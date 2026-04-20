@@ -1,16 +1,16 @@
 // ============================
-// 排盘计算核心
+// 排盤計算核心
 // ============================
 
 // 引入 lunar-javascript
-// 假设我们在 index.html 中通过 script 标签引入了 lunar-javascript
+// 假設我們在 index.html 中通過 script 標籤引入了 lunar-javascript
 
 function countWuXing(pillars) {
   let count = {'金':0,'木':0,'水':0,'火':0,'土':0};
   pillars.forEach(p => {
     // 天干
     count[WX_GAN[p.gan]] += 1.5;
-    // 地支藏干
+    // 地支藏幹
     let cg = CANG_GAN[p.zhi];
     cg.forEach((g, i) => { count[WX_GAN[g]] += CG_WEIGHT[i]; });
   });
@@ -65,7 +65,7 @@ function getXiYong(dayGan, isStrong, ctrlEl, motherEl, childWX, wealthEl) {
   }
 }
 
-// 伪随机
+// 僞隨機
 function seededRand(seed) { let x = Math.sin(seed * 9301 + 49297) * 49297; return x - Math.floor(x); }
 function pickItems(seed, arr, n) {
   let pool = [...arr], res = [];
@@ -90,13 +90,13 @@ function dayFortune(dayGZ_idx, xiElements, jiElements) {
 }
 
 function getPillarsUsingLunar(year, month, day, hourIndex) {
-    // 因为lunar要求精确的时间，我们用小时的中间值
+    // 因爲lunar要求精確的時間，我們用小時的中間值
     const hourMap = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
     const hour = hourMap[hourIndex];
     
-    // 创建阳历对象
+    // 創建陽曆對象
     const solar = Solar.fromYmdHms(year, month, day, hour, 0, 0);
-    // 获取八字对象
+    // 獲取八字對象
     const lunar = solar.getLunar();
     const bazi = lunar.getEightChar();
     
@@ -112,13 +112,13 @@ function getPillarsUsingLunar(year, month, day, hourIndex) {
     return [yp, mp, dp, hp];
 }
 
-// 导出供全局使用
+// 導出供全局使用
 window.getPillarsUsingLunar = getPillarsUsingLunar;
 
 // 十神
 function getShiShen(dayGan, otherGan) {
   let me = WX_GAN[dayGan], ot = WX_GAN[otherGan];
-  if (me === ot) return (dayGan % 2 === otherGan % 2) ? '比肩' : '劫财';
+  if (me === ot) return (dayGan % 2 === otherGan % 2) ? '比肩' : '劫財';
   let mi = ELEMENT_CYCLE.indexOf(me), oi = ELEMENT_CYCLE.indexOf(ot);
   let rel;
   if ((mi + 1) % 5 === oi) rel = 'iGenerate';

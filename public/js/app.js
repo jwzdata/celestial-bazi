@@ -1,5 +1,5 @@
 // ============================
-// 全局状态
+// 全局狀態
 // ============================
 let baziResult = null;
 let calYear = new Date().getFullYear();
@@ -10,14 +10,14 @@ let calMonth = new Date().getMonth(); // 0-indexed
 // ============================
 
 function renderPillars(pillars, dayGan) {
-  const labels = ['年柱','月柱','日柱（命主）','时柱'];
+  const labels = ['年柱','月柱','日柱（命主）','時柱'];
   const grid = document.getElementById('pillarGrid');
   grid.innerHTML = '';
   pillars.forEach((p, i) => {
     let isDay = (i === 2);
     let ss = getShiShen(dayGan, p.gan);
-    let ny = NA_YIN[Math.floor(((p.gan % 10) * 12 + (p.zhi % 12)) / 2) % 30]; // 简化纳音
-    // 更准确的纳音：用干支序号
+    let ny = NA_YIN[Math.floor(((p.gan % 10) * 12 + (p.zhi % 12)) / 2) % 30]; // 簡化納音
+    // 更準確的納音：用干支序號
     let gzIdx = 0;
     for (let g = 0; g < 10; g++) for (let z = 0; z < 12; z++) {
       if (g === p.gan && z === p.zhi) break;
@@ -25,11 +25,11 @@ function renderPillars(pillars, dayGan) {
       if (g === p.gan) { gzIdx = g * 12 + z; break; }
       gzIdx++;
     }
-    // 简单方法：干支序号
-    gzIdx = p.gan * 6 + Math.floor(p.zhi / 2); // 不对...
-    // 正确方法：六十甲子序号
+    // 簡單方法：干支序號
+    gzIdx = p.gan * 6 + Math.floor(p.zhi / 2); // 不對...
+    // 正確方法：六十甲子序號
     // 甲子=0, 乙丑=1, ... 
-    // gan和zhi必须同奇偶才能组合
+    // gan和zhi必須同奇偶才能組合
     let gz60 = -1;
     for (let k = 0; k < 60; k++) {
       if (k % 10 === p.gan && k % 12 === p.zhi) { gz60 = k; break; }
@@ -39,7 +39,7 @@ function renderPillars(pillars, dayGan) {
     let ganColor = WX_COLORS[WX_GAN[p.gan]];
     let zhiColor = WX_COLORS[WX_ZHI[p.zhi]];
     let cangGanHTML = CANG_GAN[p.zhi].map((g, ci) => {
-      let w = ['本气','中气','余气'][ci];
+      let w = ['本氣','中氣','餘氣'][ci];
       return `<span class="text-xs" style="color:${WX_COLORS[WX_GAN[g]]};opacity:${1-ci*0.25}">${TG[g]}<span class="text-accent/30" style="font-size:.55rem">${w}</span></span>`;
     }).join(' ');
 
@@ -72,12 +72,12 @@ function renderWuXing(wxCount) {
   let r = 80, cx = 100, cy = 100, C = 2 * Math.PI * r;
   chart.innerHTML = '';
   
-  // 缺失的五行显示虚线环
+  // 缺失的五行顯示虛線環
   let startOffset = 0;
   WX_LIST.forEach(wx => {
     let pct = wxCount[wx] / total;
     let len = pct * C;
-    let gap = 4; // 间隔
+    let gap = 4; // 間隔
     let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     circle.setAttribute('cx', cx);
     circle.setAttribute('cy', cy);
@@ -96,7 +96,7 @@ function renderWuXing(wxCount) {
     startOffset += len;
   });
 
-  // 图例
+  // 圖例
   legend.innerHTML = '';
   WX_LIST.forEach(wx => {
     let pct = ((wxCount[wx] / total) * 100).toFixed(0);
@@ -128,7 +128,7 @@ function renderStrength(dayGan, monthZhi, strength) {
   
   let badge = document.getElementById('strengthBadge');
   if (strength.isStrong) {
-    badge.textContent = '身强';
+    badge.textContent = '身強';
     badge.className = 'px-4 py-1.5 rounded-full text-sm font-600 bg-earth/15 text-earth border border-earth/30';
   } else {
     badge.textContent = '身弱';
@@ -143,17 +143,17 @@ function renderStrength(dayGan, monthZhi, strength) {
 
   let dayWX = WX_GAN[dayGan];
   let motherEl = strength.motherEl;
-  let text = `${TG[dayGan]}${dayWX}日主生于${DZ[monthZhi]}月`;
-  // 判断得令
+  let text = `${TG[dayGan]}${dayWX}日主生於${DZ[monthZhi]}月`;
+  // 判斷得令
   if (WX_ZHI[monthZhi] === dayWX || WX_ZHI[monthZhi] === motherEl) {
-    text += `，${DZ[monthZhi]}为${dayWX === WX_ZHI[monthZhi] ? dayWX+'之余气' : '生'+dayWX+'之印星'}，日主得令`;
+    text += `，${DZ[monthZhi]}爲${dayWX === WX_ZHI[monthZhi] ? dayWX+'之餘氣' : '生'+dayWX+'之印星'}，日主得令`;
   } else {
     text += `，月支${DZ[monthZhi]}${WX_ZHI[monthZhi]}不助日主`;
   }
   if (strength.isStrong) {
-    text += `。综合五行力量分析，日主${dayWX}力量偏强，属于身强之命格。身强则宜泄宜克，需要通过食伤泄秀或官杀制衡来平衡命局。`;
+    text += `。綜合五行力量分析，日主${dayWX}力量偏強，屬於身強之命格。身強則宜泄宜克，需要通過食傷泄秀或官殺制衡來平衡命局。`;
   } else {
-    text += `。综合五行力量分析，日主${dayWX}力量偏弱，属于身弱之命格。身弱则宜扶宜生，需要通过印星生扶或比劫助身来增强命局。`;
+    text += `。綜合五行力量分析，日主${dayWX}力量偏弱，屬於身弱之命格。身弱則宜扶宜生，需要通過印星生扶或比劫助身來增強命局。`;
   }
   document.getElementById('strengthText').textContent = text;
 }
@@ -174,7 +174,7 @@ function renderXiYong(xiYong) {
     { label: '喜神', wx: xiYong.xi, cls: 'xi' },
     { label: '用神', wx: xiYong.yong, cls: 'yong' },
     { label: '忌神', wx: xiYong.ji, cls: 'ji' },
-    { label: '闲神', wx: xiYong.xian, cls: 'xian' }
+    { label: '閒神', wx: xiYong.xian, cls: 'xian' }
   ];
   grid.innerHTML = '';
   items.forEach(it => {
@@ -193,24 +193,24 @@ function renderXiYong(xiYong) {
     grid.appendChild(card);
   });
 
-  // 详细解读
+  // 詳細解讀
   let detail = document.getElementById('xiYongDetail').querySelector('ul');
   let dayWX = baziResult.dayGanWX;
   let isStrong = baziResult.isStrong;
   let lines = [];
   
   if (isStrong) {
-    lines.push(`<li><strong style="color:${WX_COLORS[xiYong.yong]}">${xiYong.yong}为用神</strong>：${xiYong.yong}能克制过旺之${dayWX}，有效抑制日主过强带来的刚愎自用之弊，使命局趋于平衡</li>`);
-    lines.push(`<li><strong style="color:${WX_COLORS[xiYong.xi]}">${xiYong.xi}为喜神</strong>：${xiYong.xi}为${dayWX}所生，能泄化日主过剩之气，转化为才华与创造力，增强命局的流通性</li>`);
+    lines.push(`<li><strong style="color:${WX_COLORS[xiYong.yong]}">${xiYong.yong}爲用神</strong>：${xiYong.yong}能剋制過旺之${dayWX}，有效抑制日主過強帶來的剛愎自用之弊，使命局趨於平衡</li>`);
+    lines.push(`<li><strong style="color:${WX_COLORS[xiYong.xi]}">${xiYong.xi}爲喜神</strong>：${xiYong.xi}爲${dayWX}所生，能泄化日主過剩之氣，轉化爲才華與創造力，增強命局的流通性</li>`);
     let jiStr = xiYong.ji.join('、');
-    lines.push(`<li><strong style="color:var(--fire)">${jiStr}为忌神</strong>：${jiStr}会进一步助旺日主，加剧命局失衡，应尽量回避</li>`);
-    lines.push(`<li><strong style="color:var(--accent)">${xiYong.xian}为闲神</strong>：${xiYong.xian}虽耗日主之力，但作用有限，需视命局配合而定</li>`);
+    lines.push(`<li><strong style="color:var(--fire)">${jiStr}爲忌神</strong>：${jiStr}會進一步助旺日主，加劇命局失衡，應儘量迴避</li>`);
+    lines.push(`<li><strong style="color:var(--accent)">${xiYong.xian}爲閒神</strong>：${xiYong.xian}雖耗日主之力，但作用有限，需視命局配合而定</li>`);
   } else {
-    lines.push(`<li><strong style="color:${WX_COLORS[xiYong.yong]}">${xiYong.yong}为用神</strong>：${xiYong.yong}与日主同属${dayWX}，能直接增强日主力量，是最有效的扶助之力</li>`);
-    lines.push(`<li><strong style="color:${WX_COLORS[xiYong.xi]}">${xiYong.xi}为喜神</strong>：${xiYong.xi}能生助日主${dayWX}，如同母亲滋养子女，为命局注入温暖与支持</li>`);
+    lines.push(`<li><strong style="color:${WX_COLORS[xiYong.yong]}">${xiYong.yong}爲用神</strong>：${xiYong.yong}與日主同屬${dayWX}，能直接增強日主力量，是最有效的扶助之力</li>`);
+    lines.push(`<li><strong style="color:${WX_COLORS[xiYong.xi]}">${xiYong.xi}爲喜神</strong>：${xiYong.xi}能生助日主${dayWX}，如同母親滋養子女，爲命局注入溫暖與支持</li>`);
     let jiStr = xiYong.ji.join('、');
-    lines.push(`<li><strong style="color:var(--fire)">${jiStr}为忌神</strong>：${jiStr}会进一步消耗或克制本已偏弱的日主，应尽量避免</li>`);
-    lines.push(`<li><strong style="color:var(--accent)">${xiYong.xian}为闲神</strong>：${xiYong.xian}耗日主之力但有时也可激发斗志，需视大运配合</li>`);
+    lines.push(`<li><strong style="color:var(--fire)">${jiStr}爲忌神</strong>：${jiStr}會進一步消耗或剋制本已偏弱的日主，應儘量避免</li>`);
+    lines.push(`<li><strong style="color:var(--accent)">${xiYong.xian}爲閒神</strong>：${xiYong.xian}耗日主之力但有時也可激發鬥志，需視大運配合</li>`);
   }
   detail.innerHTML = lines.join('');
 }
@@ -219,7 +219,7 @@ function renderCalendar() {
   document.getElementById('calYearHeader').textContent = calYear;
   document.getElementById('calMonthLabel').textContent = calYear + '年' + (calMonth + 1) + '月';
   
-  // 更新实时时间
+  // 更新實時時間
   const updateTime = () => {
     const now = new Date();
     document.getElementById('calTimeNow').textContent = now.toTimeString().split(' ')[0];
@@ -229,14 +229,14 @@ function renderCalendar() {
   updateTime();
   if(!window.timeInt) window.timeInt = setInterval(updateTime, 1000);
   
-  // 日历网格
+  // 日曆網格
   const daysContainer = document.getElementById('calDays');
   daysContainer.innerHTML = '';
   
   let year = calYear, month = calMonth + 1; // JS month is 0-indexed
   
-  // 我们使用农历的月来显示吉凶日历会更准确，但为了和公历配合，我们仍然显示公历的这个月
-  // 可以根据需要决定显示公历月还是农历月
+  // 我們使用農曆的月來顯示吉凶日曆會更準確，但爲了和公曆配合，我們仍然顯示公曆的這個月
+  // 可以根據需要決定顯示公曆月還是農曆月
   let firstDay = new Date(year, month - 1, 1);
   let daysInMonth = new Date(year, month, 0).getDate();
   let startDOW = firstDay.getDay(); // 0=Sunday
@@ -251,19 +251,19 @@ function renderCalendar() {
   let xiElements = [baziResult.xiYong.xi, baziResult.xiYong.yong];
   let jiElements = baziResult.xiYong.ji;
   
-  // 展平数组，以防喜用神是数组
+  // 展平數組，以防喜用神是數組
   xiElements = xiElements.flat();
   jiElements = jiElements.flat();
   
   let todayDate = new Date();
   
   for (let d = 1; d <= daysInMonth; d++) {
-    // 使用 lunar-javascript 获取日柱干支索引用于吉凶判断
+    // 使用 lunar-javascript 獲取日柱干支索引用於吉凶判斷
     const solar = Solar.fromYmdHms(year, month, d, 12, 0, 0);
     const lunar = solar.getLunar();
     const bazi = lunar.getEightChar();
     
-    // 获取日柱的干和支索引
+    // 獲取日柱的乾和支索引
     const dGan = TG.indexOf(bazi.getDayGan());
     const dZhi = DZ.indexOf(bazi.getDayZhi());
     
@@ -274,7 +274,7 @@ function renderCalendar() {
     if (jiElements.includes(dGanWX)) score -= 2;
     if (jiElements.includes(dZhiWX)) score -= 1.5;
     
-    // 把 score 转换成类似 bazi-daily 的百分制分数
+    // 把 score 轉換成類似 bazi-daily 的百分制分數
     let percentScore = 60 + Math.round(score * 10);
     percentScore = Math.max(0, Math.min(100, percentScore));
     
@@ -282,7 +282,7 @@ function renderCalendar() {
     if (score >= 1.5) fortune = 'ji';
     else if (score <= -1.5) fortune = 'xiong';
     
-    // 计算当天的十神
+    // 計算當天的十神
     let shishen = getShiShen(baziResult.dayGan, dGan);
     
     let isToday = (year === todayDate.getFullYear() && month === (todayDate.getMonth() + 1) && d === todayDate.getDate());
@@ -299,9 +299,9 @@ function renderCalendar() {
       <div class="day-shishen">${shishen}</div>
     `;
     
-    // 绑定点击事件，更新顶部摘要
+    // 綁定點擊事件，更新頂部摘要
     dayCell.onclick = () => {
-      // 移除其他选中状态
+      // 移除其他選中狀態
       document.querySelectorAll('.cal-day').forEach(el => el.classList.remove('ring-1', 'ring-accent'));
       dayCell.classList.add('ring-1', 'ring-accent');
       
@@ -310,7 +310,7 @@ function renderCalendar() {
     
     daysContainer.appendChild(dayCell);
     
-    // 如果是今天，或者是每月1号，初始化摘要数据
+    // 如果是今天，或者是每月1號，初始化摘要數據
     if (isToday || (d === 1 && !document.getElementById('calSummaryDate').textContent)) {
       updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fortune);
       if(isToday) dayCell.classList.add('ring-1', 'ring-accent');
@@ -320,7 +320,9 @@ function renderCalendar() {
 
 function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fortune) {
   document.getElementById('calSummaryDate').textContent = `${solar.getMonth()}月${solar.getDay()}日`;
-  document.getElementById('calSummaryLunar').textContent = `农历${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}`;
+  let lunarMonth = lunar.getMonthInChinese().replace('腊', '臘').replace('闰', '閏');
+  let lunarDay = lunar.getDayInChinese().replace('廿', '廿'); // 廿 is same
+  document.getElementById('calSummaryLunar').textContent = `農曆${lunarMonth}月${lunarDay}`;
   
   document.getElementById('calSummaryYear').textContent = bazi.getYear();
   document.getElementById('calSummaryMonth').textContent = bazi.getMonth();
@@ -329,7 +331,7 @@ function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fo
   
   document.getElementById('calSummaryScoreNum').textContent = percentScore;
   
-  // 环形进度条
+  // 環形進度條
   let dash = Math.max(0.1, percentScore) + ', 100';
   let ring = document.getElementById('calSummaryScoreRing');
   ring.setAttribute('stroke-dasharray', dash);
@@ -342,7 +344,7 @@ function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fo
   
   document.getElementById('calSummaryShiShen').textContent = shishen;
   
-  // 模拟生成宜忌和建议
+  // 模擬生成宜忌和建議
   let seed = solar.getYear() * 10000 + solar.getMonth() * 100 + solar.getDay();
   
   let goods = [], bads = [];
@@ -360,9 +362,9 @@ function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fo
   document.getElementById('calSummaryGood').innerHTML = goods.map(g => `<div class="text-wood"><i class="fas fa-check-square mr-1"></i>${g}</div>`).join('');
   document.getElementById('calSummaryBad').innerHTML = bads.map(b => `<div class="text-fire"><i class="fas fa-exclamation-triangle mr-1"></i>${b}</div>`).join('');
   
-  let advice = "运势平稳，按部就班即可。";
-  if (fortune === 'ji') advice = "今日运势极佳，适合推进重要事项，把握机会。";
-  if (fortune === 'xiong') advice = "今日运势低迷，宜静不宜动，注意情绪管理与风险防范。";
+  let advice = "運勢平穩，按部就班即可。";
+  if (fortune === 'ji') advice = "今日運勢極佳，適合推進重要事項，把握機會。";
+  if (fortune === 'xiong') advice = "今日運勢低迷，宜靜不宜動，注意情緒管理與風險防範。";
   document.getElementById('calSummaryAdvice').textContent = advice;
 }
 
@@ -370,7 +372,7 @@ function renderLucky() {
   let xy = baziResult.xiYong;
   let xiWX = xy.xi, yongWX = xy.yong;
   
-  // 合并喜神和用神数据
+  // 合併喜神和用神數據
   let dirs = [...new Set([LUCKY_DATA[xiWX].dir, LUCKY_DATA[yongWX].dir])];
   let colors = [...new Set([...LUCKY_DATA[xiWX].colors, ...LUCKY_DATA[yongWX].colors])];
   let nums = [...new Set([...LUCKY_DATA[xiWX].nums, ...LUCKY_DATA[yongWX].nums])];
@@ -420,23 +422,23 @@ function analyze() {
     formEl.classList.add('form-shake');
   };
   
-  if (!dateVal) { showError('请选择出生日期'); return; }
-  if (hourVal === '') { showError('请选择出生时辰'); return; }
+  if (!dateVal) { showError('請選擇出生日期'); return; }
+  if (hourVal === '') { showError('請選擇出生時辰'); return; }
   errEl.classList.add('hidden');
   
-  // 禁用按钮防连点
+  // 禁用按鈕防連點
   btnEl.disabled = true;
   btnEl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>解析中...';
   
   
-  // 【VIP 拦截逻辑】
-  // 为了方便验证，暂时取消强制登录和支付拦截，直接放行
+  // 【VIP 攔截邏輯】
+  // 爲了方便驗證，暫時取消強制登錄和支付攔截，直接放行
   // if (!currentUser) {
   //   showModal('authModal');
   //   return;
   // }
   // if (!currentUser.isVip) {
-  //   selectPay('wechat'); // 默认选中微信
+  //   selectPay('wechat'); // 默認選中微信
   //   showModal('payModal');
   //   return;
   // }
@@ -446,11 +448,11 @@ function analyze() {
   let year = parseInt(parts[0]), month = parseInt(parts[1]), day = parseInt(parts[2]);
   let hourZhi = parseInt(hourVal);
   
-  // 显示加载
+  // 顯示加載
   document.getElementById('heroSection').classList.add('hidden');
   document.getElementById('loadingSection').classList.remove('hidden');
   
-  let msgs = ['正在推演天干地支...', '分析五行生克...', '测算喜用神...', '生成运势指南...'];
+  let msgs = ['正在推演天干地支...', '分析五行生剋...', '測算喜用神...', '生成運勢指南...'];
   let msgIdx = 0;
   let loadText = document.getElementById('loadingText');
   loadText.textContent = msgs[0];
@@ -461,24 +463,24 @@ function analyze() {
   
   setTimeout(() => {
     clearInterval(loadInterval);
-    // 排盘 (使用 lunar-javascript)
-    // Lunar.js 使用公历日期，小时我们传入中间值，或者不传小时用默认
+    // 排盤 (使用 lunar-javascript)
+    // Lunar.js 使用公曆日期，小時我們傳入中間值，或者不傳小時用默認
     let pillars = window.getPillarsUsingLunar(year, month, day, hourZhi);
     let yp = pillars[0];
     let mp = pillars[1];
     let dp = pillars[2];
     let hp = pillars[3];
     
-    // 五行统计
+    // 五行統計
     let wxCount = countWuXing(pillars);
     
-    // 身强身弱
+    // 身強身弱
     let strength = judgeStrength(dp.gan, mp.zhi, wxCount);
     
     // 喜用神
     let xiYong = getXiYong(dp.gan, strength.isStrong, strength.ctrlEl, strength.motherEl, strength.childWX, strength.wealthEl);
     
-    // 存储结果
+    // 存儲結果
     baziResult = {
       pillars, wxCount, strength, xiYong,
       dayGan: dp.gan,
@@ -490,7 +492,7 @@ function analyze() {
     calYear = new Date().getFullYear();
     calMonth = new Date().getMonth();
     
-    // 渲染所有模块
+    // 渲染所有模塊
     renderPillars(pillars, dp.gan);
     renderWuXing(wxCount);
     renderStrength(dp.gan, mp.zhi, strength);
@@ -499,23 +501,23 @@ function analyze() {
     renderCalendar();
     renderLucky();
     
-    // 切换显示
+    // 切換顯示
     document.getElementById('loadingSection').classList.add('hidden');
     document.getElementById('resultSection').classList.remove('hidden');
     document.getElementById('btnReset').classList.remove('hidden');
     
-    // 恢复按钮状态
+    // 恢復按鈕狀態
     btnEl.disabled = false;
-    btnEl.textContent = '开始解析';
+    btnEl.textContent = '開始解析';
     
-    // 触发滚动动画
+    // 觸發滾動動畫
     setTimeout(initScrollReveal, 100);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, 1200);
 }
 
 // ============================
-// 事件绑定
+// 事件綁定
 // ============================
 document.getElementById('btnAnalyze').addEventListener('click', analyze);
 
@@ -524,17 +526,17 @@ document.getElementById('btnReset').addEventListener('click', () => {
   document.getElementById('heroSection').classList.remove('hidden');
   document.getElementById('btnReset').classList.add('hidden');
   document.getElementById('btnAnalyze').disabled = false;
-  document.getElementById('btnAnalyze').textContent = '开始解析';
+  document.getElementById('btnAnalyze').textContent = '開始解析';
   
-  // 重置分享解锁状态
+  // 重置分享解鎖狀態
   const overlay = document.getElementById('shareUnlockOverlay');
   const container = document.getElementById('careerListContainer');
   if (overlay) {
     overlay.style.display = 'flex';
     overlay.innerHTML = `<i class="fas fa-lock text-2xl text-accent/50 mb-2"></i>
-          <p class="text-xs text-accent mb-4 font-bold">分享给好友，免费解锁事业财运详批</p>
+          <p class="text-xs text-accent mb-4 font-bold">分享給好友，免費解鎖事業財運詳批</p>
           <button onclick="mockShareUnlock()" class="bg-gradient-to-r from-wood/80 to-wood text-bg px-4 py-2 rounded-full text-xs font-bold shadow-lg hover:scale-105 transition-transform">
-            <i class="fab fa-weixin mr-1"></i> 立即分享解锁
+            <i class="fab fa-weixin mr-1"></i> 立即分享解鎖
           </button>`;
   }
   if (container) {
@@ -568,12 +570,12 @@ document.getElementById('calBackToday').addEventListener('click', () => {
   renderCalendar();
 });
 
-// 回车提交
+// 回車提交
 document.getElementById('inputDate').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
 document.getElementById('inputHour').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
 
 // ============================
-// 滚动揭示动画
+// 滾動揭示動畫
 // ============================
 function initScrollReveal() {
   let observer = new IntersectionObserver((entries) => {
@@ -617,16 +619,16 @@ function initParticles() {
 // 初始化
 // ============================
 
-// 内容营销：命理小知识
+// 內容營銷：命理小知識
 const baziTips = [
-  { tag: '十神', text: "「正财」代表正当收入与稳定积累，也常对应男命的妻星。适合用“长期主义”的方式打造财富。" },
-  { tag: '五行', text: "「木」主仁，其性直，其情和。木旺之人多重情义，适合做教育、内容、品牌与长期经营。" },
-  { tag: '天干', text: "「甲木」如参天大树，重原则、讲担当。优势在于扛事与格局，短板是容易刚直不圆融。" },
-  { tag: '地支', text: "「子水」为阳水，主机敏与应变。子旺之人思维快，适合策略、产品、运营与跨界整合。" },
-  { tag: '空亡', text: "「空亡」不必然全凶。若忌神落空亡，反而像“消灾”，关键看命局整体配合与运势流转。" },
-  { tag: '桃花', text: "「桃花星」主管人缘与魅力。真正的桃花运不是“多”，而是“对”：有边界、有筛选、有成长。" },
-  { tag: '财库', text: "辰戌丑未为“四库”。命局见财库，往往更擅长存钱与做“资产型选择”，重在守与积。" },
-  { tag: '驿马', text: "「驿马星」代表走动与变动。驿马旺者适合出差、跨城、跨境与流动性更强的行业赛道。" }
+  { tag: '十神', text: "「正財」代表正當收入與穩定積累，也常對應男命的妻星。適合用“長期主義”的方式打造財富。" },
+  { tag: '五行', text: "「木」主仁，其性直，其情和。木旺之人多重情義，適合做教育、內容、品牌與長期經營。" },
+  { tag: '天干', text: "「甲木」如參天大樹，重原則、講擔當。優勢在於扛事與格局，短板是容易剛直不圓融。" },
+  { tag: '地支', text: "「子水」爲陽水，主機敏與應變。子旺之人思維快，適合策略、產品、運營與跨界整合。" },
+  { tag: '空亡', text: "「空亡」不必然全兇。若忌神落空亡，反而像“消災”，關鍵看命局整體配合與運勢流轉。" },
+  { tag: '桃花', text: "「桃花星」主管人緣與魅力。真正的桃花運不是“多”，而是“對”：有邊界、有篩選、有成長。" },
+  { tag: '財庫', text: "辰戌醜未爲“四庫”。命局見財庫，往往更擅長存錢與做“資產型選擇”，重在守與積。" },
+  { tag: '驛馬', text: "「驛馬星」代表走動與變動。驛馬旺者適合出差、跨城、跨境與流動性更強的行業賽道。" }
 ];
 
 let currentTipIndex = -1;
@@ -650,15 +652,19 @@ function refreshTip(forceRandom = false) {
 
   currentTipIndex = forceRandom ? Math.floor(Math.random() * baziTips.length) : getDailyTipIndex();
   const tip = baziTips[currentTipIndex];
-  tipEl.innerHTML = `<div class="fade-in"><span class="text-xs text-accent/60">【${tip.tag}】</span> ${tip.text}</div>`;
+  tipEl.innerHTML = `<div class="fade-in"><span class="text-xs text-accent/60">【<span>${tip.tag}</span>】</span> <span>${tip.text}</span></div>`;
 }
 
 async function copyTip() {
   const tip = baziTips[currentTipIndex >= 0 ? currentTipIndex : getDailyTipIndex()];
-  const shareText = `【每日命理小贴士｜${tip.tag}】${tip.text}（来自星曜命理）`;
+  const tTag = typeof translateText === 'function' ? translateText(tip.tag) : tip.tag;
+  const tText = typeof translateText === 'function' ? translateText(tip.text) : tip.text;
+  const tTitle = typeof translateText === 'function' ? translateText('每日命理小貼士') : '每日命理小貼士';
+  const tSource = typeof translateText === 'function' ? translateText('來自星曜命理') : '來自星曜命理';
+  const shareText = `【${tTitle} | ${tTag}】${tText} (${tSource})`;
   try {
     await navigator.clipboard.writeText(shareText);
-    alert('已复制，可直接粘贴到朋友圈/社群。');
+    alert(typeof translateText === 'function' ? translateText('已複製，可直接粘貼到朋友圈/社羣。') : '已複製，可直接粘貼到朋友圈/社羣。');
   } catch (e) {
     const tmp = document.createElement('textarea');
     tmp.value = shareText;
@@ -666,7 +672,7 @@ async function copyTip() {
     tmp.select();
     document.execCommand('copy');
     tmp.remove();
-    alert('已复制，可直接粘贴到朋友圈/社群。');
+    alert(typeof translateText === 'function' ? translateText('已複製，可直接粘貼到朋友圈/社羣。') : '已複製，可直接粘貼到朋友圈/社羣。');
   }
 }
 
@@ -674,7 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initParticles();
   refreshTip();
   
-  // 设置默认日期
+  // 設置默認日期
   let today = new Date();
   let dateStr = today.toISOString().split('T')[0];
   document.getElementById('inputDate').value = dateStr;
@@ -682,11 +688,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ============================
-// 高级功能逻辑
+// 高級功能邏輯
 // ============================
 
 function checkVipBeforeFeature() {
-  // 为了方便验证，暂时取消强制登录和支付拦截
+  // 爲了方便驗證，暫時取消強制登錄和支付攔截
   // if (!currentUser) {
   //   showModal('authModal');
   //   return false;
@@ -697,7 +703,7 @@ function checkVipBeforeFeature() {
   //   return false;
   // }
   if (!baziResult) {
-    alert('请先在主页输入出生信息进行排盘分析！');
+    alert('請先在主頁輸入出生信息進行排盤分析！');
     return false;
   }
   return true;
@@ -706,10 +712,10 @@ function checkVipBeforeFeature() {
 function showFeature(feature) {
   if (!checkVipBeforeFeature()) return;
   
-  // 每次打开弹窗前，重置内部状态
+  // 每次打開彈窗前，重置內部狀態
   if (feature === 'hehun') {
     const btn = document.querySelector('#hehunModal .btn-primary');
-    btn.innerHTML = '<i class="fas fa-heart mr-2"></i>开始合婚';
+    btn.innerHTML = '<i class="fas fa-heart mr-2"></i>開始合婚';
     btn.disabled = false;
     document.getElementById('hehunResult').classList.add('hidden');
   } else if (feature === 'qiming') {
@@ -717,7 +723,7 @@ function showFeature(feature) {
     btn.innerHTML = '<i class="fas fa-magic mr-2"></i>智能起名';
     btn.disabled = false;
     document.getElementById('qimingResult').classList.add('hidden');
-    // 可选：不自动清空姓氏，方便用户重试
+    // 可選：不自動清空姓氏，方便用戶重試
   } else if (feature === 'chouqian') {
     document.getElementById('qianTong').classList.remove('hidden');
     document.getElementById('qianResult').classList.add('hidden');
@@ -725,7 +731,7 @@ function showFeature(feature) {
     document.getElementById('numResult').classList.add('hidden');
     document.getElementById('btnGenNum').classList.remove('hidden');
     
-    // 设置喜用神文本
+    // 設置喜用神文本
     let xi = baziResult.xiYong.xi;
     let yong = baziResult.xiYong.yong;
     if (Array.isArray(xi)) xi = xi[0];
@@ -741,15 +747,15 @@ function calculateHehun() {
   const otherHour = document.getElementById('hehunHour').value;
   
   if (!otherDate || otherHour === "") {
-    alert('请选择对方的出生日期和时辰');
+    alert('請選擇對方的出生日期和時辰');
     return;
   }
   
   const btn = document.querySelector('#hehunModal .btn-primary');
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>测算中...';
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>測算中...';
   btn.disabled = true;
   
-  // 使用 lunar-javascript 测算对方八字五行
+  // 使用 lunar-javascript 測算對方八字五行
   let parts = otherDate.split('-');
   let year = parseInt(parts[0]), month = parseInt(parts[1]), day = parseInt(parts[2]);
   let hourZhi = parseInt(otherHour);
@@ -757,7 +763,7 @@ function calculateHehun() {
   let otherPillars = window.getPillarsUsingLunar(year, month, day, hourZhi);
   let otherWxCount = countWuXing(otherPillars);
   
-  // 找出对方最旺的五行
+  // 找出對方最旺的五行
   let maxWx = '木';
   let maxVal = 0;
   for (let wx in otherWxCount) {
@@ -777,10 +783,10 @@ function calculateHehun() {
     }
   }
   
-  // 简单的契合度算法：
-  // 1. 如果对方的旺五行是我的喜用神，加分
-  // 2. 如果我的旺五行是对方的喜用神，加分
-  // 这里简化为：五行相生 > 五行相同 > 五行相克
+  // 簡單的契合度算法：
+  // 1. 如果對方的旺五行是我的喜用神，加分
+  // 2. 如果我的旺五行是對方的喜用神，加分
+  // 這裏簡化爲：五行相生 > 五行相同 > 五行相剋
   
   let score = 60;
   let desc = "";
@@ -792,23 +798,23 @@ function calculateHehun() {
   
   if (maxWx === myXi || maxWx === myYong) {
     score += 25;
-    desc = `对方八字${maxWx}旺，正好是您的喜用神，能为您带来极大的帮助与好运。`;
+    desc = `對方八字${maxWx}旺，正好是您的喜用神，能爲您帶來極大的幫助與好運。`;
   } else if (baziResult.xiYong.ji.includes(maxWx)) {
     score -= 15;
-    desc = `对方八字${maxWx}旺，恰为您的忌神，相处中可能会有一些摩擦，需要多包容。`;
+    desc = `對方八字${maxWx}旺，恰爲您的忌神，相處中可能會有一些摩擦，需要多包容。`;
   } else {
     score += 10;
-    desc = `双方五行相对平衡，属于平稳互助的组合。`;
+    desc = `雙方五行相對平衡，屬於平穩互助的組合。`;
   }
   
-  // 随机波动一下，显得更真实
+  // 隨機波動一下，顯得更真實
   score += Math.floor(Math.random() * 10) - 5;
   score = Math.max(40, Math.min(99, score));
   
   let level = score >= 80 ? "上等婚" : (score >= 60 ? "中等婚" : "下等婚");
   
   setTimeout(() => {
-    // 渲染结果
+    // 渲染結果
     const resDiv = document.getElementById('hehunResult');
     resDiv.innerHTML = `
       <div class="flex justify-center items-center gap-4 mb-4">
@@ -821,52 +827,52 @@ function calculateHehun() {
     `;
     
     resDiv.classList.remove('hidden');
-    btn.innerHTML = '<i class="fas fa-check mr-2"></i>测算完成';
+    btn.innerHTML = '<i class="fas fa-check mr-2"></i>測算完成';
   }, 1500);
 }
 
-// 简单的名字库，按五行分类
+// 簡單的名字庫，按五行分類
 const NAME_DICT = {
   '金': {
-    '男': ['铭', '锋', '锐', '铮', '锦', '鑫', '钧', '诚', '铎', '新'],
-    '女': ['铃', '钰', '银', '钟', '铭', '锦', '静', '诗', '悦', '珊']
+    '男': ['銘', '鋒', '銳', '錚', '錦', '鑫', '鈞', '誠', '鐸', '新'],
+    '女': ['鈴', '鈺', '銀', '鍾', '銘', '錦', '靜', '詩', '悅', '珊']
   },
   '木': {
-    '男': ['林', '森', '朴', '权', '杉', '杨', '松', '柏', '栋', '栩'],
-    '女': ['柯', '桐', '梓', '棋', '楠', '榕', '桔', '棉', '樱', '梅']
+    '男': ['林', '森', '樸', '權', '杉', '楊', '松', '柏', '棟', '栩'],
+    '女': ['柯', '桐', '梓', '棋', '楠', '榕', '桔', '棉', '櫻', '梅']
   },
   '水': {
-    '男': ['浩', '海', '涛', '润', '涵', '清', '渊', '淼', '泽', '洋'],
-    '女': ['沐', '沛', '沦', '滢', '泓', '波', '洁', '洋', '湘', '涟']
+    '男': ['浩', '海', '濤', '潤', '涵', '清', '淵', '淼', '澤', '洋'],
+    '女': ['沐', '沛', '淪', '瀅', '泓', '波', '潔', '洋', '湘', '漣']
   },
   '火': {
-    '男': ['炎', '灿', '炜', '烁', '炫', '烽', '焕', '烨', '烽', '煌'],
-    '女': ['灵', '秋', '熠', '烨', '然', '熔', '熙', '燃', '燕', '灿']
+    '男': ['炎', '燦', '煒', '爍', '炫', '烽', '煥', '燁', '烽', '煌'],
+    '女': ['靈', '秋', '熠', '燁', '然', '熔', '熙', '燃', '燕', '燦']
   },
   '土': {
-    '男': ['城', '培', '基', '堂', '坤', '坚', '坦', '均', '坚', '圣'],
-    '女': ['佳', '圭', '圜', '坊', '均', '坚', '圣', '坤', '培', '基']
+    '男': ['城', '培', '基', '堂', '坤', '堅', '坦', '均', '堅', '聖'],
+    '女': ['佳', '圭', '圜', '坊', '均', '堅', '聖', '坤', '培', '基']
   }
 };
 
 function generateNames() {
   const ln = document.getElementById('lastName').value.trim();
-  if(!ln) return alert('请输入姓氏');
+  if(!ln) return alert('請輸入姓氏');
   
   const gender = document.getElementById('gender').value;
   const btn = document.querySelector('#qimingModal .btn-primary');
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>匹配诗经楚辞...';
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>匹配詩經楚辭...';
   btn.disabled = true;
   
-  // 获取喜用神
+  // 獲取喜用神
   let xi = baziResult.xiYong.xi;
   let yong = baziResult.xiYong.yong;
   
-  // 处理可能返回数组的情况
+  // 處理可能返回數組的情況
   if (Array.isArray(xi)) xi = xi[0];
   if (Array.isArray(yong)) yong = yong[0];
   
-  // 确保五行存在于字典中，如果没有喜用神或者字典没有，默认使用木水
+  // 確保五行存在於字典中，如果沒有喜用神或者字典沒有，默認使用木水
   let primaryWx = NAME_DICT[xi] ? xi : '木';
   let secondaryWx = NAME_DICT[yong] ? yong : '水';
 
@@ -877,16 +883,16 @@ function generateNames() {
     <span style="color:${WX_COLORS[secondaryWx]}">${secondaryWx}</span>
   `;
   
-  // 生成名字组合
+  // 生成名字組合
   const generateCard = (wx1, wx2) => {
-    // 从字典中随机挑选字
+    // 從字典中隨機挑選字
     const list1 = NAME_DICT[wx1][gender] || NAME_DICT['木']['男'];
     const list2 = NAME_DICT[wx2][gender] || NAME_DICT['水']['男'];
     
     const char1 = list1[Math.floor(Math.random() * list1.length)];
     const char2 = list2[Math.floor(Math.random() * list2.length)];
     
-    // 主导的颜色（用于边框）
+    // 主導的顏色（用於邊框）
     const borderColor = WX_COLORS[wx1];
     
     return `
@@ -904,7 +910,7 @@ function generateNames() {
   cardsContainer.innerHTML = '';
   
   setTimeout(() => {
-    // 生成 4 个推荐名字，组合方式：喜+用，用+喜，喜+喜，用+用
+    // 生成 4 個推薦名字，組合方式：喜+用，用+喜，喜+喜，用+用
     let html = '';
     html += generateCard(primaryWx, secondaryWx);
     html += generateCard(secondaryWx, primaryWx);
@@ -914,39 +920,39 @@ function generateNames() {
     cardsContainer.innerHTML = html;
     
     document.getElementById('qimingResult').classList.remove('hidden');
-    btn.innerHTML = '<i class="fas fa-check mr-2"></i>生成完毕';
-    // 保持按钮可用，允许用户再次点击生成不同名字
+    btn.innerHTML = '<i class="fas fa-check mr-2"></i>生成完畢';
+    // 保持按鈕可用，允許用戶再次點擊生成不同名字
     btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-magic mr-2"></i>换一批';
+    btn.innerHTML = '<i class="fas fa-magic mr-2"></i>換一批';
   }, 1000);
 }
 
 function drawQian() {
   const tong = document.getElementById('qianTong');
-  tong.classList.add('form-shake'); // 复用现有的震动动画
+  tong.classList.add('form-shake'); // 複用現有的震動動畫
   
   setTimeout(() => {
     tong.classList.remove('form-shake');
     tong.classList.add('hidden');
     
-    // 生成签文结果
+    // 生成籤文結果
     const qianData = [
-      { t: '上上签', p: '春风得意马蹄疾，一日看尽长安花。', e: '今日运势极旺，五行能量与您完美契合。所求之事多能顺遂，适合大胆推进核心计划。' },
-      { t: '上吉签', p: '乘风破浪会有时，直挂云帆济沧海。', e: '今日您的贵人运强劲，虽有小波折，但最终都能化险为夷，逢凶化吉。' },
-      { t: '中吉签', p: '有心栽花花不开，无心插柳柳成荫。', e: '今日不宜强求，顺其自然反而会有意外之喜。适合做一些轻松的筹备工作。' },
-      { t: '中平签', p: '行到水穷处，坐看云起时。', e: '今日运势平稳，五行能量无大冲大合。适合静心学习、复盘，不宜做重大决策。' },
-      { t: '下下签', p: '路漫漫其修远兮，吾将上下而求索。', e: '今日流日干支与您命局有所冲克。建议保持低调，少说话多做事，避免与人发生口角。' }
+      { t: '上上籤', p: '春風得意馬蹄疾，一日看盡長安花。', e: '今日運勢極旺，五行能量與您完美契合。所求之事多能順遂，適合大膽推進核心計劃。' },
+      { t: '上吉籤', p: '乘風破浪會有時，直掛雲帆濟滄海。', e: '今日您的貴人運強勁，雖有小波折，但最終都能化險爲夷，逢凶化吉。' },
+      { t: '中吉籤', p: '有心栽花花不開，無心插柳柳成蔭。', e: '今日不宜強求，順其自然反而會有意外之喜。適合做一些輕鬆的籌備工作。' },
+      { t: '中平籤', p: '行到水窮處，坐看雲起時。', e: '今日運勢平穩，五行能量無大沖大合。適合靜心學習、覆盤，不宜做重大決策。' },
+      { t: '下下籤', p: '路漫漫其修遠兮，吾將上下而求索。', e: '今日流日干支與您命局有所沖剋。建議保持低調，少說話多做事，避免與人發生口角。' }
     ];
     
-    // 结合今天的日期和用户的日柱生成一个伪随机索引
-    const today = new Date();
-    const seed = today.getDate() + baziResult.dayGan * 10;
-    const result = qianData[seed % qianData.length];
+    // 生成隨機索引，不再綁定特定日期，確保每次抽籤結果隨機
+    const result = qianData[Math.floor(Math.random() * qianData.length)];
     
-    document.getElementById('qianTitle').textContent = result.t;
+    document.getElementById('qianTitle').textContent = typeof translateText === 'function' ? translateText(result.t) : result.t;
     document.getElementById('qianTitle').className = `font-serif text-3xl font-bold mb-2 ${result.t.includes('下') ? 'text-fire' : 'text-accent'}`;
-    document.getElementById('qianPoem').textContent = result.p;
-    document.getElementById('qianExplain').textContent = '解析：' + result.e;
+    document.getElementById('qianPoem').textContent = typeof translateText === 'function' ? translateText(result.p) : result.p;
+    const explainPrefix = typeof translateText === 'function' ? translateText('解析：') : '解析：';
+    const explainContent = typeof translateText === 'function' ? translateText(result.e) : result.e;
+    document.getElementById('qianExplain').textContent = explainPrefix + explainContent;
     
     document.getElementById('qianResult').classList.remove('hidden');
   }, 800);
@@ -958,7 +964,7 @@ function generateLuckyNum() {
   btn.disabled = true;
   
   setTimeout(() => {
-    // 获取用户的喜用神五行对应的数字
+    // 獲取用戶的喜用神五行對應的數字
     let xi = baziResult.xiYong.xi;
     let yong = baziResult.xiYong.yong;
     if (Array.isArray(xi)) xi = xi[0];
@@ -968,7 +974,7 @@ function generateLuckyNum() {
       '水': [1, 6], '火': [2, 7], '木': [3, 8], '金': [4, 9], '土': [5, 0]
     };
     
-    let pool = [...(wxNums[xi] || []), ...(wxNums[yong] || []), 0,1,2,3,4,5,6,7,8,9]; // 偏好喜用神数字，但也包含其他
+    let pool = [...(wxNums[xi] || []), ...(wxNums[yong] || []), 0,1,2,3,4,5,6,7,8,9]; // 偏好喜用神數字，但也包含其他
     
     let nums = [];
     for(let i=0; i<6; i++) {
@@ -984,7 +990,7 @@ function generateLuckyNum() {
     btn.classList.add('hidden');
     document.getElementById('numResult').classList.remove('hidden');
     
-    btn.innerHTML = '<i class="fas fa-dice mr-2"></i>点击生成';
+    btn.innerHTML = '<i class="fas fa-dice mr-2"></i>點擊生成';
     btn.disabled = false;
   }, 600);
 }
@@ -993,19 +999,19 @@ function generatePoster() {
   
   showModal('posterModal');
   const resultDiv = document.getElementById('posterResult');
-  resultDiv.innerHTML = '<div class="py-20 text-center text-accent/50"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>海报生成中...</div>';
+  resultDiv.innerHTML = '<div class="py-20 text-center text-accent/50"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>海報生成中...</div>';
   
-  // 填充海报数据
+  // 填充海報數據
   document.getElementById('posterDayMaster').textContent = TG[baziResult.dayGan] + WX_GAN[baziResult.dayGan];
-  document.getElementById('posterStrength').textContent = baziResult.strength.isStrong ? '身强' : '身弱';
+  document.getElementById('posterStrength').textContent = baziResult.strength.isStrong ? '身強' : '身弱';
   document.getElementById('posterDesc').textContent = document.getElementById('strengthText').textContent.substring(0, 80) + '...';
   
-  // 设置二维码 (带推广链接，未登录时使用默认链接)
+  // 設置二維碼 (帶推廣鏈接，未登錄時使用默認鏈接)
   const inviteCode = currentUser ? currentUser.invite_code : 'DEMO';
   const refLink = encodeURIComponent(`${window.location.origin}/?ref=${inviteCode}`);
   document.getElementById('posterQr').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${refLink}`;
   
-  // 生成图片
+  // 生成圖片
   setTimeout(() => {
     html2canvas(document.getElementById('posterCanvas'), {
       backgroundColor: '#1a1a2e',
@@ -1017,5 +1023,5 @@ function generatePoster() {
       resultDiv.innerHTML = '';
       resultDiv.appendChild(img);
     });
-  }, 1000); // 等待二维码图片加载
+  }, 1000); // 等待二維碼圖片加載
 }

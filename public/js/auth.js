@@ -1,17 +1,17 @@
 
-// 全局状态
+// 全局狀態
 let currentUser = null;
 let currentPayMethod = 'wechat';
 let currentOrderId = null;
 
-// 检查邀请码
+// 檢查邀請碼
 const urlParams = new URLSearchParams(window.location.search);
 const refCode = urlParams.get('ref');
 if (refCode) {
   sessionStorage.setItem('bazi_ref', refCode);
 }
 
-// API 请求封装
+// API 請求封裝
 async function apiFetch(endpoint, options = {}) {
   const token = localStorage.getItem('bazi_token');
   const headers = { 'Content-Type': 'application/json' };
@@ -19,20 +19,20 @@ async function apiFetch(endpoint, options = {}) {
   
   const res = await fetch(endpoint, { ...options, headers });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || '请求失败');
+  if (!res.ok) throw new Error(data.error || '請求失敗');
   return data;
 }
 
-// 初始化用户状态
+// 初始化用戶狀態
 async function initAuth() {
   try {
     const user = await apiFetch('/api/user');
     currentUser = user;
-    document.getElementById('userStatusText').textContent = '用户中心';
+    document.getElementById('userStatusText').textContent = '用戶中心';
   } catch (err) {
     currentUser = null;
     localStorage.removeItem('bazi_token');
-    document.getElementById('userStatusText').textContent = '登录 / 注册';
+    document.getElementById('userStatusText').textContent = '登錄 / 註冊';
   }
 }
 
@@ -47,11 +47,11 @@ function closeModals() {
   document.getElementById('modalContainer').classList.add('hidden');
 }
 
-// 头部按钮点击
+// 頭部按鈕點擊
 document.getElementById('btnUser').addEventListener('click', () => {
   if (currentUser) {
     document.getElementById('uName').textContent = currentUser.username;
-    document.getElementById('uVip').textContent = currentUser.isVip ? `VIP (至 ${new Date(currentUser.vip_expire_time).toLocaleDateString()})` : '普通用户';
+    document.getElementById('uVip').textContent = currentUser.isVip ? `VIP (至 ${new Date(currentUser.vip_expire_time).toLocaleDateString()})` : '普通用戶';
     document.getElementById('uVip').className = currentUser.isVip ? 'font-bold text-fire' : 'font-bold text-accent/50';
 
     document.getElementById('uBalance').textContent = currentUser.balance.toFixed(2);
@@ -64,7 +64,7 @@ document.getElementById('btnUser').addEventListener('click', () => {
   }
 });
 
-// 登录/注册逻辑
+// 登錄/註冊邏輯
 let isLoginMode = true;
 function toggleAuthMode() {
   const title = document.getElementById('authTitle');
@@ -73,15 +73,15 @@ function toggleAuthMode() {
   const toggleBtn = document.getElementById('btnAuthToggle');
   
   if (isLoginMode) {
-    title.textContent = '用户登录';
-    btn.textContent = '登录';
-    toggleText.textContent = '没有账号？';
-    toggleBtn.textContent = '立即注册';
+    title.textContent = '用戶登錄';
+    btn.textContent = '登錄';
+    toggleText.textContent = '沒有賬號？';
+    toggleBtn.textContent = '立即註冊';
   } else {
-    title.textContent = '账号注册';
-    btn.textContent = '注册';
-    toggleText.textContent = '已有账号？';
-    toggleBtn.textContent = '直接登录';
+    title.textContent = '賬號註冊';
+    btn.textContent = '註冊';
+    toggleText.textContent = '已有賬號？';
+    toggleBtn.textContent = '直接登錄';
   }
 }
 
@@ -96,10 +96,10 @@ document.getElementById('btnAuthSubmit').addEventListener('click', async () => {
   const password = document.getElementById('authPassword').value;
   const btn = document.getElementById('btnAuthSubmit');
   
-  if(!username || !password) return alert('请填写用户名和密码');
+  if(!username || !password) return alert('請填寫用戶名和密碼');
   
   btn.disabled = true;
-  btn.textContent = '处理中...';
+  btn.textContent = '處理中...';
   
   try {
     const endpoint = isLoginMode ? '/api/login' : '/api/register';
@@ -122,7 +122,7 @@ document.getElementById('btnAuthSubmit').addEventListener('click', async () => {
 function logout() {
   localStorage.removeItem('bazi_token');
   currentUser = null;
-  document.getElementById('userStatusText').textContent = '登录 / 注册';
+  document.getElementById('userStatusText').textContent = '登錄 / 註冊';
   closeModals();
 }
 
@@ -130,10 +130,10 @@ function copyRef() {
   const input = document.getElementById('refLink');
   input.select();
   document.execCommand('copy');
-  alert('推广链接已复制！发送给好友，好友订阅您将获得 30% 佣金。');
+  alert('推廣鏈接已複製！發送給好友，好友訂閱您將獲得 30% 佣金。');
 }
 
-// 支付逻辑
+// 支付邏輯
 function selectPay(method) {
   currentPayMethod = method;
   const btnW = document.getElementById('btnWechat');
@@ -146,7 +146,7 @@ function selectPay(method) {
   } else {
     btnW.className = 'flex-1 py-3 border-2 border-transparent bg-wood/10 text-wood rounded-xl font-bold transition-all opacity-60';
     btnA.className = 'flex-1 py-3 border-2 border-water bg-water/10 text-water rounded-xl font-bold transition-all';
-    document.getElementById('payMethodText').textContent = '支付宝';
+    document.getElementById('payMethodText').textContent = '支付寶';
   }
   createOrder();
 }
@@ -158,15 +158,15 @@ async function createOrder() {
       body: JSON.stringify({ method: currentPayMethod }) 
     });
     currentOrderId = res.orderId;
-    // 实际项目中这里会把 res.payUrl 生成二维码显示
-    console.log('订单已创建:', res);
+    // 實際項目中這裏會把 res.payUrl 生成二維碼顯示
+    console.log('訂單已創建:', res);
   } catch (err) {
-    alert('订单创建失败：' + err.message);
+    alert('訂單創建失敗：' + err.message);
   }
 }
 
 async function mockPaySuccess() {
-  if (!currentOrderId) return alert('订单未生成');
+  if (!currentOrderId) return alert('訂單未生成');
   try {
     const res = await apiFetch('/api/pay/mock-success', {
       method: 'POST',
@@ -175,14 +175,14 @@ async function mockPaySuccess() {
     alert(res.message);
     closeModals();
     await initAuth();
-    // 重新触发分析
+    // 重新觸發分析
     document.getElementById('btnAnalyze').click();
   } catch (err) {
     alert(err.message);
   }
 }
 
-// 页面加载完成初始化
+// 頁面加載完成初始化
 window.addEventListener('DOMContentLoaded', () => {
   initAuth();
 });
