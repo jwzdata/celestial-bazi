@@ -9,7 +9,7 @@ cli_args:
   - "--port"
   - "80"
   - "--root"
-  - "/public"
+  - "/"
 volumes:
   - name: public
-    mount: /public
+    mount: /
