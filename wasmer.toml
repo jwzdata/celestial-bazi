@@ -1,7 +1,11 @@
----
-kind: wasmer.io/App.v0
-name: celestial-bazi
-description: "A modern, commercial-ready Bazi (Chinese Astrology) web application."
-package: node
-domains:
-  - celestial-bazi.wasmer.app
+[dependencies]
+
+[package]
+name = "jwz123883/celestial-bazi"
+version = "0.1.0"
+description = "A modern, commercial-ready Bazi (Chinese Astrology) web application."
+readme = "README.md"
+license = "MIT"
+
+[fs]
+public = "public"
