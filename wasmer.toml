@@ -1,9 +1,13 @@
+[dependencies]
+"sharrattj/static-web-server" = "^1.1.8"
+
 [package]
 name = "jwz123883/celestial-bazi"
-version = "0.1.6"
+version = "0.1.7"
 description = "A modern, commercial-ready Bazi (Chinese Astrology) web application."
 readme = "README.md"
 license = "MIT"
+entrypoint = "static-web-server"
 
 [fs]
 public = "public"
