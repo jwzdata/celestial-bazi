@@ -2,6 +2,12 @@
 kind: wasmer.io/App.v0
 name: celestial-bazi
 description: "A modern, commercial-ready Bazi (Chinese Astrology) web application."
-package: jwz123883/celestial-bazi
+package: wasmer/static-web-server@1.0.8
 domains:
   - celestial-bazi.wasmer.app
+cli_args:
+  - "--directory"
+  - "/public"
+volumes:
+  - name: public
+    mount: /public
