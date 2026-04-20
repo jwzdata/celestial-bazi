@@ -3,7 +3,7 @@
 
 [package]
 name = "jwz123883/celestial-bazi"
-version = "0.1.4"
+version = "0.1.5"
 description = "A modern, commercial-ready Bazi (Chinese Astrology) web application."
 readme = "README.md"
 license = "MIT"
@@ -15,4 +15,4 @@ source = "worker.js"
 abi = "wasi"
 
 [fs]
-public = "public"
+"/public" = "public"

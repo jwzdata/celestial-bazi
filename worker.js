@@ -1,9 +1,5 @@
 import { serve } from 'wasmer/winterjs';
 
-const headers = {
-  'Content-Type': 'text/html; charset=utf-8',
-};
-
 async function handleRequest(req) {
   const url = new URL(req.url);
   let path = url.pathname;
@@ -13,9 +9,11 @@ async function handleRequest(req) {
   }
 
   try {
-    const fileContent = await Deno.readFile(`/public${path}`);
-    let contentType = 'text/plain';
+    // 尝试读取文件，注意文件路径
+    const filePath = `/public${path}`;
+    const fileContent = await Deno.readFile(filePath);
     
+    let contentType = 'text/plain';
     if (path.endsWith('.html')) contentType = 'text/html; charset=utf-8';
     else if (path.endsWith('.css')) contentType = 'text/css';
     else if (path.endsWith('.js')) contentType = 'application/javascript';
@@ -25,13 +23,15 @@ async function handleRequest(req) {
     else if (path.endsWith('.woff') || path.endsWith('.woff2')) contentType = 'font/woff2';
 
     return new Response(fileContent, {
+      status: 200,
       headers: { 'Content-Type': contentType },
     });
   } catch (error) {
-    if (path === '/index.html') {
-        return new Response('Error loading index.html: ' + error.message, { status: 500 });
-    }
-    return new Response('404 Not Found: ' + path, { status: 404 });
+    // 如果是 404，返回更清晰的错误信息帮助调试
+    return new Response(`Not Found: ${path} \nError: ${error.message}`, { 
+      status: 404,
+      headers: { 'Content-Type': 'text/plain' }
+    });
   }
 }
 
