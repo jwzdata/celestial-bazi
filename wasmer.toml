@@ -1,18 +1,18 @@
+[package]
+name = "jwz123883/celestial-bazi"
+version = "0.1.10"
+description = "A modern, commercial-ready Bazi (Chinese Astrology) web application."
+license = "MIT"
+readme = "README.md"
+entrypoint = "worker"
+
 [dependencies]
 "wasmer/winterjs" = "^1"
 
-[package]
-name = "jwz123883/celestial-bazi"
-version = "0.1.9"
-description = "A modern, commercial-ready Bazi (Chinese Astrology) web application."
-readme = "README.md"
-license = "MIT"
-entrypoint = "worker"
+[fs]
+"/public" = "public"
 
 [[module]]
 name = "worker"
 source = "worker.js"
 abi = "wasi"
-
-[fs]
-"/public" = "public"
