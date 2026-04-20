@@ -111,7 +111,7 @@ const translations = {
     '「子水」爲陽水，主機敏與應變。子旺之人思維快，適合策略、產品、運營與跨界整合。': 'Zi Water is Yang Water, governing agility. Fast thinkers, suitable for strategy, product, and cross-border integration.',
     '「空亡」不必然全兇。若忌神落空亡，反而像“消災”，關鍵看命局整體配合與運勢流轉。': 'Void (Kong Wang) is not necessarily bad. If an unfavorable element falls into Void, it acts as disaster relief. It depends on the overall chart.',
     '「桃花星」主管人緣與魅力。真正的桃花運不是“多”，而是“對”：有邊界、有篩選、有成長。': 'Peach Blossom Star governs popularity and charm. True Peach Blossom luck isn\'t about quantity, but quality.',
-    '辰戌醜未爲“四庫”。命局見財庫，往往更擅長存錢與做“資產型選擇”，重在守與積。': 'Chen, Xu, Chou, Wei are the Four Repositories. Having a Wealth Treasury means being better at saving and making asset-based choices.',
+    '辰戌丑未爲“四庫”。命局見財庫，往往更擅長存錢與做“資產型選擇”，重在守與積。': 'Chen, Xu, Chou, Wei are the Four Repositories. Having a Wealth Treasury means being better at saving and making asset-based choices.',
     '「驛馬星」代表走動與變動。驛馬旺者適合出差、跨城、跨境與流動性更強的行業賽道。': 'Traveling Horse Star represents movement and change. Suitable for business trips, cross-city, cross-border, and highly mobile industries.',
 
     // Bazi Data
@@ -196,7 +196,7 @@ function translateText(text) {
   // Stem & Branch single characters
   const charMap = {
     '甲':'Jia','乙':'Yi','丙':'Bing','丁':'Ding','戊':'Wu','己':'Ji','庚':'Geng','辛':'Xin','壬':'Ren','癸':'Gui',
-    '子':'Zi','醜':'Chou','寅':'Yin','卯':'Mao','辰':'Chen','巳':'Si','午':'Wu','未':'Wei','申':'Shen','酉':'You','戌':'Xu','亥':'Hai',
+    '子':'Zi','丑':'Chou','寅':'Yin','卯':'Mao','辰':'Chen','巳':'Si','午':'Wu','未':'Wei','申':'Shen','酉':'You','戌':'Xu','亥':'Hai',
     '金':'Metal','木':'Wood','水':'Water','火':'Fire','土':'Earth',
     '月':'Month','年':'Year','日':'Day',
     '吉':'Good','兇':'Bad','平':'Fair',
