@@ -53,6 +53,7 @@ document.getElementById('btnUser').addEventListener('click', () => {
     document.getElementById('uName').textContent = currentUser.username;
     document.getElementById('uVip').textContent = currentUser.isVip ? `VIP (至 ${new Date(currentUser.vip_expire_time).toLocaleDateString()})` : '普通用户';
     document.getElementById('uVip').className = currentUser.isVip ? 'font-bold text-fire' : 'font-bold text-accent/50';
+
     document.getElementById('uBalance').textContent = currentUser.balance.toFixed(2);
     document.getElementById('refLink').value = `${window.location.origin}/?ref=${currentUser.invite_code}`;
     showModal('userModal');

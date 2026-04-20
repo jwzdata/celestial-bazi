@@ -148,6 +148,36 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
       <h3 class="font-serif text-sm font-bold text-accent">今日幸运数字</h3>
       <p class="text-[10px] text-accent/50 mt-1">专属财运密码</p>
     </div>
+
+    <!-- 商业变现：大师亲算 -->
+    <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('consult')">
+      <div class="w-12 h-12 rounded-full bg-fire/20 text-fire flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform relative">
+        <div class="absolute -top-1 -right-1 w-3 h-3 bg-fire rounded-full animate-ping"></div>
+        <div class="absolute -top-1 -right-1 w-3 h-3 bg-fire rounded-full border border-[#16213e]"></div>
+        <i class="fas fa-user-tie text-xl"></i>
+      </div>
+      <h3 class="font-serif text-sm font-bold text-accent">大师一对一亲算</h3>
+      <p class="text-[10px] text-accent/50 mt-1">深度解析答疑解惑</p>
+    </div>
+  </div>
+</section>
+
+<!-- 内容营销：命理知识库 -->
+<section id="baziTipsSection" class="max-w-5xl mx-auto px-6 pt-12">
+  <div class="glass-card p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-serif text-lg font-bold text-accent flex items-center gap-2">
+        <i class="fas fa-book-open text-wood"></i> 每日命理小贴士
+      </h2>
+      <div class="flex items-center gap-3">
+        <button onclick="copyTip()" class="text-xs text-accent/50 hover:text-accent transition-colors"><i class="fas fa-copy mr-1"></i>复制分享</button>
+        <button onclick="refreshTip(true)" class="text-xs text-accent/50 hover:text-accent transition-colors"><i class="fas fa-sync-alt mr-1"></i>换一个</button>
+      </div>
+    </div>
+    <div id="tipContent" class="text-sm text-accent/80 leading-relaxed bg-black/20 p-4 rounded-lg border-l-2 border-accent">
+      <!-- 动态插入 -->
+      <span class="text-accent/50">正在加载知识库...</span>
+    </div>
   </div>
 </section>
 
@@ -213,9 +243,11 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
         <h3 class="font-serif text-base font-600 text-accent mb-4"><i class="fas fa-user-circle mr-2 text-accent/50"></i>性格特点</h3>
         <ul id="personalityList" class="space-y-2 text-sm text-accent/70"></ul>
       </div>
-      <div class="glass-card p-6">
+      <div class="glass-card p-6 relative overflow-hidden group">
         <h3 class="font-serif text-base font-600 text-accent mb-4"><i class="fas fa-briefcase mr-2 text-accent/50"></i>事业财运</h3>
-        <ul id="careerList" class="space-y-2 text-sm text-accent/70"></ul>
+        <div id="careerListContainer" class="transition-all duration-500">
+          <ul id="careerList" class="space-y-2 text-sm text-accent/70"></ul>
+        </div>
       </div>
     </div>
   </div>
@@ -624,6 +656,34 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
     <h3 class="font-serif text-xl text-accent mb-4">长按保存图片发朋友圈</h3>
     <div id="posterResult" class="w-full rounded-lg overflow-hidden shadow-2xl shadow-accent/20"></div>
     <p class="text-xs text-accent/50 mt-4 text-center">已包含您的专属推广码<br>好友扫码测算，您将获得30%佣金</p>
+  </div>
+
+  <!-- 大师亲算弹窗 -->
+  <div id="consultModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#16213e] flex flex-col items-center">
+    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
+    <h3 class="font-serif text-2xl text-accent mb-2 text-center">大师一对一亲算</h3>
+    <p class="text-xs text-accent/60 text-center mb-6">资深命理师为您深度答疑解惑</p>
+    
+    <div class="w-full bg-black/20 p-4 rounded-xl mb-6 border border-accent/10">
+      <ul class="space-y-3 text-sm text-accent/80">
+        <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>事业财运详批</span></li>
+        <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>婚姻感情指导</span></li>
+        <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>大运流年深度剖析</span></li>
+        <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>起名改运/风水建议</span></li>
+      </ul>
+      <div class="mt-4 pt-4 border-t border-accent/10 flex justify-between items-center">
+        <span class="text-xs text-accent/50">咨询润金</span>
+        <span class="text-xl font-bold text-fire">¥298 <span class="text-xs text-accent/50 line-through">¥598</span></span>
+      </div>
+    </div>
+
+    <div class="bg-white p-2 rounded-lg w-40 h-40 mx-auto flex items-center justify-center relative shadow-inner mb-4">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=wechat:master_bazi" alt="大师微信" class="w-full h-full opacity-80 blur-[2px]">
+      <div class="absolute inset-0 flex items-center justify-center">
+        <span class="bg-black/60 text-white text-xs px-2 py-1 rounded">扫码添加大师微信</span>
+      </div>
+    </div>
+    <p class="text-center text-xs text-accent/60">微信号：<span class="font-mono text-accent select-all">master_bazi_123</span></p>
   </div>
 
 </div>

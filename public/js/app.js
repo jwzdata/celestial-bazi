@@ -525,6 +525,22 @@ document.getElementById('btnReset').addEventListener('click', () => {
   document.getElementById('btnReset').classList.add('hidden');
   document.getElementById('btnAnalyze').disabled = false;
   document.getElementById('btnAnalyze').textContent = '开始解析';
+  
+  // 重置分享解锁状态
+  const overlay = document.getElementById('shareUnlockOverlay');
+  const container = document.getElementById('careerListContainer');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    overlay.innerHTML = `<i class="fas fa-lock text-2xl text-accent/50 mb-2"></i>
+          <p class="text-xs text-accent mb-4 font-bold">分享给好友，免费解锁事业财运详批</p>
+          <button onclick="mockShareUnlock()" class="bg-gradient-to-r from-wood/80 to-wood text-bg px-4 py-2 rounded-full text-xs font-bold shadow-lg hover:scale-105 transition-transform">
+            <i class="fab fa-weixin mr-1"></i> 立即分享解锁
+          </button>`;
+  }
+  if (container) {
+    container.classList.add('blur-sm', 'opacity-50', 'select-none', 'pointer-events-none');
+  }
+
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
@@ -600,8 +616,63 @@ function initParticles() {
 // ============================
 // 初始化
 // ============================
+
+// 内容营销：命理小知识
+const baziTips = [
+  { tag: '十神', text: "「正财」代表正当收入与稳定积累，也常对应男命的妻星。适合用“长期主义”的方式打造财富。" },
+  { tag: '五行', text: "「木」主仁，其性直，其情和。木旺之人多重情义，适合做教育、内容、品牌与长期经营。" },
+  { tag: '天干', text: "「甲木」如参天大树，重原则、讲担当。优势在于扛事与格局，短板是容易刚直不圆融。" },
+  { tag: '地支', text: "「子水」为阳水，主机敏与应变。子旺之人思维快，适合策略、产品、运营与跨界整合。" },
+  { tag: '空亡', text: "「空亡」不必然全凶。若忌神落空亡，反而像“消灾”，关键看命局整体配合与运势流转。" },
+  { tag: '桃花', text: "「桃花星」主管人缘与魅力。真正的桃花运不是“多”，而是“对”：有边界、有筛选、有成长。" },
+  { tag: '财库', text: "辰戌丑未为“四库”。命局见财库，往往更擅长存钱与做“资产型选择”，重在守与积。" },
+  { tag: '驿马', text: "「驿马星」代表走动与变动。驿马旺者适合出差、跨城、跨境与流动性更强的行业赛道。" }
+];
+
+let currentTipIndex = -1;
+
+function getDailyTipIndex() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth() + 1;
+  const d = now.getDate();
+  let seed = y * 10000 + m * 100 + d;
+  if (baziResult && typeof baziResult.dayGan === 'number') {
+    seed += baziResult.dayGan * 97;
+  }
+  seed = Math.abs(seed);
+  return seed % baziTips.length;
+}
+
+function refreshTip(forceRandom = false) {
+  const tipEl = document.getElementById('tipContent');
+  if (!tipEl) return;
+
+  currentTipIndex = forceRandom ? Math.floor(Math.random() * baziTips.length) : getDailyTipIndex();
+  const tip = baziTips[currentTipIndex];
+  tipEl.innerHTML = `<div class="fade-in"><span class="text-xs text-accent/60">【${tip.tag}】</span> ${tip.text}</div>`;
+}
+
+async function copyTip() {
+  const tip = baziTips[currentTipIndex >= 0 ? currentTipIndex : getDailyTipIndex()];
+  const shareText = `【每日命理小贴士｜${tip.tag}】${tip.text}（来自星曜命理）`;
+  try {
+    await navigator.clipboard.writeText(shareText);
+    alert('已复制，可直接粘贴到朋友圈/社群。');
+  } catch (e) {
+    const tmp = document.createElement('textarea');
+    tmp.value = shareText;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand('copy');
+    tmp.remove();
+    alert('已复制，可直接粘贴到朋友圈/社群。');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initParticles();
+  refreshTip();
   
   // 设置默认日期
   let today = new Date();
