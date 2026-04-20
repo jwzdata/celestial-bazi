@@ -1007,21 +1007,26 @@ function generatePoster() {
   document.getElementById('posterDesc').textContent = document.getElementById('strengthText').textContent.substring(0, 80) + '...';
   
   // 設置二維碼 (帶推廣鏈接，未登錄時使用默認鏈接)
-  const inviteCode = currentUser ? currentUser.invite_code : 'DEMO';
+  const inviteCode = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.invite_code : 'DEMO';
   const refLink = encodeURIComponent(`${window.location.origin}/?ref=${inviteCode}`);
+  document.getElementById('posterQr').crossOrigin = 'anonymous';
   document.getElementById('posterQr').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${refLink}`;
   
   // 生成圖片
   setTimeout(() => {
     html2canvas(document.getElementById('posterCanvas'), {
       backgroundColor: '#1a1a2e',
-      scale: 2
+      scale: 2,
+      useCORS: true
     }).then(canvas => {
       const img = document.createElement('img');
       img.src = canvas.toDataURL('image/jpeg');
       img.className = 'w-full h-auto';
       resultDiv.innerHTML = '';
       resultDiv.appendChild(img);
+    }).catch(err => {
+      console.error(err);
+      resultDiv.innerHTML = '<div class="py-20 text-center text-fire"><i class="fas fa-exclamation-triangle text-3xl mb-2"></i><br>海報生成失敗，請稍後重試</div>';
     });
   }, 1000); // 等待二維碼圖片加載
 }
