@@ -27,10 +27,10 @@ async function handleRequest(req) {
       headers: { 'Content-Type': contentType },
     });
   } catch (error) {
-    // 如果是 404，返回更清晰的错误信息帮助调试
-    return new Response(`Not Found: ${path} \nError: ${error.message}`, { 
+    // 如果是 404，返回一个简单的 HTML 错误页面，而不是纯文本，有时这能避免 500
+    return new Response(`<h1>404 Not Found</h1><p>Cannot find ${path}</p>`, { 
       status: 404,
-      headers: { 'Content-Type': 'text/plain' }
+      headers: { 'Content-Type': 'text/html; charset=utf-8' }
     });
   }
 }
