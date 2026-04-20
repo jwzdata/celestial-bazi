@@ -1,11 +1,13 @@
 [dependencies]
+"saghul/http-server" = "0.1.3"
 
 [package]
 name = "jwz123883/celestial-bazi"
-version = "0.1.0"
+version = "0.1.3"
 description = "A modern, commercial-ready Bazi (Chinese Astrology) web application."
 readme = "README.md"
 license = "MIT"
+entrypoint = "http-server"
 
 [fs]
 public = "public"
