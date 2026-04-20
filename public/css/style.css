@@ -1,0 +1,121 @@
+:root{--accent:#f0d78c;--wood:#81c784;--fire:#ff9800;--earth:#ffc107;--metal:#e0e0e0;--water:#64b5f6}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);background-attachment:fixed;color:#fff;font-family:'Noto Serif SC',serif;overflow-x:hidden;min-height:100vh}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:rgba(0,0,0,0.2)}
+::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.3);border-radius:3px}
+
+/* 背景装饰 */
+.bg-blob{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}
+.blob-1{width:500px;height:500px;background:rgba(255,215,0,0.06);top:-100px;right:-100px;animation:blobFloat 25s ease-in-out infinite}
+.blob-2{width:400px;height:400px;background:rgba(129,199,132,0.05);bottom:-50px;left:-100px;animation:blobFloat 30s ease-in-out infinite reverse}
+.blob-3{width:300px;height:300px;background:rgba(255,152,0,0.04);top:50%;left:50%;animation:blobFloat 20s ease-in-out infinite 5s}
+
+@keyframes blobFloat{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(30px,-40px) scale(1.1)}50%{transform:translate(-20px,30px) scale(0.95)}75%{transform:translate(40px,20px) scale(1.05)}}
+
+/* 浮动粒子 */
+.particle{position:fixed;width:2px;height:2px;background:rgba(255,215,0,0.4);border-radius:50%;pointer-events:none;z-index:0}
+@keyframes particleRise{0%{transform:translateY(0) translateX(0);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(-100vh) translateX(40px);opacity:0}}
+
+/* 卡片样式 */
+.glass-card{background:linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 215, 0, 0.02));border:1px solid rgba(255, 215, 0, 0.3);backdrop-filter:blur(10px);border-radius:20px;transition:all .3s ease}
+.glass-card:hover{border-color:rgba(255, 215, 0, 0.5);background:linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05));box-shadow:0 0 20px rgba(255, 215, 0, 0.1)}
+
+/* 四柱卡片 */
+.pillar-card{position:relative;background:rgba(0,0,0,0.2);border:1px solid rgba(255,215,0,0.2);border-radius:15px;padding:20px 16px;text-align:center;transition:all .4s ease;overflow:hidden}
+.pillar-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .4s}
+.pillar-card:hover::before{opacity:1}
+.pillar-card:hover{transform:translateY(-4px);border-color:rgba(255,215,0,0.4);box-shadow:0 5px 15px rgba(255,215,0,0.1)}
+.pillar-card.is-day{border-color:rgba(255,215,0,0.6);background:linear-gradient(135deg, rgba(255,215,0,0.1), transparent);box-shadow:0 0 20px rgba(255,215,0,0.2)}
+.pillar-card.is-day::before{opacity:1}
+.pillar-gan{font-family:'Noto Serif SC',serif;font-size:2.5rem;font-weight:700;line-height:1.2;margin:8px 0}
+.pillar-zhi{font-family:'Noto Serif SC',serif;font-size:2.5rem;font-weight:700;line-height:1.2;margin:8px 0;border-top:1px solid rgba(255,215,0,0.2);padding-top:8px}
+.pillar-divider{width:24px;height:1px;background:rgba(255,215,0,0.3);margin:6px auto}
+
+/* 五行环图 */
+.wx-ring{transform:rotate(-90deg)}
+.wx-ring circle{transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)}
+
+/* 日历 */
+.cal-day{min-height:80px;border:1px solid rgba(255,215,0,0.06);border-radius:8px;padding:8px 6px;font-size:.75rem;transition:all .2s;cursor:default;position:relative}
+.cal-day:hover{border-color:rgba(255,215,0,0.4);transform:scale(1.02);z-index:2}
+.cal-day.ji{background:rgba(76,175,80,0.15);border-color:rgba(76,175,80,0.3)}
+.cal-day.xiong{background:rgba(244,67,54,0.15);border-color:rgba(244,67,54,0.3)}
+.cal-day.ping{background:rgba(255,255,255,0.02)}
+.cal-day .day-num{font-weight:600;font-size:.85rem}
+.cal-day .day-score{position:absolute;top:-10px;right:-10px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff;border:2px solid rgba(255,255,255,0.2);box-shadow:0 4px 10px rgba(0,0,0,0.3);z-index:3;transition:transform .3s}
+.cal-day:hover .day-score{transform:scale(1.15)}
+.cal-day.ji .day-score{background:var(--wood)}
+.cal-day.xiong .day-score{background:var(--fire)}
+.cal-day.ping .day-score{background:rgba(255,215,0,0.4)}
+.cal-day .day-shishen{position:absolute;bottom:0;left:0;right:0;padding:2px 0;text-align:center;font-size:.65rem;color:rgba(255,255,255,0.6);background:rgba(0,0,0,0.2);border-radius:0 0 8px 8px}
+
+/* 月标签 */
+.month-tab{padding:8px 16px;border-radius:8px;font-size:.8rem;cursor:pointer;transition:all .25s;border:1px solid transparent;white-space:nowrap}
+.month-tab:hover{background:rgba(255,215,0,0.1)}
+.month-tab.active{background:rgba(255,215,0,0.2);border-color:rgba(255,215,0,0.5);color:var(--accent)}
+
+/* 色块 */
+.color-swatch{width:40px;height:40px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);transition:transform .2s}
+.color-swatch:hover{transform:scale(1.15)}
+
+/* 动画效果 */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+.form-shake { animation: shake 0.4s ease-in-out; }
+
+/* 滚动动画 */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.delay-0 { transition-delay: 0ms; }
+.delay-100 { transition-delay: 100ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-300 { transition-delay: 300ms; }
+
+/* 输入框 */
+.input-field{background:rgba(0,0,0,0.3);border:1px solid rgba(255,215,0,0.3);border-radius:15px;padding:12px 16px;color:#fff;font-size:.95rem;transition:all .25s;width:100%;font-family:'Noto Serif SC',serif}
+.input-field:focus{outline:none;border-color:#f0d78c;box-shadow:0 0 10px rgba(255,215,0,0.3);background:rgba(0,0,0,0.4)}
+.input-field::-webkit-calendar-picker-indicator{filter:invert(0.7) sepia(0.5) hue-rotate(5deg)}
+
+select.input-field{background:rgba(0,0,0,0.3);border:1px solid rgba(255,215,0,0.3);border-radius:15px;padding:12px 16px;color:#fff;font-size:.95rem;transition:all .25s;width:100%;font-family:'Noto Serif SC',serif}
+select.input-field option{background:#16213e;color:#fff}
+
+/* 按钮 */
+.btn-primary{background:linear-gradient(135deg,#f0d78c,#e6a857);color:#1a1a2e;font-weight:700;padding:14px 40px;border-radius:20px;border:none;font-size:1rem;cursor:pointer;transition:all .3s;font-family:'Noto Serif SC',serif;letter-spacing:1px}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(255,215,0,0.4)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* 十神标签 */
+.shi-shen-tag{font-size:.6rem;padding:2px 6px;border-radius:4px;background:rgba(255,215,0,0.2);color:var(--accent);display:inline-block;margin-top:2px}
+
+/* 喜用神卡片 */
+.xi-yong-card{padding:16px 20px;border-radius:12px;border:1px solid rgba(255,215,0,0.2);text-align:center;transition:all .3s}
+.xi-yong-card:hover{transform:translateY(-2px)}
+.xi-yong-card.xi{background:rgba(76,175,80,0.1);border-color:rgba(76,175,80,0.3)}
+.xi-yong-card.yong{background:rgba(33,150,243,0.1);border-color:rgba(33,150,243,0.3)}
+.xi-yong-card.ji{background:rgba(244,67,54,0.1);border-color:rgba(244,67,54,0.3)}
+.xi-yong-card.xian{background:rgba(255,152,0,0.1);border-color:rgba(255,215,0,0.2)}
+
+/* 加载动画 */
+.loader{width:40px;height:40px;border:2px solid rgba(255,215,0,0.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 响应式 */
+@media(max-width:768px){
+.pillar-gan,.pillar-zhi{font-size:2rem}
+.cal-day{min-height:70px;padding:6px 4px}
+.cal-day .day-score{width:26px;height:26px;font-size:.6rem;top:-6px;right:-6px}
+.cal-day .day-shishen{font-size:.55rem}
+.month-tab{padding:6px 12px;font-size:.75rem}
+}
+@media(prefers-reduced-motion:reduce){
+.reveal{opacity:1;transform:none;transition:none}
+.particle,.bg-blob{animation:none!important}
+.wx-ring circle{transition:none}
+}
+select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23f0d78c' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;cursor:pointer}

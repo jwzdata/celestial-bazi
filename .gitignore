@@ -1,0 +1,6 @@
+node_modules/
+.DS_Store
+bazi.db
+.env
+*.log
+package-lock.json
