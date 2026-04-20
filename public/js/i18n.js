@@ -39,6 +39,8 @@ const translations = {
     '专属打卡灵签': 'Your Daily Oracle',
     '今日幸运数字': 'Lucky Numbers',
     '专属财运密码': 'Wealth Code of the Day',
+    '复制分享': 'Copy to Share',
+    '换一个': 'Another',
 
     // Analysis Sections
     '您的八字命盘': 'Your Bazi Chart',
