@@ -1,7 +1,9 @@
-import { serve } from 'wasmer/winterjs';
+addEventListener('fetch', (event) => {
+  event.respondWith(handleRequest(event.request));
+});
 
-async function handleRequest(req) {
-  const url = new URL(req.url);
+async function handleRequest(request) {
+  const url = new URL(request.url);
   let path = url.pathname;
 
   if (path === '/' || path === '') {
@@ -9,10 +11,15 @@ async function handleRequest(req) {
   }
 
   try {
-    // 尝试读取文件，注意文件路径
     const filePath = `/public${path}`;
-    const fileContent = await Deno.readFile(filePath);
     
+    // WinterJS 读取文件
+    const file = await fetch(`file://${filePath}`);
+    
+    if (!file.ok) {
+      return new Response(`Not Found: ${path}`, { status: 404 });
+    }
+
     let contentType = 'text/plain';
     if (path.endsWith('.html')) contentType = 'text/html; charset=utf-8';
     else if (path.endsWith('.css')) contentType = 'text/css';
@@ -22,17 +29,11 @@ async function handleRequest(req) {
     else if (path.endsWith('.svg')) contentType = 'image/svg+xml';
     else if (path.endsWith('.woff') || path.endsWith('.woff2')) contentType = 'font/woff2';
 
-    return new Response(fileContent, {
+    return new Response(file.body, {
       status: 200,
       headers: { 'Content-Type': contentType },
     });
   } catch (error) {
-    // 如果是 404，返回一个简单的 HTML 错误页面，而不是纯文本，有时这能避免 500
-    return new Response(`<h1>404 Not Found</h1><p>Cannot find ${path}</p>`, { 
-      status: 404,
-      headers: { 'Content-Type': 'text/html; charset=utf-8' }
-    });
+    return new Response(`Server Error: ${error.message}`, { status: 500 });
   }
 }
-
-serve(handleRequest);
