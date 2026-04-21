@@ -4,11 +4,9 @@
 
 [functions]
   directory = "netlify/functions"
-  node_bundler = "esbuild"
-  # @libsql/client 有 native binding，不能让 esbuild 打包进去
-  # 标记为 external 后，运行时直接从 node_modules 加载
-  external_node_modules = ["@libsql/client"]
-  # 需要包含 api/ 目录和 node_modules 供运行时 require
+  # zisi 对 CommonJS (require/module.exports) 更兼容
+  # esbuild 在处理 .cjs + external_node_modules + included_files 时容易出现运行时问题
+  node_bundler = "zisi"
   included_files = ["api/**"]
 
 # 将 /api/* 路由代理到对应的 Netlify Function

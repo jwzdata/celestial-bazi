@@ -1,15 +1,13 @@
 // 通用适配器：将 Netlify Web Platform API 的 Request 转为 Vercel Express-style (req, res)
 // 这样可以零改动复用 api/ 目录下的所有 Vercel Serverless Functions
 
-/**
- * @param {Function} vercelHandler - Vercel-style handler: (req, res) => Promise<void>
- * @returns {Function} Netlify-style handler: (req: Request, context: Context) => Promise<Response>
- */
 function adapt(vercelHandler) {
   return async (request, context) => {
     let body = {};
     if (request.method !== 'GET' && request.method !== 'HEAD') {
-      try { body = await request.json(); } catch {}
+      try {
+        body = typeof request.json === 'function' ? await request.json() : (request.body || {});
+      } catch {}
     }
 
     // 构造 Express-style req
@@ -22,7 +20,6 @@ function adapt(vercelHandler) {
         : (request.headers || {}),
       body,
       query: Object.fromEntries(new URL(fullUrl).searchParams),
-      // 兼容一些写法
       url: rawUrl,
     };
 
@@ -45,7 +42,13 @@ function adapt(vercelHandler) {
       },
     };
 
-    await vercelHandler(req, res);
+    try {
+      await vercelHandler(req, res);
+    } catch (err) {
+      console.error('Handler error:', err);
+      statusCode = 500;
+      responseBody = { error: 'Internal server error' };
+    }
 
     return new Response(JSON.stringify(responseBody), {
       status: statusCode,
