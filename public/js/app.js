@@ -1122,7 +1122,6 @@ function generatePoster() {
           resultDiv.innerHTML = '<div class="py-20 text-center text-fire"><i class="fas fa-exclamation-triangle text-3xl mb-2"></i><br>海報生成失敗，請稍後重試</div>';
         });
       }, 500); // 等待图片渲染
-    });
 }
 
 // ============================
