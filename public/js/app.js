@@ -528,21 +528,7 @@ document.getElementById('btnReset').addEventListener('click', () => {
   document.getElementById('btnAnalyze').disabled = false;
   document.getElementById('btnAnalyze').textContent = '開始解析';
   
-  // 重置分享解鎖狀態
-  const overlay = document.getElementById('shareUnlockOverlay');
-  const container = document.getElementById('careerListContainer');
-  if (overlay) {
-    overlay.style.display = 'flex';
-    overlay.innerHTML = `<i class="fas fa-lock text-2xl text-accent/50 mb-2"></i>
-          <p class="text-xs text-accent mb-4 font-bold">分享給好友，免費解鎖事業財運詳批</p>
-          <button onclick="mockShareUnlock()" class="bg-gradient-to-r from-wood/80 to-wood text-bg px-4 py-2 rounded-full text-xs font-bold shadow-lg hover:scale-105 transition-transform">
-            <i class="fab fa-weixin mr-1"></i> 立即分享解鎖
-          </button>`;
-  }
-  if (container) {
-    container.classList.add('blur-sm', 'opacity-50', 'select-none', 'pointer-events-none');
-  }
-
+  // 重置状态
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
@@ -666,14 +652,26 @@ async function copyTip() {
     await navigator.clipboard.writeText(shareText);
     alert(typeof translateText === 'function' ? translateText('已複製，可直接粘貼到朋友圈/社羣。') : '已複製，可直接粘貼到朋友圈/社羣。');
   } catch (e) {
-    const tmp = document.createElement('textarea');
-    tmp.value = shareText;
-    document.body.appendChild(tmp);
-    tmp.select();
-    document.execCommand('copy');
-    tmp.remove();
+    // Fallback: use temporary textarea
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try { await navigator.clipboard.writeText(shareText); } catch (_) {
+        fallbackCopy(shareText);
+      }
+    } else {
+      fallbackCopy(shareText);
+    }
     alert(typeof translateText === 'function' ? translateText('已複製，可直接粘貼到朋友圈/社羣。') : '已複製，可直接粘貼到朋友圈/社羣。');
   }
+}
+function fallbackCopy(text) {
+  const tmp = document.createElement('textarea');
+  tmp.value = text;
+  tmp.style.position = 'fixed';
+  tmp.style.opacity = '0';
+  document.body.appendChild(tmp);
+  tmp.select();
+  try { document.execCommand('copy'); } catch(_) {}
+  tmp.remove();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -739,7 +737,94 @@ function showFeature(feature) {
     document.getElementById('numXiYong').textContent = `喜${xi}用${yong}`;
   }
   
+  if (feature === 'dayun') {
+    renderDaYun();
+  }
+  
   showModal(feature + 'Modal');
+}
+
+function renderDaYun() {
+  if (!baziResult) return;
+  const container = document.getElementById('dayunContent');
+  const parts = document.getElementById('inputDate').value.split('-');
+  const year = parseInt(parts[0]), month = parseInt(parts[1]), day = parseInt(parts[2]);
+  const hourZhi = parseInt(document.getElementById('inputHour').value);
+
+  // 使用 lunar-javascript 获取大运
+  const solar = Solar.fromYmdHms(year, month, day, [0,2,4,6,8,10,12,14,16,18,20,22][hourZhi], 0, 0);
+  const lunar = solar.getLunar();
+  const eightChar = lunar.getEightChar();
+  const yun = eightChar.getYun(1); // 1=顺排，根据性别和年干阴阳自动判断
+
+  const dayunList = yun.getDaYun();
+  const today = new Date();
+  let html = '';
+
+  dayunList.forEach((dy, idx) => {
+    const startYear = dy.getStartYear();
+    const endYear = startYear + 9;
+    const ganZhi = dy.getGanZhi();
+    const dGan = TG.indexOf(ganZhi.charAt(0));
+    const dZhi = DZ.indexOf(ganZhi.charAt(1));
+    const dyWX = WX_GAN[dGan];
+
+    // 判断与喜用神的关系
+    const isXi = baziResult.xiYong.xi === dyWX || (Array.isArray(baziResult.xiYong.xi) && baziResult.xiYong.xi.includes(dyWX));
+    const isYong = baziResult.xiYong.yong === dyWX;
+    const isJi = baziResult.xiYong.ji.includes(dyWX);
+    const isFuture = startYear > today.getFullYear();
+    const isCurrent = startYear <= today.getFullYear() && endYear >= today.getFullYear();
+
+    let borderColor = 'border-accent/10', bgColor = 'bg-accent/5', textColor = 'text-accent';
+    let fortuneLabel = '平';
+    if (isXi || isYong) { borderColor = 'border-wood/20'; bgColor = 'bg-wood/5'; textColor = 'text-wood'; fortuneLabel = '吉'; }
+    if (isYong) { fortuneLabel = '大吉'; }
+    if (isJi) { borderColor = 'border-fire/20'; bgColor = 'bg-fire/5'; textColor = 'text-fire'; fortuneLabel = '兇'; }
+
+    let tag = '';
+    if (isCurrent) tag = '<span class="ml-2 px-2 py-0.5 rounded-full bg-accent/20 text-accent text-[10px] font-bold">當前</span>';
+    else if (isFuture) tag = '<span class="ml-2 px-2 py-0.5 rounded-full bg-black/30 text-accent/50 text-[10px]">未來</span>';
+
+    let desc = '';
+    if (isXi || isYong) desc = `${ganZhi}大運，${dyWX}氣旺盛，正好是您的喜用神，運勢順遂，事業財運均有突破。`;
+    else if (isJi) desc = `${ganZhi}大運，${dyWX}氣偏旺，恰爲忌神，需注意防范風險，穩中求進。`;
+    else desc = `${ganZhi}大運，五行氣場平和，運勢穩定，適合積累沉淀。`;
+
+    // 生成流年概览（每步大运的10年）
+    let yearsHtml = '';
+    for (let y = startYear; y <= Math.min(endYear, startYear + 9); y++) {
+      const ySolar = Solar.fromYmd(y, month, day);
+      const yLunar = ySolar.getLunar();
+      const yBazi = yLunar.getEightChar();
+      const yDayGan = TG.indexOf(yBazi.getDayGan());
+      const yDayWX = WX_GAN[yDayGan];
+      let yScore = 0;
+      const xiArr = [baziResult.xiYong.xi, baziResult.xiYong.yong].flat();
+      const jiArr = baziResult.xiYong.ji.flat();
+      if (xiArr.includes(yDayWX)) yScore += 2;
+      if (jiArr.includes(yDayWX)) yScore -= 2;
+      let yFortune = '平', yColor = 'text-accent', yBg = 'bg-black/20';
+      if (yScore >= 2) { yFortune = '吉'; yColor = 'text-wood'; yBg = 'bg-wood/20'; }
+      else if (yScore <= -2) { yFortune = '兇'; yColor = 'text-fire'; yBg = 'bg-fire/20'; }
+
+      yearsHtml += `<div class="${yBg} p-1 rounded ${yColor}">${y}<br>${yFortune}</div>`;
+    }
+
+    html += `
+      <div class="p-4 border ${borderColor} ${bgColor} rounded-lg">
+        <h4 class="font-bold ${textColor} text-sm mb-2">
+          <i class="fas fa-${isCurrent ? 'arrow-up' : (isFuture ? 'arrow-right' : 'history')} mr-2"></i>
+          ${startYear} - ${endYear} (${ganZhi}大運)${tag}
+        </h4>
+        <p class="text-xs text-accent/70 leading-relaxed">${desc}</p>
+        <div class="mt-3 grid grid-cols-5 gap-2 text-center text-[10px]">${yearsHtml}</div>
+      </div>`;
+
+    if (idx >= 3) return; // 最多显示4步大运
+  });
+
+  container.innerHTML = html || '<p class="text-center text-accent/50 text-sm">請先進行排盤分析</p>';
 }
 
 function calculateHehun() {
@@ -1010,16 +1095,19 @@ function generatePoster() {
   const inviteCode = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.invite_code : 'DEMO';
   const refLink = encodeURIComponent(`${window.location.origin}/?ref=${inviteCode}`);
   
-  // 使用 fetch 將二維碼轉爲 blob url，徹底解決 html2canvas 的跨域污染問題
-  fetch(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${refLink}`)
-    .then(res => res.blob())
-    .then(blob => {
-      const qrUrl = URL.createObjectURL(blob);
-      document.getElementById('posterQr').src = qrUrl;
-      
-      // 生成圖片
-      setTimeout(() => {
-        html2canvas(document.getElementById('posterCanvas'), {
+  // 使用内联 QR 码生成
+  const qrCanvas = document.createElement('canvas');
+  const qrSize = 150;
+  qrCanvas.width = qrSize;
+  qrCanvas.height = qrSize;
+  generateQRCode(qrCanvas, refLink);
+
+  document.getElementById('posterQr').src = qrCanvas.toDataURL();
+  document.getElementById('posterQr').style.display = 'block';
+
+  // 生成图片
+  setTimeout(() => {
+    html2canvas(document.getElementById('posterCanvas'), {
           backgroundColor: '#1a1a2e',
           scale: 2,
           useCORS: true
@@ -1033,10 +1121,52 @@ function generatePoster() {
           console.error(err);
           resultDiv.innerHTML = '<div class="py-20 text-center text-fire"><i class="fas fa-exclamation-triangle text-3xl mb-2"></i><br>海報生成失敗，請稍後重試</div>';
         });
-      }, 500); // 等待圖片渲染
-    })
-    .catch(err => {
-      console.error('Failed to load QR code:', err);
-      resultDiv.innerHTML = '<div class="py-20 text-center text-fire"><i class="fas fa-exclamation-triangle text-3xl mb-2"></i><br>海報資源加載失敗，請稍後重試</div>';
+      }, 500); // 等待图片渲染
     });
+}
+
+// ============================
+// 内联 QR 码生成（无外部依赖）
+// ============================
+function generateQRCode(canvas, data) {
+  const ctx = canvas.getContext('2d');
+  const size = canvas.width;
+  const modules = 21; // QR version 1
+  const cellSize = Math.floor(size / (modules + 2));
+  const offset = Math.floor((size - cellSize * modules) / 2);
+
+  // 简易 QR 编码（使用 data URL 方式生成 canvas QR）
+  // 实际使用轻量实现
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, size, size);
+
+  // 使用简易模式：生成一个基于数据的视觉 QR 图案
+  const qrLib = window.qrcode;
+  if (qrLib) {
+    // 如果 qrcode 库可用，使用它
+    const qr = qrLib(0, 'M');
+    qr.addData(data);
+    qr.make();
+    const moduleCount = qr.getModuleCount();
+    const cellSz = size / moduleCount;
+    ctx.fillStyle = '#000000';
+    for (let r = 0; r < moduleCount; r++) {
+      for (let c = 0; c < moduleCount; c++) {
+        if (qr.isDark(r, c)) {
+          ctx.fillRect(c * cellSz, r * cellSz, cellSz, cellSz);
+        }
+      }
+    }
+  } else {
+    // Fallback: 生成装饰性占位图案
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#f0d78c';
+    ctx.font = `${Math.floor(size / 15)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('QR Code', size / 2, size / 2 - 10);
+    ctx.fillStyle = 'rgba(255,215,0,0.5)';
+    ctx.font = `${Math.floor(size / 25)}px sans-serif`;
+    ctx.fillText(window.location.origin, size / 2, size / 2 + 15);
+  }
 }

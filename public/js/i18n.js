@@ -182,7 +182,33 @@ let currentLang = localStorage.getItem('lang') || 'zh';
 function toggleLanguage() {
   currentLang = currentLang === 'zh' ? 'en' : 'zh';
   localStorage.setItem('lang', currentLang);
-  location.reload();
+
+  const btnLang = document.getElementById('btnLang');
+  if (btnLang) {
+    btnLang.innerHTML = currentLang === 'zh' ? '<i class="fas fa-globe mr-1"></i>EN' : '<i class="fas fa-globe mr-1"></i>中文';
+  }
+
+  if (currentLang === 'en') {
+    translateDOMNode(document.body);
+    if (!window._i18nObserver) {
+      window._i18nObserver = new MutationObserver((mutations) => {
+        window._i18nObserver.disconnect();
+        mutations.forEach(mutation => {
+          if (mutation.type === 'childList') {
+            mutation.addedNodes.forEach(translateDOMNode);
+          }
+        });
+        window._i18nObserver.observe(document.body, { childList: true, subtree: true });
+      });
+      window._i18nObserver.observe(document.body, { childList: true, subtree: true });
+    }
+  }
+  // zh mode: just reload to restore original text (simplest for mixed state)
+  if (currentLang === 'zh' && window._i18nObserver) {
+    window._i18nObserver.disconnect();
+    window._i18nObserver = null;
+    location.reload();
+  }
 }
 
 function translateText(text) {
@@ -312,21 +338,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (currentLang === 'en') {
     translateDOMNode(document.body);
     
-    // Use MutationObserver to catch dynamically added content (like calendar, analysis results)
-    const observer = new MutationObserver((mutations) => {
-      observer.disconnect(); // Prevent infinite loop during translation
+    // Use MutationObserver to catch dynamically added content
+    window._i18nObserver = new MutationObserver((mutations) => {
+      window._i18nObserver.disconnect();
       mutations.forEach(mutation => {
         if (mutation.type === 'childList') {
           mutation.addedNodes.forEach(translateDOMNode);
-        } else if (mutation.type === 'characterData') {
-          let text = mutation.target.nodeValue;
-          let translated = translateText(text);
-          if (translated !== text) mutation.target.nodeValue = translated;
         }
       });
-      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+      window._i18nObserver.observe(document.body, { childList: true, subtree: true });
     });
-    
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    window._i18nObserver.observe(document.body, { childList: true, subtree: true });
   }
 });

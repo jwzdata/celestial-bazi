@@ -2,15 +2,10 @@
 // 排盤計算核心
 // ============================
 
-// 引入 lunar-javascript
-// 假設我們在 index.html 中通過 script 標籤引入了 lunar-javascript
-
 function countWuXing(pillars) {
   let count = {'金':0,'木':0,'水':0,'火':0,'土':0};
   pillars.forEach(p => {
-    // 天干
     count[WX_GAN[p.gan]] += 1.5;
-    // 地支藏幹
     let cg = CANG_GAN[p.zhi];
     cg.forEach((g, i) => { count[WX_GAN[g]] += CG_WEIGHT[i]; });
   });
@@ -76,43 +71,25 @@ function pickItems(seed, arr, n) {
   return res;
 }
 
-function dayFortune(dayGZ_idx, xiElements, jiElements) {
-  let dGan = dayGZ_idx % 10, dZhi = dayGZ_idx % 12;
-  let dGanWX = WX_GAN[dGan], dZhiWX = WX_ZHI[dZhi];
-  let score = 0;
-  if (xiElements.includes(dGanWX)) score += 2;
-  if (xiElements.includes(dZhiWX)) score += 1.5;
-  if (jiElements.includes(dGanWX)) score -= 2;
-  if (jiElements.includes(dZhiWX)) score -= 1.5;
-  if (score >= 1.5) return 'ji';
-  if (score <= -1.5) return 'xiong';
-  return 'ping';
-}
-
 function getPillarsUsingLunar(year, month, day, hourIndex) {
-    // 因爲lunar要求精確的時間，我們用小時的中間值
-    const hourMap = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
-    const hour = hourMap[hourIndex];
-    
-    // 創建陽曆對象
-    const solar = Solar.fromYmdHms(year, month, day, hour, 0, 0);
-    // 獲取八字對象
-    const lunar = solar.getLunar();
-    const bazi = lunar.getEightChar();
-    
-    // 解析天干地支索引
-    const ganIdx = (str) => TG.indexOf(str);
-    const zhiIdx = (str) => DZ.indexOf(str);
-    
-    const yp = { gan: ganIdx(bazi.getYearGan()), zhi: zhiIdx(bazi.getYearZhi()) };
-    const mp = { gan: ganIdx(bazi.getMonthGan()), zhi: zhiIdx(bazi.getMonthZhi()) };
-    const dp = { gan: ganIdx(bazi.getDayGan()), zhi: zhiIdx(bazi.getDayZhi()) };
-    const hp = { gan: ganIdx(bazi.getTimeGan()), zhi: zhiIdx(bazi.getTimeZhi()) };
-    
-    return [yp, mp, dp, hp];
+  const hourMap = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
+  const hour = hourMap[hourIndex];
+
+  const solar = Solar.fromYmdHms(year, month, day, hour, 0, 0);
+  const lunar = solar.getLunar();
+  const bazi = lunar.getEightChar();
+
+  const ganIdx = (str) => TG.indexOf(str);
+  const zhiIdx = (str) => DZ.indexOf(str);
+
+  const yp = { gan: ganIdx(bazi.getYearGan()), zhi: zhiIdx(bazi.getYearZhi()) };
+  const mp = { gan: ganIdx(bazi.getMonthGan()), zhi: zhiIdx(bazi.getMonthZhi()) };
+  const dp = { gan: ganIdx(bazi.getDayGan()), zhi: zhiIdx(bazi.getDayZhi()) };
+  const hp = { gan: ganIdx(bazi.getTimeGan()), zhi: zhiIdx(bazi.getTimeZhi()) };
+
+  return [yp, mp, dp, hp];
 }
 
-// 導出供全局使用
 window.getPillarsUsingLunar = getPillarsUsingLunar;
 
 // 十神
@@ -128,4 +105,3 @@ function getShiShen(dayGan, otherGan) {
   let sameP = (dayGan % 2 === otherGan % 2);
   return SHI_SHEN_MAP[rel][sameP ? 0 : 1];
 }
-

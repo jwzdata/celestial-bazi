@@ -2,11 +2,18 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { getDb, initDb } = require('./_db');
+const { rateLimit } = require('./_rateLimit');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'bazi-secret-key-change-me-in-production';
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+
+  // Rate limit: 5 registrations per minute per IP
+  const limiter = rateLimit(req, { windowMs: 60000, max: 5 });
+  if (!limiter.success) {
+    return res.status(429).json({ error: '操作過於頻繁，請稍後再試' });
+  }
 
   const { username, password, ref } = req.body;
   if (!username || !password) return res.status(400).json({ error: '请填写完整信息' });

@@ -1,7 +1,7 @@
 :root{--accent:#f0d78c;--wood:#81c784;--fire:#ff9800;--earth:#ffc107;--metal:#e0e0e0;--water:#64b5f6}
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{background:linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);background-attachment:fixed;color:#fff;font-family:'Noto Serif SC',serif;overflow-x:hidden;min-height:100vh}
+body{background:linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);color:#fff;font-family:'Noto Serif SC',serif;overflow-x:hidden;min-height:100vh}
 ::-webkit-scrollbar{width:6px}
 ::-webkit-scrollbar-track{background:rgba(0,0,0,0.2)}
 ::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.3);border-radius:3px}
@@ -110,10 +110,19 @@ select.input-field option{background:#16213e;color:#fff}
 /* 响应式 */
 @media(max-width:768px){
 .pillar-gan,.pillar-zhi{font-size:2rem}
-.cal-day{min-height:70px;padding:6px 4px}
-.cal-day .day-score{width:26px;height:26px;font-size:.6rem;top:-6px;right:-6px}
-.cal-day .day-shishen{font-size:.55rem}
-.month-tab{padding:6px 12px;font-size:.75rem}
+.cal-day{min-height:65px;padding:4px 3px}
+.cal-day .day-num{font-size:.75rem}
+.cal-day .day-score{width:22px;height:22px;font-size:.5rem;top:-5px;right:-5px}
+.cal-day .day-shishen{font-size:.45rem;padding:1px 0}
+.month-tab{padding:5px 10px;font-size:.7rem}
+}
+@media(max-width:480px){
+.cal-day{min-height:55px;padding:3px 2px}
+.cal-day .day-num{font-size:.65rem}
+.cal-day .day-score{width:20px;height:20px;font-size:.45rem;top:-4px;right:-4px}
+.cal-day .day-shishen{display:none}
+.pillar-gan,.pillar-zhi{font-size:1.6rem}
+.pillar-card{padding:12px 8px}
 }
 @media(prefers-reduced-motion:reduce){
 .reveal{opacity:1;transform:none;transition:none}

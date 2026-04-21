@@ -128,9 +128,25 @@ function logout() {
 
 function copyRef() {
   const input = document.getElementById('refLink');
-  input.select();
-  document.execCommand('copy');
-  alert('推廣鏈接已複製！發送給好友，好友訂閱您將獲得 30% 佣金。');
+  const text = input.value;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('推廣鏈接已複製！發送給好友，好友訂閱您將獲得 30% 佣金。');
+    }).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+    alert('推廣鏈接已複製！發送給好友，好友訂閱您將獲得 30% 佣金。');
+  }
+}
+function fallbackCopy(text) {
+  const tmp = document.createElement('textarea');
+  tmp.value = text;
+  tmp.style.position = 'fixed';
+  tmp.style.opacity = '0';
+  document.body.appendChild(tmp);
+  tmp.select();
+  try { document.execCommand('copy'); } catch(_) {}
+  tmp.remove();
 }
 
 // 支付邏輯
