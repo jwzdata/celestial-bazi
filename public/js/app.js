@@ -722,10 +722,17 @@ function showFeature(feature) {
     if (Array.isArray(xi)) xi = xi[0];
     if (Array.isArray(yong)) yong = yong[0];
     document.getElementById('numXiYong').textContent = `喜${xi}用${yong}`;
+  } else if (feature === 'aiReport') {
+    document.getElementById('aiReportIntro').classList.remove('hidden');
+    document.getElementById('aiReportGenerating').classList.add('hidden');
+    document.getElementById('aiReportResult').classList.add('hidden');
+    document.getElementById('aiProgress').style.width = '0%';
   }
   
   if (feature === 'dayun') {
     renderDaYun();
+  } else if (feature === 'wealth') {
+    renderWealth();
   }
   
   showModal(feature + 'Modal');
@@ -812,6 +819,168 @@ function renderDaYun() {
   });
 
   container.innerHTML = html || '<p class="text-center text-accent/50 text-sm">請先進行排盤分析</p>';
+}
+
+function renderWealth() {
+  if (!baziResult) return;
+  const container = document.getElementById('wealthContent');
+  
+  // 找出財星五行 (克日主的五行爲財星)
+  const dayWX = baziResult.dayGanWX;
+  let wealthWX = '';
+  if (dayWX === '金') wealthWX = '木';
+  if (dayWX === '木') wealthWX = '土';
+  if (dayWX === '水') wealthWX = '火';
+  if (dayWX === '火') wealthWX = '金';
+  if (dayWX === '土') wealthWX = '水';
+
+  const wealthCount = baziResult.wxCount[wealthWX] || 0;
+  
+  // 判斷財庫 (辰戌丑未)
+  const kuList = ['辰', '戌', '丑', '未'];
+  let myKu = [];
+  baziResult.pillars.forEach(p => {
+    let zhi = DZ[p.zhi];
+    if (kuList.includes(zhi)) {
+      myKu.push(zhi);
+    }
+  });
+
+  // 計算財富指數 (滿分100)
+  let score = 60; // 基礎分
+  if (wealthCount > 0) score += 15;
+  if (wealthCount > 1) score += 10;
+  score += myKu.length * 5;
+  
+  // 身強能擔財，身弱財多反累
+  if (baziResult.isStrong && wealthCount > 0) score += 10;
+  if (!baziResult.isStrong && wealthCount > 2) score -= 10;
+  
+  score = Math.min(99, Math.max(40, score)); // 限制在40-99之間
+
+  let levelText = score >= 85 ? '大富之命' : (score >= 70 ? '中富之命' : '小富安康');
+  let levelColor = score >= 85 ? 'text-fire' : 'text-accent';
+
+  let kuHtml = '';
+  if (myKu.length > 0) {
+    kuHtml = `您的命局自帶財庫：<span class="font-bold text-earth">${myKu.join('、')}</span>，擅長守財，晚年易有豐厚積累。`;
+  } else {
+    kuHtml = `您的命局暫無明現財庫，建議養成儲蓄習慣，或通過購置固定資產來守住財富。`;
+  }
+
+  // 生成投資建議
+  let advice = '';
+  if (wealthWX === '金') advice = '適合金融、五金、汽車、珠寶等行業。投資偏向穩健的理財產品。';
+  if (wealthWX === '木') advice = '適合教育、文化、林業、醫療等行業。投資可考慮長期持有的資產。';
+  if (wealthWX === '水') advice = '適合物流、貿易、互聯網、餐飲等流動性強的行業。求財需靈活應變。';
+  if (wealthWX === '火') advice = '適合科技、互聯網、電力、美業等行業。投資眼光獨到，適合新興領域。';
+  if (wealthWX === '土') advice = '適合房地產、農業、建築、礦產等實體行業。投資以固定資產爲佳。';
+
+  let html = `
+    <div class="text-center mb-6">
+      <div class="inline-block relative">
+        <svg width="120" height="120" viewBox="0 0 120 120" class="transform -rotate-90">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="8"></circle>
+          <circle cx="60" cy="60" r="50" fill="none" stroke="var(--fire)" stroke-width="8" stroke-dasharray="${score * 3.14} 400"></circle>
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+          <span class="text-3xl font-bold ${levelColor}">${score}</span>
+          <span class="text-[10px] text-accent/50">財富指數</span>
+        </div>
+      </div>
+      <div class="mt-2 text-sm font-bold ${levelColor}">${levelText}</div>
+    </div>
+
+    <div class="bg-black/20 p-4 rounded-xl mb-4 border border-accent/10">
+      <h4 class="text-accent text-sm font-bold mb-2"><i class="fas fa-search-dollar mr-2"></i>財星解析</h4>
+      <p class="text-xs text-accent/80 leading-relaxed mb-2">您的財星五行爲：<span class="font-bold text-accent" style="color:${WX_COLORS[wealthWX]}">${wealthWX}</span>。命局中財星數量為 ${Math.round(wealthCount)}。</p>
+      <p class="text-xs text-accent/80 leading-relaxed">${baziResult.isStrong ? '您屬於「身強」能擔財，只要努力打拼，多能獲得豐厚回報。' : '您屬於「身弱」，求財不宜貪大求快，適合團隊合作或借力打力。'}</p>
+    </div>
+
+    <div class="bg-black/20 p-4 rounded-xl mb-4 border border-accent/10">
+      <h4 class="text-accent text-sm font-bold mb-2"><i class="fas fa-box-open mr-2"></i>財庫分析</h4>
+      <p class="text-xs text-accent/80 leading-relaxed">${kuHtml}</p>
+    </div>
+
+    <div class="bg-black/20 p-4 rounded-xl border border-accent/10">
+      <h4 class="text-accent text-sm font-bold mb-2"><i class="fas fa-chart-line mr-2"></i>求財方向</h4>
+      <p class="text-xs text-accent/80 leading-relaxed">${advice}</p>
+    </div>
+  `;
+
+  container.innerHTML = html;
+}
+
+function generateAiReport() {
+  document.getElementById('aiReportIntro').classList.add('hidden');
+  document.getElementById('aiReportGenerating').classList.remove('hidden');
+  
+  let progress = 0;
+  let pBar = document.getElementById('aiProgress');
+  let tText = document.getElementById('aiTypingText');
+  
+  let texts = [
+    '正在讀取八字天干地支能量...',
+    '分析大運流年走向...',
+    '測算事業財富軌跡...',
+    '推演婚姻感情歸宿...',
+    '加載專屬改運方案...',
+    '報告生成即將完成...'
+  ];
+  
+  let intv = setInterval(() => {
+    progress += Math.random() * 15;
+    if (progress > 95) progress = 95;
+    pBar.style.width = progress + '%';
+    tText.textContent = texts[Math.floor(progress / 20)] || texts[5];
+  }, 500);
+
+  setTimeout(() => {
+    clearInterval(intv);
+    pBar.style.width = '100%';
+    tText.textContent = '生成完畢！';
+    
+    setTimeout(() => {
+      document.getElementById('aiReportGenerating').classList.add('hidden');
+      document.getElementById('aiReportResult').classList.remove('hidden');
+      renderAiReportContent();
+    }, 500);
+  }, 4000);
+}
+
+function renderAiReportContent() {
+  const container = document.getElementById('aiReportContent');
+  const dWX = baziResult.dayGanWX;
+  const isS = baziResult.isStrong;
+  
+  // 模擬長篇報告
+  let html = `
+    <h4 class="text-lg font-serif text-accent font-bold mb-4 border-b border-accent/20 pb-2">一、 命局總評</h4>
+    <p>您的日主為${dWX}，生於${DZ[baziResult.monthZhi]}月。整體命局屬於${isS ? '身強' : '身弱'}之格。此命格最大的特點在於其內在的韌性與潛力。${isS ? '您天生具備較強的抗壓能力與獨立精神，適合開創性的工作。' : '您善於借力打力，心思細膩，適合在團隊中發揮核心協調作用。'}</p>
+    
+    <h4 class="text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2">二、 財運與事業剖析</h4>
+    <p>從財庫與大運走勢來看，您的財富積累屬於“${baziResult.wxCount['金'] > 1 ? '爆發型' : '穩健型'}”。在未來的3-5年內，將會迎來一波較為明顯的事業上升期。建議在處理財務時，多聽取專業人士意見，避免盲目跟風。</p>
+    <p class="mt-2"><strong>事業方向建議：</strong> 您的喜用神為 ${baziResult.xiYong.yong}，非常適合從事與之相關的行業。在職場中，您容易遇到貴人提攜，但需注意防範小人嫉妒。</p>
+
+    <h4 class="text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2">三、 婚姻與感情歸宿</h4>
+    <p>您的感情觀較為${isS ? '主動且強勢' : '被動且細膩'}。命盤顯示，您的正緣出現在${Math.random() > 0.5 ? '東方或東南方' : '西方或西北方'}。婚姻生活中，需多注意溝通方式，避免因固執己見而產生不必要的摩擦。</p>
+    
+    <h4 class="text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2">四、 專屬改運指導</h4>
+    <ul class="list-disc pl-5 space-y-2">
+      <li><strong>色彩開運：</strong> 多穿戴 ${LUCKY_DATA[baziResult.xiYong.yong].colors.join('、')} 色的服飾。</li>
+      <li><strong>方位選擇：</strong> 床頭或辦公桌宜朝向 ${LUCKY_DATA[baziResult.xiYong.yong].dir}。</li>
+      <li><strong>日常建議：</strong> 保持規律作息，適當佩戴 ${DRESS_COLORS[baziResult.xiYong.yong].acc[0]} 等飾品以增強自身氣場。</li>
+    </ul>
+    
+    <div class="mt-6 p-4 bg-accent/10 rounded-lg text-xs text-accent/60">
+      <i class="fas fa-lock mr-2"></i> 完整版萬字報告（包含未來20年逐年流年精批）已解鎖。
+    </div>
+  `;
+  container.innerHTML = html;
+}
+
+function downloadAiReport() {
+  alert('正在生成 PDF，請稍候... (此為演示功能)');
 }
 
 function calculateHehun() {

@@ -170,6 +170,27 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
       <h3 class="font-serif text-sm font-bold text-accent">大師一對一親算</h3>
       <p class="text-[10px] text-accent/50 mt-1">深度解析答疑解惑</p>
     </div>
+
+    <!-- AI 深度命理報告 -->
+    <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all relative overflow-hidden" onclick="showFeature('aiReport')">
+      <div class="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      <div class="w-12 h-12 rounded-full bg-accent/20 text-accent flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform relative">
+        <div class="absolute inset-0 rounded-full border-2 border-accent/50 animate-ping opacity-50"></div>
+        <i class="fas fa-robot text-xl"></i>
+      </div>
+      <h3 class="font-serif text-sm font-bold text-accent">AI 深度命理報告</h3>
+      <p class="text-[10px] text-accent/50 mt-1">萬字長文 終生運程</p>
+      <div class="absolute top-0 right-0 bg-fire text-white text-[8px] px-2 py-0.5 rounded-bl-lg font-bold">HOT</div>
+    </div>
+
+    <!-- 一生財富白皮書 -->
+    <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('wealth')">
+      <div class="w-12 h-12 rounded-full bg-earth/20 text-earth flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+        <i class="fas fa-coins text-xl"></i>
+      </div>
+      <h3 class="font-serif text-sm font-bold text-accent">一生財富白皮書</h3>
+      <p class="text-[10px] text-accent/50 mt-1">財庫分析 暴富指南</p>
+    </div>
   </div>
 </section>
 
@@ -681,6 +702,64 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
       </div>
     </div>
     <p class="text-center text-xs text-accent/60">微信號：<span class="font-mono text-accent select-all">master_bazi_123</span></p>
+  </div>
+
+  <!-- AI 深度報告彈窗 -->
+  <div id="aiReportModal" class="glass-card p-8 w-full max-w-lg hidden relative mx-4 bg-[#16213e] flex flex-col items-center">
+    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent z-10"><i class="fas fa-times"></i></button>
+    <div class="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mb-4 relative">
+      <div class="absolute inset-0 rounded-full border border-accent animate-ping opacity-50"></div>
+      <i class="fas fa-robot text-3xl text-accent"></i>
+    </div>
+    <h3 class="font-serif text-2xl text-accent mb-2 text-center">AI 深度命理報告</h3>
+    <p class="text-xs text-accent/60 text-center mb-6">基於千億參數玄學大模型，為您生成專屬運程報告</p>
+    
+    <div id="aiReportIntro" class="w-full">
+      <div class="bg-black/20 p-4 rounded-xl mb-6 border border-accent/10">
+        <ul class="space-y-3 text-sm text-accent/80">
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>萬字詳批，覆蓋一生起伏</span></li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>事業/財運/婚姻/健康全方位解析</span></li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>精確到每年的流年重大事件預測</span></li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>專屬改運化解指導方案</span></li>
+        </ul>
+      </div>
+      <div class="flex justify-between items-center bg-accent/10 p-4 rounded-lg mb-6">
+        <div class="text-sm text-accent">限時特惠價</div>
+        <div class="text-2xl font-bold text-fire">¥19.9 <span class="text-xs text-accent/50 line-through">¥99.0</span></div>
+      </div>
+      <button onclick="generateAiReport()" class="btn-primary w-full animate-pulse" id="btnGenAi"><i class="fas fa-unlock-alt mr-2"></i>立即解鎖報告</button>
+    </div>
+
+    <div id="aiReportGenerating" class="hidden w-full text-center py-8">
+      <div class="inline-block relative w-20 h-20 mb-4">
+        <div class="absolute inset-0 border-2 border-accent/20 rounded-full"></div>
+        <div class="absolute inset-0 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
+        <div class="absolute inset-0 flex items-center justify-center text-accent"><i class="fas fa-brain text-2xl"></i></div>
+      </div>
+      <p class="text-sm text-accent font-bold mb-2">AI 模型正在深度推演...</p>
+      <p class="text-xs text-accent/60" id="aiTypingText">正在讀取八字天干地支能量...</p>
+      <div class="w-full bg-black/30 h-2 rounded-full mt-4 overflow-hidden">
+        <div class="bg-accent h-full w-0 transition-all duration-200" id="aiProgress"></div>
+      </div>
+    </div>
+
+    <div id="aiReportResult" class="hidden w-full h-[50vh] overflow-y-auto mt-4 pr-2 custom-scrollbar text-left">
+      <div class="text-sm text-accent/80 leading-relaxed space-y-4" id="aiReportContent">
+        <!-- AI 報告內容 -->
+      </div>
+      <button onclick="downloadAiReport()" class="btn-primary w-full mt-6"><i class="fas fa-download mr-2"></i>下載 PDF 版報告</button>
+    </div>
+  </div>
+
+  <!-- 一生財富白皮書彈窗 -->
+  <div id="wealthModal" class="glass-card p-6 w-full max-w-md hidden relative mx-4 bg-[#16213e]">
+    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent z-10"><i class="fas fa-times"></i></button>
+    <h3 class="font-serif text-2xl text-accent mb-2 text-center">一生財富白皮書</h3>
+    <p class="text-xs text-accent/60 text-center mb-6">解析命局財庫，尋找屬於你的暴富密碼</p>
+    
+    <div id="wealthContent" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+      <!-- 动态填充 -->
+    </div>
   </div>
 
 </div>
