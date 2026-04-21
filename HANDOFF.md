@@ -11,7 +11,7 @@
 | **名称** | Celestial Bazi（星曜命理） |
 | **技术栈** | 纯前端（HTML/CSS/JS）+ Vercel Serverless API + Turso 云数据库 |
 | **GitHub** | `https://github.com/jwzdata/celestial-bazi` |
-| **生产环境** | 部署在 Vercel，每次 push 到 main 自动部署 |
+| **生产环境** | 部署在 Vercel + Netlify，每次 push 到 main 自动部署 |
 | **数据库** | Turso 云 SQLite（libsql） |
 
 ### 功能
@@ -113,10 +113,12 @@ JWT_SECRET=你的密钥
 ### 第四步：本地启动
 
 ```powershell
-vercel dev
+npm run dev
 ```
 
-首次运行会要求登录 Vercel 账号，按提示操作即可。
+> 使用 Vercel CLI（`vercel dev`）或 Netlify CLI（`npm run netlify:dev`）均可。
+
+首次运行 Vercel CLI 会要求登录，按提示操作即可。
 
 启动成功后访问 `http://localhost:3000`。
 
@@ -140,13 +142,15 @@ celestial-bazi/
 │   ├── index.html       ← 主页面
 │   ├── css/style.css    ← 样式
 │   └── js/              ← 前端 JS（app.js / bazi.js / data.js / auth.js / i18n.js）
-├── api/                 ← 后端 API（Vercel Serverless Functions）
+├── api/                 ← 后端 API（Vercel Serverless Functions，Netlify 复用同一份代码）
 │   ├── _db.js           ← 数据库连接
 │   ├── register.js      ← 注册接口
 │   ├── login.js         ← 登录接口
 │   ├── user.js          ← 用户信息接口
 │   └── pay/             ← 支付相关
+├── netlify/functions/   ← Netlify Functions 适配层（薄 wrapper，引用 api/ 代码）
 ├── vercel.json          ← Vercel 配置
+├── netlify.toml         ← Netlify 配置
 └── package.json         ← 依赖声明
 ```
 
@@ -172,14 +176,15 @@ git commit -m "描述你做了什么"
 git push
 ```
 
-推送后 Vercel 会自动部署到生产环境（约 1-2 分钟）。
+推送后 Vercel 和 Netlify 都会自动部署到生产环境（约 1-2 分钟）。
 
 ---
 
 ## 常见问题
 
-### Q: `vercel dev` 启动失败
+### Q: `npm run dev` 启动失败
 确保 Vercel CLI 已安装（`npm install -g vercel`）且已登录（`vercel login`）。
+也可以用 Netlify CLI：`npm install -g netlify-cli`，然后 `npm run netlify:dev`。
 
 ### Q: 数据库连接失败
 检查 `.env` 中的 `TURSO_DATABASE_URL` 和 `TURSO_AUTH_TOKEN` 是否正确。
@@ -218,7 +223,7 @@ GitHub 已不支持密码登录，需要使用 Personal Access Token（PAT）：
    JWT_SECRET=（填入实际值）
    ```
 4. 安装 Vercel CLI（如果没有）：`npm install -g vercel`
-5. 启动本地开发服务：`vercel dev`
+5. 启动本地开发服务：`npm run dev`（或 `npm run netlify:dev`）
 6. 告诉我访问地址，我确认能否正常打开
 
 之后修改代码时，我会告诉你要改什么。改完后帮我执行：
@@ -230,4 +235,4 @@ git push
 
 ---
 
-_文档生成时间：2026-04-21_
+_文档生成时间：2026-04-21_ | _更新时间：2026-04-21_

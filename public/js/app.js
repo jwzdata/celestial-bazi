@@ -16,25 +16,12 @@ function renderPillars(pillars, dayGan) {
   pillars.forEach((p, i) => {
     let isDay = (i === 2);
     let ss = getShiShen(dayGan, p.gan);
-    let ny = NA_YIN[Math.floor(((p.gan % 10) * 12 + (p.zhi % 12)) / 2) % 30]; // 簡化納音
-    // 更準確的納音：用干支序號
-    let gzIdx = 0;
-    for (let g = 0; g < 10; g++) for (let z = 0; z < 12; z++) {
-      if (g === p.gan && z === p.zhi) break;
-      if (z === 11 && g !== p.gan) continue;
-      if (g === p.gan) { gzIdx = g * 12 + z; break; }
-      gzIdx++;
-    }
-    // 簡單方法：干支序號
-    gzIdx = p.gan * 6 + Math.floor(p.zhi / 2); // 不對...
-    // 正確方法：六十甲子序號
-    // 甲子=0, 乙丑=1, ... 
-    // gan和zhi必須同奇偶才能組合
+    // 六十甲子序號 → 納音
     let gz60 = -1;
     for (let k = 0; k < 60; k++) {
       if (k % 10 === p.gan && k % 12 === p.zhi) { gz60 = k; break; }
     }
-    ny = NA_YIN[Math.floor(gz60 / 2)];
+    let ny = NA_YIN[Math.floor(gz60 / 2)];
     
     let ganColor = WX_COLORS[WX_GAN[p.gan]];
     let zhiColor = WX_COLORS[WX_ZHI[p.zhi]];

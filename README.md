@@ -1,6 +1,6 @@
 # Celestial Bazi (星曜命理)
 
-A modern, commercial-ready Web Application for Bazi (Chinese Astrology) calculation, matchmaking, naming, and fortune analysis. Deployed on **Vercel** with **Turso** cloud database.
+A modern, commercial-ready Web Application for Bazi (Chinese Astrology) calculation, matchmaking, naming, and fortune analysis. Deployed on **Vercel** & **Netlify** with **Turso** cloud database.
 
 ## Features
 
@@ -29,7 +29,7 @@ celestial-bazi/
 │       ├── data.js         # Constants (Stems, Branches, Elements, etc.)
 │       ├── auth.js         # User System & Payment UI
 │       └── i18n.js         # Internationalization (zh/en)
-├── api/                    # Vercel Serverless Functions
+├── api/                    # Vercel Serverless Functions (shared by both platforms)
 │   ├── _db.js              # Shared Database Module (Turso/libsql)
 │   ├── register.js         # POST /api/register
 │   ├── login.js            # POST /api/login
@@ -37,7 +37,10 @@ celestial-bazi/
 │   └── pay/
 │       ├── create.js       # POST /api/pay/create
 │       └── mock-success.js # POST /api/pay/mock-success
+├── netlify/                # Netlify Functions Adapters
+│   └── functions/          # Thin wrappers reusing api/ logic
 ├── vercel.json             # Vercel Configuration
+├── netlify.toml            # Netlify Configuration
 ├── package.json            # Project Dependencies
 ├── .env.example            # Environment Variables Template
 └── README.md
@@ -58,44 +61,35 @@ celestial-bazi/
    ```bash
    cp .env.example .env
    ```
-4. Start development server (requires [Vercel CLI](https://vercel.com/docs/cli)):
-   ```bash
-   vercel dev
-   ```
+4. Start development server:
+   - **Vercel** (requires [Vercel CLI](https://vercel.com/docs/cli)):
+     ```bash
+     npm run dev
+     ```
+   - **Netlify** (requires [Netlify CLI](https://docs.netlify.com/cli/get-started/)):
+     ```bash
+     npm run netlify:dev
+     ```
 5. Open `http://localhost:3000` in your browser.
 
-## Deployment (Vercel + Turso)
+## Deployment
 
-### Prerequisites
+### Vercel
 
-- A [Vercel](https://vercel.com) account
-- A [Turso](https://turso.tech) account (free tier available)
+Push to GitHub and import in [Vercel Dashboard](https://vercel.com) — zero-config deployment.
 
-### Setup
+### Netlify
 
-1. **Create Turso database:**
-   ```bash
-   turso auth login
-   turso db create bazi
-   turso db show bazi --url      # Copy TURSO_DATABASE_URL
-   turso db tokens create bazi   # Copy TURSO_AUTH_TOKEN
-   ```
+Push to GitHub and import in [Netlify Dashboard](https://app.netlify.com) — `netlify.toml` handles all configuration.
 
-2. **Connect to Vercel:**
-   - Push code to GitHub
-   - Import repository in Vercel Dashboard
-   - No build configuration needed (zero-config)
+### Environment Variables (both platforms)
 
-3. **Set Environment Variables** in Vercel Dashboard → Settings → Environment Variables:
-
-   | Variable | Description |
-   |----------|-------------|
-   | `TURSO_DATABASE_URL` | Your Turso database URL |
-   | `TURSO_AUTH_TOKEN` | Your Turso auth token |
-   | `JWT_SECRET` | A random hex string for JWT signing |
-
-4. **Deploy** — Vercel will automatically build and deploy on each push.
+| Variable | Description |
+|----------|-------------|
+| `TURSO_DATABASE_URL` | Your Turso database URL |
+| `TURSO_AUTH_TOKEN` | Your Turso auth token |
+| `JWT_SECRET` | A random hex string for JWT signing |
 
 ## License
 
-MIT
+ISC

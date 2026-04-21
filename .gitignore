@@ -1,10 +1,20 @@
+# Dependencies
 node_modules/
-.DS_Store
-bazi.db
+
+# Environment
 .env
 *.log
-package-lock.json
-.vercel
 
-# Local Netlify folder
+# Database
+bazi.db
+
+# Lock file
+package-lock.json
+
+# Platform caches
+.vercel
 .netlify
+
+# OS
+.DS_Store
+Thumbs.db

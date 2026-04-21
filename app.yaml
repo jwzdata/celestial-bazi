@@ -1,8 +1,0 @@
-name: celestial-bazi
-app_id: da_KD4Iat7Uzddr
-owner: jwz123883
-package: .
-domains:
-- celestial-bazi.wasmer.app
-kind: wasmer.io/App.v0
-description: A modern, commercial-ready Bazi (Chinese Astrology) web application.

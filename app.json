@@ -1,8 +1,0 @@
-{
-  "name": "celestial-bazi",
-  "description": "A modern Bazi app",
-  "repository": "https://github.com/jwzdata/celestial-bazi",
-  "env": {
-    "NODE_ENV": "production"
-  }
-}
