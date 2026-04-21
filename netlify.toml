@@ -1,0 +1,40 @@
+[build]
+  publish = "public"
+  command = "npm install"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# 将 /api/* 路由代理到对应的 Netlify Function
+# 这样前端代码（auth.js 中的 /api/register 等）无需任何修改
+[[redirects]]
+  from = "/api/register"
+  to = "/.netlify/functions/register"
+  status = 200
+
+[[redirects]]
+  from = "/api/login"
+  to = "/.netlify/functions/login"
+  status = 200
+
+[[redirects]]
+  from = "/api/user"
+  to = "/.netlify/functions/user"
+  status = 200
+
+[[redirects]]
+  from = "/api/pay/create"
+  to = "/.netlify/functions/pay-create"
+  status = 200
+
+[[redirects]]
+  from = "/api/pay/mock-success"
+  to = "/.netlify/functions/pay-mock-success"
+  status = 200
+
+# 所有其他请求 fallback 到 index.html（SPA 支持）
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

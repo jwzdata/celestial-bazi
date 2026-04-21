@@ -5,7 +5,9 @@
   "main": "api/register.js",
   "scripts": {
     "start": "vercel dev",
-    "dev": "vercel dev"
+    "dev": "vercel dev",
+    "netlify:dev": "netlify dev",
+    "netlify:deploy": "netlify deploy --prod"
   },
   "dependencies": {
     "@libsql/client": "^0.17.2",
