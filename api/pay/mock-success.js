@@ -30,6 +30,9 @@ module.exports = async (req, res) => {
     });
     const order = orderRes.rows[0];
     if (!order) return res.status(400).json({ error: '订单无效或已支付' });
+    if (String(order.user_id) !== String(decoded.id)) {
+      return res.status(403).json({ error: '无权操作此订单' });
+    }
 
     // 更新订单状态
     await db.execute({

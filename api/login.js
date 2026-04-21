@@ -10,6 +10,9 @@ module.exports = async (req, res) => {
 
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ error: '请填写用户名和密码' });
+  if (username.length > 20 || password.length > 128) {
+    return res.status(400).json({ error: '输入过长' });
+  }
 
   try {
     await initDb();

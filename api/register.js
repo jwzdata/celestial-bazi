@@ -10,6 +10,12 @@ module.exports = async (req, res) => {
 
   const { username, password, ref } = req.body;
   if (!username || !password) return res.status(400).json({ error: '请填写完整信息' });
+  if (!/^[a-zA-Z0-9_]{2,20}$/.test(username)) {
+    return res.status(400).json({ error: '用户名需2-20位，仅支持字母、数字和下划线' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ error: '密码至少6位' });
+  }
 
   try {
     await initDb();
