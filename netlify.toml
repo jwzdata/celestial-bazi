@@ -4,8 +4,6 @@
 
 [functions]
   directory = "netlify/functions"
-  # zisi 对 CommonJS (require/module.exports) 更兼容
-  # esbuild 在处理 .cjs + external_node_modules + included_files 时容易出现运行时问题
   node_bundler = "zisi"
   included_files = ["api/**"]
 

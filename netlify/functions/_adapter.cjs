@@ -1,32 +1,23 @@
-// 通用适配器：将 Netlify Web Platform API 的 Request 转为 Vercel Express-style (req, res)
-// 这样可以零改动复用 api/ 目录下的所有 Vercel Serverless Functions
-
+// Netlify Functions v1 adapter: 将 Lambda event 转为 Vercel Express-style (req, res)
 function adapt(vercelHandler) {
-  return async (request, context) => {
+  return async (event, context) => {
+    // event.body 是 JSON 字符串（API Gateway）
     let body = {};
-    if (request.method !== 'GET' && request.method !== 'HEAD') {
-      try {
-        body = typeof request.json === 'function' ? await request.json() : (request.body || {});
-      } catch {}
+    if (event.body) {
+      try { body = JSON.parse(event.body); } catch {}
     }
 
-    // 构造 Express-style req
-    const rawUrl = request.url || '';
-    const fullUrl = rawUrl.startsWith('http') ? rawUrl : `https://placeholder${rawUrl}`;
     const req = {
-      method: request.method,
-      headers: request.headers instanceof Headers
-        ? Object.fromEntries(request.headers.entries())
-        : (request.headers || {}),
+      method: event.httpMethod || 'GET',
+      headers: event.headers || {},
       body,
-      query: Object.fromEntries(new URL(fullUrl).searchParams),
-      url: rawUrl,
+      query: event.queryStringParameters || {},
+      url: event.path || '/',
     };
 
     let statusCode = 200;
     let responseBody = {};
 
-    // 构造 Express-style res
     const res = {
       status(code) {
         statusCode = code;
@@ -50,10 +41,11 @@ function adapt(vercelHandler) {
       responseBody = { error: 'Internal server error' };
     }
 
-    return new Response(JSON.stringify(responseBody), {
-      status: statusCode,
+    return {
+      statusCode,
+      body: JSON.stringify(responseBody),
       headers: { 'Content-Type': 'application/json' },
-    });
+    };
   };
 }
 
