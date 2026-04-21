@@ -13,15 +13,17 @@ function adapt(vercelHandler) {
     }
 
     // 构造 Express-style req
+    const rawUrl = request.url || '';
+    const fullUrl = rawUrl.startsWith('http') ? rawUrl : `https://placeholder${rawUrl}`;
     const req = {
       method: request.method,
       headers: request.headers instanceof Headers
         ? Object.fromEntries(request.headers.entries())
         : (request.headers || {}),
       body,
-      query: Object.fromEntries(new URL(request.url).searchParams),
+      query: Object.fromEntries(new URL(fullUrl).searchParams),
       // 兼容一些写法
-      url: request.url,
+      url: rawUrl,
     };
 
     let statusCode = 200;
