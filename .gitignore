@@ -4,3 +4,4 @@ bazi.db
 .env
 *.log
 package-lock.json
+.vercel
