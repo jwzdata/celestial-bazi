@@ -144,6 +144,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
       <p class="text-[10px] text-accent/50 mt-1">帶二維碼分享</p>
     </div>
     
+    <!-- 每日運勢抽籤 -->
     <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('chouqian')">
       <div class="w-12 h-12 rounded-full bg-water/20 text-water flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
         <i class="fas fa-scroll text-xl"></i>
@@ -152,6 +153,17 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
       <p class="text-[10px] text-accent/50 mt-1">專屬打卡靈籤</p>
     </div>
 
+    <!-- 賽博擲筊 -->
+    <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all relative overflow-hidden" onclick="showFeature('zhijiao')">
+      <div class="w-12 h-12 rounded-full bg-[#c13a3a]/20 text-[#c13a3a] flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform relative">
+        <i class="fas fa-moon text-xl transform -rotate-45"></i>
+      </div>
+      <h3 class="font-serif text-sm font-bold text-[#c13a3a]">賽博擲筊</h3>
+      <p class="text-[10px] text-[#c13a3a]/60 mt-1">遇事不決 叩問神明</p>
+      <div class="absolute top-0 right-0 bg-[#c13a3a] text-white text-[8px] px-2 py-0.5 rounded-bl-lg font-bold">NEW</div>
+    </div>
+
+    <!-- 今日幸運數字 -->
     <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('luckynum')">
       <div class="w-12 h-12 rounded-full bg-wood/20 text-wood flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
         <i class="fas fa-ticket-alt text-xl"></i>
@@ -645,6 +657,35 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
         </div>
       </div>
       <button onclick="document.getElementById('qianTong').classList.remove('hidden');document.getElementById('qianResult').classList.add('hidden');" class="text-xs text-accent/50 hover:text-accent underline">重新抽籤</button>
+    </div>
+  </div>
+
+  <!-- 賽博擲筊彈窗 -->
+  <div id="zhijiaoModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#16213e] flex flex-col items-center">
+    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
+    <h3 class="font-serif text-2xl text-[#c13a3a] mb-2 text-center">賽博擲筊</h3>
+    <p class="text-xs text-accent/60 text-center mb-6">遇事不決，可問玄學。在心中默唸你的問題，點擊擲筊</p>
+    
+    <!-- 筊杯容器 -->
+    <div id="jiaoContainer" class="relative w-40 h-40 mx-auto mb-8 flex items-center justify-center gap-6 perspective-1000">
+      <!-- 左筊 -->
+      <div id="jiaoLeft" class="jiao-block jiao-left">
+          <div class="jiao-yin"></div>
+          <div class="jiao-yang"><span class="text-black/30 text-xs font-bold">平</span></div>
+      </div>
+      <!-- 右筊 -->
+      <div id="jiaoRight" class="jiao-block jiao-right">
+          <div class="jiao-yin"></div>
+          <div class="jiao-yang"><span class="text-black/30 text-xs font-bold">平</span></div>
+      </div>
+    </div>
+
+    <button onclick="tossZhijiao()" class="w-full py-3 bg-[#c13a3a] text-white rounded-xl font-bold hover:bg-[#a02c2c] transition-colors mb-4" id="btnToss"><i class="fas fa-hand-sparkles mr-2"></i>誠心擲筊</button>
+
+    <div id="zhijiaoResult" class="hidden w-full text-center">
+      <div class="font-serif text-3xl font-bold mb-2" id="zjTitle"></div>
+      <div class="text-sm text-accent/80 mb-4" id="zjDesc"></div>
+      <button onclick="resetZhijiao()" class="text-xs text-accent/50 hover:text-accent underline">重新擲筊</button>
     </div>
   </div>
 

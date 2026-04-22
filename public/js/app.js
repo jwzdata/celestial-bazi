@@ -727,6 +727,8 @@ function showFeature(feature) {
     document.getElementById('aiReportGenerating').classList.add('hidden');
     document.getElementById('aiReportResult').classList.add('hidden');
     document.getElementById('aiProgress').style.width = '0%';
+  } else if (feature === 'zhijiao') {
+    resetZhijiao();
   }
   
   if (feature === 'dayun') {
@@ -981,6 +983,83 @@ function renderAiReportContent() {
 
 function downloadAiReport() {
   alert('正在生成 PDF，請稍候... (此為演示功能)');
+}
+
+function tossZhijiao() {
+  const btn = document.getElementById('btnToss');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>神明感應中...';
+  document.getElementById('zhijiaoResult').classList.add('hidden');
+  
+  const jL = document.getElementById('jiaoLeft');
+  const jR = document.getElementById('jiaoRight');
+  
+  // 重置动画状态
+  jL.style.transform = '';
+  jR.style.transform = '';
+  
+  // 触发抛掷动画
+  const container = document.getElementById('jiaoContainer');
+  container.classList.remove('tossing');
+  void container.offsetWidth; // 触发重绘
+  container.classList.add('tossing');
+  
+  setTimeout(() => {
+    container.classList.remove('tossing');
+    
+    // 随机决定结果
+    // 0: 阴面（凸起）, 1: 阳面（平坦）
+    const resL = Math.random() > 0.5 ? 1 : 0;
+    const resR = Math.random() > 0.5 ? 1 : 0;
+    
+    // 加上随机的角度让落地看起来更自然
+    const rotZL = (Math.random() * 40 - 20) + 'deg';
+    const rotZR = (Math.random() * 40 - 20) + 'deg';
+    
+    // 阳面需要 rotateY(180deg)，阴面 rotateY(0deg)
+    jL.style.transform = `rotateY(${resL ? 180 : 0}deg) rotateZ(${rotZL})`;
+    jR.style.transform = `rotateY(${resR ? 180 : 0}deg) rotateZ(${rotZR})`;
+    
+    // 判断结果类型
+    let title = '';
+    let desc = '';
+    let color = '';
+    
+    if (resL !== resR) {
+      title = '聖杯 (允杯)';
+      desc = '一平一凸。神明表示贊同、允許、順利。這是一個非常好的兆頭，大膽去做吧！';
+      color = 'text-fire';
+    } else if (resL === 1 && resR === 1) {
+      title = '笑杯';
+      desc = '兩平面朝上。神明在笑，表示狀況不明朗、或者問題問得不清楚。建議換個方式再問一次。';
+      color = 'text-accent';
+    } else {
+      title = '陰杯 (怒杯)';
+      desc = '兩凸面朝上。神明表示不贊同、不合適、或者時機未到。建議三思而後行，不可強求。';
+      color = 'text-water';
+    }
+    
+    const resDiv = document.getElementById('zhijiaoResult');
+    document.getElementById('zjTitle').textContent = title;
+    document.getElementById('zjTitle').className = `font-serif text-3xl font-bold mb-2 ${color}`;
+    document.getElementById('zjDesc').textContent = desc;
+    
+    resDiv.classList.remove('hidden');
+    btn.innerHTML = '<i class="fas fa-hand-sparkles mr-2"></i>誠心擲筊';
+    btn.disabled = false;
+    
+  }, 800); // 等待 CSS 动画结束
+}
+
+function resetZhijiao() {
+  document.getElementById('zhijiaoResult').classList.add('hidden');
+  const jL = document.getElementById('jiaoLeft');
+  const jR = document.getElementById('jiaoRight');
+  const btn = document.getElementById('btnToss');
+  jL.style.transform = '';
+  jR.style.transform = '';
+  btn.innerHTML = '<i class="fas fa-hand-sparkles mr-2"></i>誠心擲筊';
+  btn.disabled = false;
 }
 
 function calculateHehun() {
