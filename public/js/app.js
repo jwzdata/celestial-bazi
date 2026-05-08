@@ -6,6 +6,27 @@ let calYear = new Date().getFullYear();
 let calMonth = new Date().getMonth(); // 0-indexed
 
 // ============================
+// 頁面過渡動畫
+// ============================
+function transitionSection(hideEl, showEl, callback) {
+  hideEl.classList.add('section-exit-active');
+  setTimeout(() => {
+    hideEl.classList.add('hidden');
+    hideEl.classList.remove('section-exit-active');
+    showEl.classList.remove('hidden');
+    showEl.classList.add('section-enter');
+    requestAnimationFrame(() => {
+      showEl.classList.remove('section-enter');
+      showEl.classList.add('section-enter-active');
+      setTimeout(() => {
+        showEl.classList.remove('section-enter-active');
+        if (callback) callback();
+      }, 500);
+    });
+  }, 300);
+}
+
+// ============================
 // UI 渲染
 // ============================
 
@@ -401,16 +422,21 @@ function analyze() {
   let formEl = document.getElementById('inputForm');
   let btnEl = document.getElementById('btnAnalyze');
   
-  const showError = (msg) => {
+  const showError = (msg, fieldId) => {
     errEl.textContent = msg;
     errEl.classList.remove('hidden');
     formEl.classList.remove('form-shake');
     void formEl.offsetWidth; // trigger reflow
     formEl.classList.add('form-shake');
+    if (fieldId) {
+      const field = document.getElementById(fieldId);
+      field.classList.add('input-error');
+      field.addEventListener('focus', () => field.classList.remove('input-error'), { once: true });
+    }
   };
-  
-  if (!dateVal) { showError('請選擇出生日期'); return; }
-  if (hourVal === '') { showError('請選擇出生時辰'); return; }
+
+  if (!dateVal) { showError('請選擇出生日期', 'inputDate'); return; }
+  if (hourVal === '') { showError('請選擇出生時辰', 'inputHour'); return; }
   errEl.classList.add('hidden');
   
   // 禁用按鈕防連點
@@ -436,8 +462,10 @@ function analyze() {
   let hourZhi = parseInt(hourVal);
   
   // 顯示加載
-  document.getElementById('heroSection').classList.add('hidden');
-  document.getElementById('loadingSection').classList.remove('hidden');
+  transitionSection(
+    document.getElementById('heroSection'),
+    document.getElementById('loadingSection')
+  );
   
   let msgs = ['正在推演天干地支...', '分析五行生剋...', '測算喜用神...', '生成運勢指南...'];
   let msgIdx = 0;
@@ -489,16 +517,23 @@ function analyze() {
     renderLucky();
     
     // 切換顯示
-    document.getElementById('loadingSection').classList.add('hidden');
-    document.getElementById('resultSection').classList.remove('hidden');
+    transitionSection(
+      document.getElementById('loadingSection'),
+      document.getElementById('resultSection'),
+      () => {
+        initScrollReveal();
+        // 移動端顯示底部導航
+        if (window.innerWidth < 768) {
+          document.getElementById('bottomNav').classList.remove('hidden');
+        }
+      }
+    );
     document.getElementById('btnReset').classList.remove('hidden');
     
     // 恢復按鈕狀態
     btnEl.disabled = false;
     btnEl.textContent = '開始解析';
-    
-    // 觸發滾動動畫
-    setTimeout(initScrollReveal, 100);
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, 1200);
 }
@@ -509,13 +544,14 @@ function analyze() {
 document.getElementById('btnAnalyze').addEventListener('click', analyze);
 
 document.getElementById('btnReset').addEventListener('click', () => {
-  document.getElementById('resultSection').classList.add('hidden');
-  document.getElementById('heroSection').classList.remove('hidden');
+  transitionSection(
+    document.getElementById('resultSection'),
+    document.getElementById('heroSection')
+  );
   document.getElementById('btnReset').classList.add('hidden');
   document.getElementById('btnAnalyze').disabled = false;
   document.getElementById('btnAnalyze').textContent = '開始解析';
-  
-  // 重置状态
+  document.getElementById('bottomNav').classList.add('hidden');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
@@ -558,8 +594,8 @@ function initScrollReveal() {
       }
     });
   }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-  
-  document.querySelectorAll('.reveal').forEach(el => {
+
+  document.querySelectorAll('.reveal, .reveal-left, .reveal-scale').forEach(el => {
     el.classList.remove('visible');
     observer.observe(el);
   });
@@ -637,7 +673,7 @@ async function copyTip() {
   const shareText = `【${tTitle} | ${tTag}】${tText} (${tSource})`;
   try {
     await navigator.clipboard.writeText(shareText);
-    alert(typeof translateText === 'function' ? translateText('已複製，可直接粘貼到朋友圈/社羣。') : '已複製，可直接粘貼到朋友圈/社羣。');
+    showToast(typeof translateText === 'function' ? translateText('已複製，可直接粘貼到朋友圈/社羣。') : '已複製，可直接粘貼到朋友圈/社羣。', 'success');
   } catch (e) {
     // Fallback: use temporary textarea
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -647,7 +683,7 @@ async function copyTip() {
     } else {
       fallbackCopy(shareText);
     }
-    alert(typeof translateText === 'function' ? translateText('已複製，可直接粘貼到朋友圈/社羣。') : '已複製，可直接粘貼到朋友圈/社羣。');
+    showToast(typeof translateText === 'function' ? translateText('已複製，可直接粘貼到朋友圈/社羣。') : '已複製，可直接粘貼到朋友圈/社羣。', 'success');
   }
 }
 function fallbackCopy(text) {
@@ -664,12 +700,90 @@ function fallbackCopy(text) {
 document.addEventListener('DOMContentLoaded', () => {
   initParticles();
   refreshTip();
-  
+  initBottomNav();
+  initModalSwipe();
+
   // 設置默認日期
   let today = new Date();
   let dateStr = today.toISOString().split('T')[0];
   document.getElementById('inputDate').value = dateStr;
 });
+
+// ============================
+// 底部導航
+// ============================
+function initBottomNav() {
+  const nav = document.getElementById('bottomNav');
+  if (!nav) return;
+
+  nav.querySelectorAll('.bottom-nav-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      nav.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const section = btn.dataset.section;
+      const targets = {
+        pillars: '#pillarGrid',
+        wuxing: '#wxChart',
+        calendar: '#calendarGrid',
+        features: '#premiumFeaturesGrid',
+        user: null
+      };
+
+      if (section === 'user') {
+        document.getElementById('btnUser').click();
+      } else if (targets[section]) {
+        const el = document.querySelector(targets[section]);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+}
+
+// ============================
+// 模態框觸摸下拉關閉
+// ============================
+function initModalSwipe() {
+  const container = document.getElementById('modalContainer');
+  if (!container) return;
+
+  let startY = 0, currentY = 0, isDragging = false;
+
+  container.addEventListener('touchstart', (e) => {
+    if (window.innerWidth > 640) return;
+    const panel = e.target.closest('.modal-panel');
+    if (!panel || panel.scrollTop > 0) return;
+    startY = e.touches[0].clientY;
+    isDragging = true;
+    panel.style.transition = 'none';
+  }, { passive: true });
+
+  container.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    currentY = e.touches[0].clientY;
+    const diff = currentY - startY;
+    if (diff > 0) {
+      const panel = container.querySelector('.modal-panel.active');
+      if (panel) panel.style.transform = `translateY(${diff}px)`;
+    }
+  }, { passive: true });
+
+  container.addEventListener('touchend', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    const diff = currentY - startY;
+    const panel = container.querySelector('.modal-panel.active');
+    if (panel) {
+      panel.style.transition = '';
+      if (diff > 120) {
+        closeModals();
+      } else {
+        panel.style.transform = '';
+      }
+    }
+    currentY = 0;
+  });
+}
 
 
 // ============================
@@ -688,7 +802,7 @@ function checkVipBeforeFeature() {
   //   return false;
   // }
   if (!baziResult) {
-    alert('請先在主頁輸入出生信息進行排盤分析！');
+    showToast('請先在主頁輸入出生信息進行排盤分析！', 'error');
     return false;
   }
   return true;
@@ -982,7 +1096,7 @@ function renderAiReportContent() {
 }
 
 function downloadAiReport() {
-  alert('正在生成 PDF，請稍候... (此為演示功能)');
+  showToast('正在生成 PDF，請稍候... (此為演示功能)');
 }
 
 function tossZhijiao() {
@@ -1067,7 +1181,7 @@ function calculateHehun() {
   const otherHour = document.getElementById('hehunHour').value;
   
   if (!otherDate || otherHour === "") {
-    alert('請選擇對方的出生日期和時辰');
+    showToast('請選擇對方的出生日期和時辰', 'error');
     return;
   }
   
@@ -1177,7 +1291,7 @@ const NAME_DICT = {
 
 function generateNames() {
   const ln = document.getElementById('lastName').value.trim();
-  if(!ln) return alert('請輸入姓氏');
+  if(!ln) return showToast('請輸入姓氏', 'error');
   
   const gender = document.getElementById('gender').value;
   const btn = document.querySelector('#qimingModal .btn-primary');

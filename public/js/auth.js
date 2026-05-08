@@ -38,13 +38,66 @@ async function initAuth() {
 
 // UI 控制
 function showModal(id) {
-  document.getElementById('modalContainer').classList.remove('hidden');
-  document.querySelectorAll('#modalContainer > div').forEach(el => el.classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
+  const container = document.getElementById('modalContainer');
+  const panels = container.querySelectorAll(':scope > div');
+
+  panels.forEach(el => {
+    el.classList.add('hidden');
+    el.classList.remove('active', 'modal-panel');
+  });
+
+  container.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    container.classList.add('active');
+    const target = document.getElementById(id);
+    target.classList.remove('hidden');
+    target.classList.add('modal-panel');
+    requestAnimationFrame(() => target.classList.add('active'));
+  });
+
+  document.addEventListener('keydown', _handleModalEscape);
+  container.addEventListener('click', _handleBackdropClick);
 }
 
 function closeModals() {
-  document.getElementById('modalContainer').classList.add('hidden');
+  const container = document.getElementById('modalContainer');
+  const activePanel = container.querySelector('.modal-panel.active');
+
+  if (activePanel) {
+    activePanel.classList.remove('active');
+    setTimeout(() => {
+      container.classList.remove('active');
+      setTimeout(() => {
+        container.classList.add('hidden');
+        activePanel.classList.add('hidden');
+        activePanel.classList.remove('modal-panel');
+      }, 300);
+    }, 300);
+  } else {
+    container.classList.remove('active');
+    container.classList.add('hidden');
+  }
+
+  document.removeEventListener('keydown', _handleModalEscape);
+  container.removeEventListener('click', _handleBackdropClick);
+}
+
+function _handleModalEscape(e) { if (e.key === 'Escape') closeModals(); }
+function _handleBackdropClick(e) { if (e.target === document.getElementById('modalContainer')) closeModals(); }
+
+// Toast notification system
+function showToast(message, type = 'info') {
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement('div');
+  toast.className = `toast${type !== 'info' ? ' toast-' + type : ''}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3100);
 }
 
 // 頭部按鈕點擊
@@ -96,7 +149,7 @@ document.getElementById('btnAuthSubmit').addEventListener('click', async () => {
   const password = document.getElementById('authPassword').value;
   const btn = document.getElementById('btnAuthSubmit');
   
-  if(!username || !password) return alert('請填寫用戶名和密碼');
+  if(!username || !password) return showToast('請填寫用戶名和密碼', 'error');
   
   btn.disabled = true;
   btn.textContent = '處理中...';
@@ -108,11 +161,11 @@ document.getElementById('btnAuthSubmit').addEventListener('click', async () => {
     
     const res = await apiFetch(endpoint, { method: 'POST', body: JSON.stringify(body) });
     localStorage.setItem('bazi_token', res.token);
-    alert(res.message);
+    showToast(res.message, 'success');
     closeModals();
     await initAuth();
   } catch (err) {
-    alert(err.message);
+    showToast(err.message, 'error');
   } finally {
     btn.disabled = false;
     toggleAuthMode();
@@ -131,11 +184,11 @@ function copyRef() {
   const text = input.value;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => {
-      alert('推廣鏈接已複製！發送給好友，好友訂閱您將獲得 30% 佣金。');
+      showToast('推廣鏈接已複製！發送給好友，好友訂閱您將獲得 30% 佣金。', 'success');
     }).catch(() => fallbackCopy(text));
   } else {
     fallbackCopy(text);
-    alert('推廣鏈接已複製！發送給好友，好友訂閱您將獲得 30% 佣金。');
+    showToast('推廣鏈接已複製！發送給好友，好友訂閱您將獲得 30% 佣金。', 'success');
   }
 }
 function fallbackCopy(text) {
@@ -177,24 +230,24 @@ async function createOrder() {
     // 實際項目中這裏會把 res.payUrl 生成二維碼顯示
     console.log('訂單已創建:', res);
   } catch (err) {
-    alert('訂單創建失敗：' + err.message);
+    showToast('訂單創建失敗：' + err.message, 'error');
   }
 }
 
 async function mockPaySuccess() {
-  if (!currentOrderId) return alert('訂單未生成');
+  if (!currentOrderId) return showToast('訂單未生成', 'error');
   try {
     const res = await apiFetch('/api/pay/mock-success', {
       method: 'POST',
       body: JSON.stringify({ orderId: currentOrderId })
     });
-    alert(res.message);
+    showToast(res.message, 'success');
     closeModals();
     await initAuth();
     // 重新觸發分析
     document.getElementById('btnAnalyze').click();
   } catch (err) {
-    alert(err.message);
+    showToast(err.message, 'error');
   }
 }
 

@@ -18,13 +18,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script>
-tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f0d78c','accent-d':'rgba(255, 215, 0, 0.2)',wood:'#81c784',fire:'#ff9800',earth:'#ffc107',metal:'#e0e0e0',water:'#64b5f6'},fontFamily:{serif:['Noto Serif SC','serif'],sans:['Noto Serif SC','serif']}}}}
+tailwind.config={theme:{extend:{colors:{bg:'#0d1117','bg-s':'#151b28','bg-e':'#222b3a',accent:'#f0d78c','accent-w':'#e6a857','accent-d':'rgba(255, 215, 0, 0.2)',wood:'#81c784',fire:'#ff9800',earth:'#ffc107',metal:'#e0e0e0',water:'#64b5f6'},fontFamily:{serif:['Noto Serif SC','serif'],sans:['Noto Sans SC','sans-serif']}}}}
 </script>
 <link rel="stylesheet" href="css/style.css">
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
-<body class="font-serif">
+<body class="font-sans">
 
 <!-- 背景裝飾 -->
 <div class="bg-blob blob-1"></div>
@@ -36,7 +36,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
 <div class="relative z-10">
 
 <!-- 頭部 -->
-<header class="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[#16213e]/70 border-b border-accent/10">
+<header class="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[#151b28]/80 border-b border-accent/10">
 <div class="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
   <div class="flex items-center gap-2">
     <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center">
@@ -102,19 +102,17 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
 <!-- 加載狀態 -->
 <section id="loadingSection" class="min-h-screen flex items-center justify-center hidden">
 <div class="text-center">
-  <div class="relative w-20 h-20 mx-auto mb-6">
-    <div class="absolute inset-0 border-2 border-accent/20 rounded-full"></div>
-    <div class="absolute inset-0 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
+  <div class="loading-orb mb-6">
     <div class="absolute inset-0 flex items-center justify-center font-serif text-accent font-bold text-xl">命</div>
   </div>
-  <p id="loadingText" class="text-sm text-accent/70 tracking-widest">正在推演天干地支...</p>
+  <p id="loadingText" class="text-sm text-accent/70 tracking-widest loading-text">正在推演天干地支...</p>
 </div>
 </section>
 
 
 <!-- 高級功能導航 (展示用) -->
 <section id="premiumFeatures" class="max-w-5xl mx-auto px-6 pt-12">
-  <div id="premiumFeaturesGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+  <div id="premiumFeaturesGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
     <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('dayun')">
       <div class="w-12 h-12 rounded-full bg-wood/20 text-wood flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
         <i class="fas fa-chart-line text-xl"></i>
@@ -486,7 +484,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
   <!-- 模態框容器 -->
 <div id="modalContainer" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/60 backdrop-blur-sm">
   <!-- 登錄/註冊框 -->
-  <div id="authModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#16213e]">
+  <div id="authModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#151b28]">
     <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-6 text-center" id="authTitle">用戶登錄</h3>
     <div class="space-y-4">
@@ -501,7 +499,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
   </div>
 
   <!-- 用戶中心框 -->
-  <div id="userModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#16213e]">
+  <div id="userModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#151b28]">
     <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-6 text-center">用戶中心</h3>
     <div class="space-y-4 text-sm text-accent/80">
@@ -521,7 +519,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
   </div>
 
   <!-- 支付框 -->
-  <div id="payModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#16213e]">
+  <div id="payModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#151b28]">
     <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">解鎖專業命盤</h3>
     <p class="text-xs text-accent/60 text-center mb-6">訂閱 1 個月 VIP，暢享無限次專業分析</p>
@@ -543,7 +541,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
     <p class="text-center text-xs text-accent/40 mt-4">請使用<span id="payMethodText">微信</span>掃碼支付</p>
   </div>
 <!-- 大運流年彈窗 -->
-  <div id="dayunModal" class="glass-card p-6 w-full max-w-2xl hidden relative mx-4 bg-[#16213e] max-h-[80vh] overflow-y-auto">
+  <div id="dayunModal" class="glass-card p-6 w-full max-w-2xl hidden relative mx-4 bg-[#151b28] max-h-[80vh] overflow-y-auto">
     <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent z-10"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">大運與流年測算</h3>
     <p class="text-xs text-accent/60 text-center mb-6">解析未來十年運勢起伏走向</p>
@@ -553,7 +551,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
   </div>
 
   <!-- 八字合婚彈窗 -->
-  <div id="hehunModal" class="glass-card p-6 w-full max-w-md hidden relative mx-4 bg-[#16213e]">
+  <div id="hehunModal" class="glass-card p-6 w-full max-w-md hidden relative mx-4 bg-[#151b28]">
     <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">八字合婚</h3>
     <p class="text-xs text-accent/60 text-center mb-6">輸入對方信息，測算五行契合度</p>
@@ -586,7 +584,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
   </div>
 
   <!-- 八字起名彈窗 -->
-  <div id="qimingModal" class="glass-card p-6 w-full max-w-md hidden relative mx-4 bg-[#16213e]">
+  <div id="qimingModal" class="glass-card p-6 w-full max-w-md hidden relative mx-4 bg-[#151b28]">
     <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">八字起名</h3>
     <p class="text-xs text-accent/60 text-center mb-6">結合命局喜用神，推薦開運美名</p>
@@ -632,7 +630,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
   </div>
   
   <!-- 抽籤彈窗 -->
-  <div id="chouqianModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#16213e] flex flex-col items-center">
+  <div id="chouqianModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#151b28] flex flex-col items-center">
     <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">今日專屬靈籤</h3>
     <p class="text-xs text-accent/60 text-center mb-6">心誠則靈，結合八字推演今日運勢</p>
@@ -661,7 +659,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
   </div>
 
   <!-- 賽博擲筊彈窗 -->
-  <div id="zhijiaoModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#16213e] flex flex-col items-center">
+  <div id="zhijiaoModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#151b28] flex flex-col items-center">
     <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-[#c13a3a] mb-2 text-center">賽博擲筊</h3>
     <p class="text-xs text-accent/60 text-center mb-6">遇事不決，可問玄學。在心中默唸你的問題，點擊擲筊</p>
@@ -690,7 +688,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
   </div>
 
   <!-- 幸運數字彈窗 -->
-  <div id="luckynumModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#16213e] flex flex-col items-center">
+  <div id="luckynumModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#151b28] flex flex-col items-center">
     <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">今日財富密碼</h3>
     <p class="text-xs text-accent/60 text-center mb-6">結合八字喜用神與流日干支生成</p>
@@ -710,7 +708,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
       <button onclick="generateLuckyNum()" class="text-xs text-accent/50 hover:text-accent underline">重新生成一組</button>
     </div>
   </div>
-  <div id="posterModal" class="glass-card p-6 w-full max-w-sm hidden relative mx-4 bg-[#16213e] flex flex-col items-center">
+  <div id="posterModal" class="glass-card p-6 w-full max-w-sm hidden relative mx-4 bg-[#151b28] flex flex-col items-center">
     <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-xl text-accent mb-4">長按保存圖片發朋友圈</h3>
     <div id="posterResult" class="w-full rounded-lg overflow-hidden shadow-2xl shadow-accent/20"></div>
@@ -718,7 +716,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
   </div>
 
   <!-- 大師親算彈窗 -->
-  <div id="consultModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#16213e] flex flex-col items-center">
+  <div id="consultModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#151b28] flex flex-col items-center">
     <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">大師一對一親算</h3>
     <p class="text-xs text-accent/60 text-center mb-6">資深命理師爲您深度答疑解惑</p>
@@ -746,7 +744,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
   </div>
 
   <!-- AI 深度報告彈窗 -->
-  <div id="aiReportModal" class="glass-card p-8 w-full max-w-lg hidden relative mx-4 bg-[#16213e] flex flex-col items-center">
+  <div id="aiReportModal" class="glass-card p-8 w-full max-w-lg hidden relative mx-4 bg-[#151b28] flex flex-col items-center">
     <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent z-10"><i class="fas fa-times"></i></button>
     <div class="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mb-4 relative">
       <div class="absolute inset-0 rounded-full border border-accent animate-ping opacity-50"></div>
@@ -793,7 +791,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
   </div>
 
   <!-- 一生財富白皮書彈窗 -->
-  <div id="wealthModal" class="glass-card p-6 w-full max-w-md hidden relative mx-4 bg-[#16213e]">
+  <div id="wealthModal" class="glass-card p-6 w-full max-w-md hidden relative mx-4 bg-[#151b28]">
     <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent z-10"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">一生財富白皮書</h3>
     <p class="text-xs text-accent/60 text-center mb-6">解析命局財庫，尋找屬於你的暴富密碼</p>
@@ -802,6 +800,32 @@ tailwind.config={theme:{extend:{colors:{bg:'#1a1a2e','bg-s':'#16213e',accent:'#f
       <!-- 动态填充 -->
     </div>
   </div>
+
+<!-- 底部標籤導航（移動端） -->
+<nav id="bottomNav" class="fixed bottom-0 left-0 right-0 z-50 hidden md:hidden">
+  <div class="bottom-nav-bar">
+    <button class="bottom-nav-item active" data-section="pillars">
+      <i class="fas fa-columns"></i>
+      <span>命盤</span>
+    </button>
+    <button class="bottom-nav-item" data-section="wuxing">
+      <i class="fas fa-circle-notch"></i>
+      <span>五行</span>
+    </button>
+    <button class="bottom-nav-item" data-section="calendar">
+      <i class="fas fa-calendar-alt"></i>
+      <span>日曆</span>
+    </button>
+    <button class="bottom-nav-item" data-section="features">
+      <i class="fas fa-th-large"></i>
+      <span>功能</span>
+    </button>
+    <button class="bottom-nav-item" data-section="user">
+      <i class="fas fa-user"></i>
+      <span>我的</span>
+    </button>
+  </div>
+</nav>
 
 </div>
 <script src="js/i18n.js"></script>
