@@ -71,26 +71,101 @@ function pickItems(seed, arr, n) {
   return res;
 }
 
-function getPillarsUsingLunar(year, month, day, hourIndex) {
-  const hourMap = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
-  const hour = hourMap[hourIndex];
+function getDayOfYear(year, month, day) {
+  const start = Date.UTC(year, 0, 0);
+  const current = Date.UTC(year, month - 1, day);
+  return Math.floor((current - start) / 86400000);
+}
 
-  const solar = Solar.fromYmdHms(year, month, day, hour, 0, 0);
+function getEquationOfTimeMinutes(year, month, day) {
+  const n = getDayOfYear(year, month, day);
+  const b = 2 * Math.PI * (n - 81) / 364;
+  return 9.87 * Math.sin(2 * b) - 7.53 * Math.cos(b) - 1.5 * Math.sin(b);
+}
+
+function parseTimeArg(timeArg) {
+  if (typeof timeArg === 'string') {
+    const [h, m] = timeArg.split(':').map(v => parseInt(v, 10));
+    return { hour: Number.isFinite(h) ? h : 12, minute: Number.isFinite(m) ? m : 0, source: 'time' };
+  }
+  const hourMap = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
+  const idx = Number.isFinite(Number(timeArg)) ? Number(timeArg) : 6;
+  return { hour: hourMap[idx] ?? 12, minute: 0, source: 'branch', hourIndex: idx };
+}
+
+function getTrueSolarDate(year, month, day, hour, minute, longitude = 120) {
+  const lng = Number.isFinite(Number(longitude)) ? Number(longitude) : 120;
+  const longitudeOffset = (lng - 120) * 4;
+  const equationOffset = getEquationOfTimeMinutes(year, month, day);
+  const totalOffset = longitudeOffset + equationOffset;
+  const utc = Date.UTC(year, month - 1, day, hour, minute, 0);
+  const date = new Date(utc + totalOffset * 60000);
+  return { date, longitudeOffset, equationOffset, totalOffset, longitude: lng };
+}
+
+function getHourIndexFromTime(hour, minute = 0) {
+  const total = hour * 60 + minute;
+  if (total >= 23 * 60 || total < 60) return 0;
+  return Math.floor((total - 60) / 120) + 1;
+}
+
+function pad2(n) { return String(n).padStart(2, '0'); }
+function formatDateTime(date) {
+  return `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}-${pad2(date.getUTCDate())} ${pad2(date.getUTCHours())}:${pad2(date.getUTCMinutes())}`;
+}
+function formatSignedMinutes(value) {
+  const sign = value >= 0 ? '+' : '-';
+  const abs = Math.abs(value);
+  const min = Math.floor(abs);
+  const sec = Math.round((abs - min) * 60);
+  return `${sign}${min}分${sec ? sec + '秒' : ''}`;
+}
+
+function getPillarsUsingLunar(year, month, day, timeArg = '12:00', longitude = 120) {
+  const parsed = parseTimeArg(timeArg);
+  const trueSolar = getTrueSolarDate(year, month, day, parsed.hour, parsed.minute, longitude);
+  const d = trueSolar.date;
+  const hourIndex = getHourIndexFromTime(d.getUTCHours(), d.getUTCMinutes());
+
+  const solar = Solar.fromYmdHms(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), 0);
   const lunar = solar.getLunar();
   const bazi = lunar.getEightChar();
 
   const ganIdx = (str) => TG.indexOf(str);
   const zhiIdx = (str) => DZ.indexOf(str);
+  const call = (obj, method, fallback) => (obj && typeof obj[method] === 'function') ? obj[method]() : fallback;
 
-  const yp = { gan: ganIdx(bazi.getYearGan()), zhi: zhiIdx(bazi.getYearZhi()) };
-  const mp = { gan: ganIdx(bazi.getMonthGan()), zhi: zhiIdx(bazi.getMonthZhi()) };
-  const dp = { gan: ganIdx(bazi.getDayGan()), zhi: zhiIdx(bazi.getDayZhi()) };
+  const yp = { gan: ganIdx(call(lunar, 'getYearGanExact', bazi.getYearGan())), zhi: zhiIdx(call(lunar, 'getYearZhiExact', bazi.getYearZhi())) };
+  const mp = { gan: ganIdx(call(lunar, 'getMonthGanExact', bazi.getMonthGan())), zhi: zhiIdx(call(lunar, 'getMonthZhiExact', bazi.getMonthZhi())) };
+  const dp = { gan: ganIdx(call(lunar, 'getDayGanExact', bazi.getDayGan())), zhi: zhiIdx(call(lunar, 'getDayZhiExact', bazi.getDayZhi())) };
   const hp = { gan: ganIdx(bazi.getTimeGan()), zhi: zhiIdx(bazi.getTimeZhi()) };
 
-  return [yp, mp, dp, hp];
+  const pillars = [yp, mp, dp, hp];
+  pillars.meta = {
+    inputTime: `${pad2(parsed.hour)}:${pad2(parsed.minute)}`,
+    trueSolarTime: `${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}`,
+    trueSolarDateTime: formatDateTime(d),
+    longitude: trueSolar.longitude,
+    longitudeOffset: trueSolar.longitudeOffset,
+    equationOffset: trueSolar.equationOffset,
+    totalOffset: trueSolar.totalOffset,
+    longitudeOffsetText: formatSignedMinutes(trueSolar.longitudeOffset),
+    equationOffsetText: formatSignedMinutes(trueSolar.equationOffset),
+    totalOffsetText: formatSignedMinutes(trueSolar.totalOffset),
+    hourIndex,
+    hourName: HOUR_BRANCH_NAMES[hourIndex],
+    hourRange: HOUR_BRANCH_RANGES[hourIndex],
+    solar,
+    lunar,
+    eightChar: bazi
+  };
+
+  return pillars;
 }
 
 window.getPillarsUsingLunar = getPillarsUsingLunar;
+window.getTrueSolarDate = getTrueSolarDate;
+window.getHourIndexFromTime = getHourIndexFromTime;
 
 // 十神
 function getShiShen(dayGan, otherGan) {

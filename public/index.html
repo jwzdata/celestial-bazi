@@ -69,27 +69,49 @@ tailwind.config={theme:{extend:{colors:{bg:'#0d1117','bg-s':'#151b28','bg-e':'#2
   <div id="inputForm" class="glass-card p-8 relative overflow-hidden">
     <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent/30 to-transparent"></div>
     <div class="space-y-5">
-      <div>
-        <label class="block text-xs text-accent/60 mb-2 tracking-wider">出生日期（公曆）</label>
-        <input type="date" id="inputDate" class="input-field" min="1900-01-01" max="2100-12-31">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs text-accent/60 mb-2 tracking-wider">出生日期（公曆）</label>
+          <input type="date" id="inputDate" class="input-field" min="1900-01-01" max="2100-12-31" autocomplete="bday">
+        </div>
+        <div>
+          <label class="block text-xs text-accent/60 mb-2 tracking-wider">出生時間（北京時）</label>
+          <input type="time" id="inputTime" class="input-field" value="12:00" autocomplete="bday-time">
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs text-accent/60 mb-2 tracking-wider">性別（用於起運）</label>
+          <select id="inputGender" class="input-field">
+            <option value="1">男</option>
+            <option value="0">女</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-accent/60 mb-2 tracking-wider">出生地</label>
+          <select id="inputCity" class="input-field">
+            <option value="116.4074">北京</option>
+            <option value="121.4737">上海</option>
+            <option value="113.2644">廣州</option>
+            <option value="114.0579">深圳</option>
+            <option value="104.0665">成都</option>
+            <option value="106.5516">重慶</option>
+            <option value="120.1551">杭州</option>
+            <option value="118.7969">南京</option>
+            <option value="114.3054">武漢</option>
+            <option value="108.9398">西安</option>
+            <option value="87.6168">烏魯木齊</option>
+            <option value="114.1694">香港</option>
+            <option value="121.5654">臺北</option>
+            <option value="103.8198">新加坡</option>
+            <option value="custom">自定義經度</option>
+          </select>
+        </div>
       </div>
       <div>
-        <label class="block text-xs text-accent/60 mb-2 tracking-wider">出生時辰</label>
-        <select id="inputHour" class="input-field">
-          <option value="">請選擇時辰</option>
-          <option value="0">子時（23:00 - 01:00）</option>
-          <option value="1">丑時（01:00 - 03:00）</option>
-          <option value="2">寅時（03:00 - 05:00）</option>
-          <option value="3">卯時（05:00 - 07:00）</option>
-          <option value="4">辰時（07:00 - 09:00）</option>
-          <option value="5">巳時（09:00 - 11:00）</option>
-          <option value="6">午時（11:00 - 13:00）</option>
-          <option value="7">未時（13:00 - 15:00）</option>
-          <option value="8">申時（15:00 - 17:00）</option>
-          <option value="9">酉時（17:00 - 19:00）</option>
-          <option value="10">戌時（19:00 - 21:00）</option>
-          <option value="11">亥時（21:00 - 23:00）</option>
-        </select>
+        <label class="block text-xs text-accent/60 mb-2 tracking-wider">出生地經度（東經）</label>
+        <input type="number" id="inputLongitude" class="input-field" value="116.4074" min="73" max="135" step="0.0001" inputmode="decimal">
+        <p class="text-[10px] text-accent/35 mt-2 leading-relaxed">用於真太陽時校正：經度差 + 均時差可能改變時辰邊界，出生時間越接近交界越重要。</p>
       </div>
       <div id="errorMsg" class="text-xs text-fire hidden"></div>
       <button id="btnAnalyze" class="btn-primary w-full mt-2">開始解析</button>
@@ -231,6 +253,20 @@ tailwind.config={theme:{extend:{colors:{bg:'#0d1117','bg-s':'#151b28','bg-e':'#2
     <h2 class="font-serif text-2xl font-700 mb-2 tracking-wide">您的八字命盤</h2>
     <p class="text-xs text-accent/50 mb-8">四柱八字 · 天干地支 · 十神納音</p>
     <div id="pillarGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+  </div>
+
+  <!-- 精確排盤參數 -->
+  <div class="reveal mb-16">
+    <h2 class="font-serif text-2xl font-700 mb-2 tracking-wide">精確排盤參數</h2>
+    <p class="text-xs text-accent/50 mb-8">真太陽時校正 · 經度時差 · 均時差</p>
+    <div id="precisionMetaGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+  </div>
+
+  <!-- 專業命理信息 -->
+  <div class="reveal mb-16">
+    <h2 class="font-serif text-2xl font-700 mb-2 tracking-wide">專業命理信息</h2>
+    <p class="text-xs text-accent/50 mb-8">命宮身宮 · 胎元旬空 · 神煞納音</p>
+    <div id="proInfoGrid" class="grid md:grid-cols-2 gap-4"></div>
   </div>
 
   <!-- 五行分析 -->

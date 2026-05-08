@@ -34,16 +34,29 @@ function renderPillars(pillars, dayGan) {
   const labels = ['年柱','月柱','日柱（命主）','時柱'];
   const grid = document.getElementById('pillarGrid');
   grid.innerHTML = '';
+  const eightChar = pillars.meta?.eightChar;
+  const naYinList = eightChar ? [
+    eightChar.getYearNaYin(),
+    eightChar.getMonthNaYin(),
+    eightChar.getDayNaYin(),
+    eightChar.getTimeNaYin()
+  ] : [];
+  const shiShenGanList = eightChar ? [
+    typeof eightChar.getYearShiShenGan === 'function' ? eightChar.getYearShiShenGan() : '',
+    typeof eightChar.getMonthShiShenGan === 'function' ? eightChar.getMonthShiShenGan() : '',
+    '日主',
+    typeof eightChar.getTimeShiShenGan === 'function' ? eightChar.getTimeShiShenGan() : ''
+  ] : [];
   pillars.forEach((p, i) => {
     let isDay = (i === 2);
-    let ss = getShiShen(dayGan, p.gan);
+    let ss = shiShenGanList[i] || getShiShen(dayGan, p.gan);
     // 六十甲子序號 → 納音
     let gz60 = -1;
     for (let k = 0; k < 60; k++) {
       if (k % 10 === p.gan && k % 12 === p.zhi) { gz60 = k; break; }
     }
-    let ny = NA_YIN[Math.floor(gz60 / 2)];
-    
+    let ny = naYinList[i] || NA_YIN[Math.floor(gz60 / 2)];
+
     let ganColor = WX_COLORS[WX_GAN[p.gan]];
     let zhiColor = WX_COLORS[WX_ZHI[p.zhi]];
     let cangGanHTML = CANG_GAN[p.zhi].map((g, ci) => {
@@ -67,6 +80,65 @@ function renderPillars(pillars, dayGan) {
     `;
     grid.appendChild(card);
   });
+}
+
+function renderPrecisionMeta() {
+  if (!baziResult?.precision) return;
+  const meta = baziResult.precision;
+  const grid = document.getElementById('precisionMetaGrid');
+  if (!grid) return;
+  const items = [
+    ['原始時間', meta.inputTime, '北京標準時間'],
+    ['真太陽時', meta.trueSolarTime, meta.trueSolarDateTime],
+    ['出生經度', `${meta.longitude.toFixed(4)}°E`, '東經'],
+    ['判定時辰', `${meta.hourName}`, meta.hourRange],
+    ['經度時差', meta.longitudeOffsetText, '相對東經120°'],
+    ['均時差', meta.equationOffsetText, '太陽視運動修正'],
+    ['總校正', meta.totalOffsetText, '經度 + 均時差'],
+    ['起運性別', baziResult.gender === 1 ? '男命' : '女命', '用於大運順逆']
+  ];
+  grid.innerHTML = items.map(([label, value, hint]) => `
+    <div class="precision-card glass-card p-4">
+      <div class="text-[10px] text-accent/40 tracking-widest mb-1">${label}</div>
+      <div class="font-serif text-lg text-accent font-bold">${value}</div>
+      <div class="text-[10px] text-accent/35 mt-1">${hint}</div>
+    </div>
+  `).join('');
+}
+
+function renderProInfo() {
+  if (!baziResult?.precision) return;
+  const meta = baziResult.precision;
+  const eightChar = meta.eightChar;
+  const lunar = meta.lunar;
+  const grid = document.getElementById('proInfoGrid');
+  if (!grid || !eightChar || !lunar) return;
+
+  const call = (obj, method, fallback = '') => (obj && typeof obj[method] === 'function') ? obj[method]() : fallback;
+  const naYin = [call(eightChar, 'getYearNaYin'), call(eightChar, 'getMonthNaYin'), call(eightChar, 'getDayNaYin'), call(eightChar, 'getTimeNaYin')].join(' · ');
+  const xunKong = [call(eightChar, 'getYearXunKong'), call(eightChar, 'getMonthXunKong'), call(eightChar, 'getDayXunKong'), call(eightChar, 'getTimeXunKong')].join(' · ');
+  const jiShen = call(lunar, 'getDayJiShen', []).slice(0, 8).join('、') || '—';
+  const xiongSha = call(lunar, 'getDayXiongSha', []).slice(0, 8).join('、') || '—';
+  const pengZu = `${call(lunar, 'getPengZuGan')}；${call(lunar, 'getPengZuZhi')}`;
+
+  const sections = [
+    ['命宮 / 身宮', `${call(eightChar, 'getMingGong')} / ${call(eightChar, 'getShenGong')}`, '命宮看先天格局，身宮看後天著力點。'],
+    ['胎元 / 胎元納音', `${call(eightChar, 'getTaiYuan')} / ${call(eightChar, 'getTaiYuanNaYin')}`, '補充四柱外的先天氣場。'],
+    ['四柱納音', naYin, '年、月、日、時納音。'],
+    ['四柱旬空', xunKong, '年、月、日、時旬空，日旬空尤其常用。'],
+    ['吉神宜趨', jiShen, '當日吉神參考。'],
+    ['凶煞宜忌', xiongSha, '當日凶煞參考。'],
+    ['彭祖百忌', pengZu, '日干日支忌諱參考。'],
+    ['時柱校正', `${meta.hourName}（${meta.trueSolarTime}）`, '按真太陽時重新判定。']
+  ];
+
+  grid.innerHTML = sections.map(([title, value, hint]) => `
+    <div class="glass-card p-5">
+      <div class="text-xs text-accent/50 mb-2 tracking-wider">${title}</div>
+      <div class="font-serif text-base text-accent/90 leading-relaxed">${value}</div>
+      <div class="text-[10px] text-accent/35 mt-2 leading-relaxed">${hint}</div>
+    </div>
+  `).join('');
 }
 
 function renderWuXing(wxCount) {
@@ -417,7 +489,9 @@ function renderLucky() {
 // ============================
 function analyze() {
   let dateVal = document.getElementById('inputDate').value;
-  let hourVal = document.getElementById('inputHour').value;
+  let timeVal = document.getElementById('inputTime').value;
+  let genderVal = document.getElementById('inputGender').value;
+  let longitudeVal = parseFloat(document.getElementById('inputLongitude').value);
   let errEl = document.getElementById('errorMsg');
   let formEl = document.getElementById('inputForm');
   let btnEl = document.getElementById('btnAnalyze');
@@ -436,7 +510,9 @@ function analyze() {
   };
 
   if (!dateVal) { showError('請選擇出生日期', 'inputDate'); return; }
-  if (hourVal === '') { showError('請選擇出生時辰', 'inputHour'); return; }
+  if (!timeVal) { showError('請選擇出生時間', 'inputTime'); return; }
+  if (!genderVal) { showError('請選擇性別', 'inputGender'); return; }
+  if (!Number.isFinite(longitudeVal) || longitudeVal < 73 || longitudeVal > 135) { showError('請輸入有效的中國/東亞經度（73-135）', 'inputLongitude'); return; }
   errEl.classList.add('hidden');
   
   // 禁用按鈕防連點
@@ -459,7 +535,7 @@ function analyze() {
 
   let parts = dateVal.split('-');
   let year = parseInt(parts[0]), month = parseInt(parts[1]), day = parseInt(parts[2]);
-  let hourZhi = parseInt(hourVal);
+  let gender = parseInt(genderVal, 10);
   
   // 顯示加載
   transitionSection(
@@ -478,9 +554,8 @@ function analyze() {
   
   setTimeout(() => {
     clearInterval(loadInterval);
-    // 排盤 (使用 lunar-javascript)
-    // Lunar.js 使用公曆日期，小時我們傳入中間值，或者不傳小時用默認
-    let pillars = window.getPillarsUsingLunar(year, month, day, hourZhi);
+    // 排盤：使用真太陽時校正後的時間
+    let pillars = window.getPillarsUsingLunar(year, month, day, timeVal, longitudeVal);
     let yp = pillars[0];
     let mp = pillars[1];
     let dp = pillars[2];
@@ -501,7 +576,9 @@ function analyze() {
       dayGan: dp.gan,
       dayGanWX: WX_GAN[dp.gan],
       monthZhi: mp.zhi,
-      isStrong: strength.isStrong
+      isStrong: strength.isStrong,
+      gender,
+      precision: pillars.meta
     };
     
     calYear = new Date().getFullYear();
@@ -509,6 +586,8 @@ function analyze() {
     
     // 渲染所有模塊
     renderPillars(pillars, dp.gan);
+    renderPrecisionMeta();
+    renderProInfo();
     renderWuXing(wxCount);
     renderStrength(dp.gan, mp.zhi, strength);
     renderTraits(dp.gan, strength.isStrong);
@@ -581,7 +660,11 @@ document.getElementById('calBackToday').addEventListener('click', () => {
 
 // 回車提交
 document.getElementById('inputDate').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
-document.getElementById('inputHour').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
+document.getElementById('inputTime').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
+document.getElementById('inputLongitude').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
+document.getElementById('inputCity').addEventListener('change', e => {
+  if (e.target.value !== 'custom') document.getElementById('inputLongitude').value = e.target.value;
+});
 
 // ============================
 // 滾動揭示動畫
@@ -855,83 +938,77 @@ function showFeature(feature) {
 }
 
 function renderDaYun() {
-  if (!baziResult) return;
+  if (!baziResult?.precision?.eightChar) return;
   const container = document.getElementById('dayunContent');
-  const parts = document.getElementById('inputDate').value.split('-');
-  const year = parseInt(parts[0]), month = parseInt(parts[1]), day = parseInt(parts[2]);
-  const hourZhi = parseInt(document.getElementById('inputHour').value);
-
-  // 使用 lunar-javascript 获取大运
-  const solar = Solar.fromYmdHms(year, month, day, [0,2,4,6,8,10,12,14,16,18,20,22][hourZhi], 0, 0);
-  const lunar = solar.getLunar();
-  const eightChar = lunar.getEightChar();
-  const yun = eightChar.getYun(1); // 1=顺排，根据性别和年干阴阳自动判断
-
+  const eightChar = baziResult.precision.eightChar;
+  const gender = baziResult.gender ?? 1;
+  const yun = eightChar.getYun(gender);
   const dayunList = yun.getDaYun();
   const today = new Date();
-  let html = '';
+  const currentYear = today.getFullYear();
+  const xiArr = [baziResult.xiYong.xi, baziResult.xiYong.yong].flat();
+  const jiArr = baziResult.xiYong.ji.flat();
 
-  dayunList.forEach((dy, idx) => {
+  let html = `
+    <div class="mb-4 p-4 rounded-xl bg-accent/5 border border-accent/10">
+      <div class="text-xs text-accent/50 mb-1">起運時間</div>
+      <div class="font-serif text-lg text-accent font-bold">${yun.getStartYear()}年 ${yun.getStartMonth()}月 ${yun.getStartDay()}日</div>
+      <div class="text-[10px] text-accent/35 mt-1">按${gender === 1 ? '男命' : '女命'}與年干陰陽推算大運順逆。</div>
+    </div>`;
+
+  dayunList.slice(1, 9).forEach((dy) => {
     const startYear = dy.getStartYear();
-    const endYear = startYear + 9;
+    const liuNianList = dy.getLiuNian();
+    const endYear = liuNianList.length ? liuNianList[liuNianList.length - 1].getYear() : startYear + 9;
     const ganZhi = dy.getGanZhi();
     const dGan = TG.indexOf(ganZhi.charAt(0));
     const dZhi = DZ.indexOf(ganZhi.charAt(1));
-    const dyWX = WX_GAN[dGan];
-
-    // 判断与喜用神的关系
-    const isXi = baziResult.xiYong.xi === dyWX || (Array.isArray(baziResult.xiYong.xi) && baziResult.xiYong.xi.includes(dyWX));
-    const isYong = baziResult.xiYong.yong === dyWX;
-    const isJi = baziResult.xiYong.ji.includes(dyWX);
-    const isFuture = startYear > today.getFullYear();
-    const isCurrent = startYear <= today.getFullYear() && endYear >= today.getFullYear();
+    const dyElements = [WX_GAN[dGan], WX_ZHI[dZhi]].filter(Boolean);
+    const isXi = dyElements.some(el => xiArr.includes(el));
+    const isJi = dyElements.some(el => jiArr.includes(el));
+    const isFuture = startYear > currentYear;
+    const isCurrent = startYear <= currentYear && endYear >= currentYear;
 
     let borderColor = 'border-accent/10', bgColor = 'bg-accent/5', textColor = 'text-accent';
     let fortuneLabel = '平';
-    if (isXi || isYong) { borderColor = 'border-wood/20'; bgColor = 'bg-wood/5'; textColor = 'text-wood'; fortuneLabel = '吉'; }
-    if (isYong) { fortuneLabel = '大吉'; }
-    if (isJi) { borderColor = 'border-fire/20'; bgColor = 'bg-fire/5'; textColor = 'text-fire'; fortuneLabel = '兇'; }
+    if (isXi) { borderColor = 'border-wood/20'; bgColor = 'bg-wood/5'; textColor = 'text-wood'; fortuneLabel = '吉'; }
+    if (isJi) { borderColor = 'border-fire/20'; bgColor = 'bg-fire/5'; textColor = 'text-fire'; fortuneLabel = '需慎'; }
 
     let tag = '';
     if (isCurrent) tag = '<span class="ml-2 px-2 py-0.5 rounded-full bg-accent/20 text-accent text-[10px] font-bold">當前</span>';
     else if (isFuture) tag = '<span class="ml-2 px-2 py-0.5 rounded-full bg-black/30 text-accent/50 text-[10px]">未來</span>';
 
-    let desc = '';
-    if (isXi || isYong) desc = `${ganZhi}大運，${dyWX}氣旺盛，正好是您的喜用神，運勢順遂，事業財運均有突破。`;
-    else if (isJi) desc = `${ganZhi}大運，${dyWX}氣偏旺，恰爲忌神，需注意防范風險，穩中求進。`;
-    else desc = `${ganZhi}大運，五行氣場平和，運勢穩定，適合積累沉淀。`;
+    const desc = isXi
+      ? `${ganZhi}大運，干支五行與喜用神呼應，整體更利於順勢發展。`
+      : isJi
+        ? `${ganZhi}大運，干支五行觸及忌神，宜保守布局，避免高風險決策。`
+        : `${ganZhi}大運，五行氣場中性，適合穩扎穩打、逐步積累。`;
 
-    // 生成流年概览（每步大运的10年）
-    let yearsHtml = '';
-    for (let y = startYear; y <= Math.min(endYear, startYear + 9); y++) {
-      const ySolar = Solar.fromYmd(y, month, day);
-      const yLunar = ySolar.getLunar();
-      const yBazi = yLunar.getEightChar();
-      const yDayGan = TG.indexOf(yBazi.getDayGan());
-      const yDayWX = WX_GAN[yDayGan];
+    const yearsHtml = liuNianList.slice(0, 10).map(ln => {
+      const lnGz = ln.getGanZhi();
+      const yGan = TG.indexOf(lnGz.charAt(0));
+      const yZhi = DZ.indexOf(lnGz.charAt(1));
+      const yElements = [WX_GAN[yGan], WX_ZHI[yZhi]].filter(Boolean);
       let yScore = 0;
-      const xiArr = [baziResult.xiYong.xi, baziResult.xiYong.yong].flat();
-      const jiArr = baziResult.xiYong.ji.flat();
-      if (xiArr.includes(yDayWX)) yScore += 2;
-      if (jiArr.includes(yDayWX)) yScore -= 2;
+      yElements.forEach(el => {
+        if (xiArr.includes(el)) yScore += 1;
+        if (jiArr.includes(el)) yScore -= 1;
+      });
       let yFortune = '平', yColor = 'text-accent', yBg = 'bg-black/20';
-      if (yScore >= 2) { yFortune = '吉'; yColor = 'text-wood'; yBg = 'bg-wood/20'; }
-      else if (yScore <= -2) { yFortune = '兇'; yColor = 'text-fire'; yBg = 'bg-fire/20'; }
-
-      yearsHtml += `<div class="${yBg} p-1 rounded ${yColor}">${y}<br>${yFortune}</div>`;
-    }
+      if (yScore > 0) { yFortune = '吉'; yColor = 'text-wood'; yBg = 'bg-wood/20'; }
+      else if (yScore < 0) { yFortune = '慎'; yColor = 'text-fire'; yBg = 'bg-fire/20'; }
+      return `<div class="${yBg} p-1 rounded ${yColor}">${ln.getYear()}<br>${lnGz}<br>${yFortune}</div>`;
+    }).join('');
 
     html += `
       <div class="p-4 border ${borderColor} ${bgColor} rounded-lg">
         <h4 class="font-bold ${textColor} text-sm mb-2">
           <i class="fas fa-${isCurrent ? 'arrow-up' : (isFuture ? 'arrow-right' : 'history')} mr-2"></i>
-          ${startYear} - ${endYear} (${ganZhi}大運)${tag}
+          ${dy.getStartAge()}歲起 · ${startYear} - ${endYear} (${ganZhi}大運)${tag}
         </h4>
         <p class="text-xs text-accent/70 leading-relaxed">${desc}</p>
         <div class="mt-3 grid grid-cols-5 gap-2 text-center text-[10px]">${yearsHtml}</div>
       </div>`;
-
-    if (idx >= 3) return; // 最多显示4步大运
   });
 
   container.innerHTML = html || '<p class="text-center text-accent/50 text-sm">請先進行排盤分析</p>';
