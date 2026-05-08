@@ -89,23 +89,8 @@ tailwind.config={theme:{extend:{colors:{bg:'#0d1117','bg-s':'#151b28','bg-e':'#2
         </div>
         <div>
           <label class="block text-xs text-accent/60 mb-2 tracking-wider">出生地</label>
-          <select id="inputCity" class="input-field">
-            <option value="116.4074">北京</option>
-            <option value="121.4737">上海</option>
-            <option value="113.2644">廣州</option>
-            <option value="114.0579">深圳</option>
-            <option value="104.0665">成都</option>
-            <option value="106.5516">重慶</option>
-            <option value="120.1551">杭州</option>
-            <option value="118.7969">南京</option>
-            <option value="114.3054">武漢</option>
-            <option value="108.9398">西安</option>
-            <option value="87.6168">烏魯木齊</option>
-            <option value="114.1694">香港</option>
-            <option value="121.5654">臺北</option>
-            <option value="103.8198">新加坡</option>
-            <option value="custom">自定義經度</option>
-          </select>
+          <input type="text" id="inputCity" class="input-field" value="北京" list="cityList" placeholder="輸入城市，如：山東新泰">
+          <datalist id="cityList"></datalist>
         </div>
       </div>
       <div>

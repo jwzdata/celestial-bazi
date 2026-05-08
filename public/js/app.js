@@ -662,9 +662,38 @@ document.getElementById('calBackToday').addEventListener('click', () => {
 document.getElementById('inputDate').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
 document.getElementById('inputTime').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
 document.getElementById('inputLongitude').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
-document.getElementById('inputCity').addEventListener('change', e => {
-  if (e.target.value !== 'custom') document.getElementById('inputLongitude').value = e.target.value;
-});
+document.getElementById('inputCity').addEventListener('change', updateLongitudeFromCity);
+document.getElementById('inputCity').addEventListener('input', updateLongitudeFromCity);
+
+function normalizeCityName(name) {
+  return String(name || '').replace(/[\s省市县縣區区]/g, '').replace(/^山東/, '山东');
+}
+
+function findCityLongitude(name) {
+  const raw = String(name || '').trim();
+  if (!raw) return null;
+  if (CITY_LONGITUDES[raw] != null) return CITY_LONGITUDES[raw];
+  const normalized = normalizeCityName(raw);
+  for (const [city, longitude] of Object.entries(CITY_LONGITUDES)) {
+    const c = normalizeCityName(city);
+    if (c === normalized || c.endsWith(normalized) || normalized.endsWith(c)) return longitude;
+  }
+  return null;
+}
+
+function updateLongitudeFromCity() {
+  const longitude = findCityLongitude(document.getElementById('inputCity').value);
+  if (longitude != null) document.getElementById('inputLongitude').value = longitude;
+}
+
+function initCityDatalist() {
+  const list = document.getElementById('cityList');
+  if (!list || typeof CITY_LONGITUDES === 'undefined') return;
+  list.innerHTML = Object.keys(CITY_LONGITUDES)
+    .sort((a, b) => a.localeCompare(b, 'zh-Hant'))
+    .map(city => `<option value="${city}"></option>`)
+    .join('');
+}
 
 // ============================
 // 滾動揭示動畫
@@ -785,6 +814,8 @@ document.addEventListener('DOMContentLoaded', () => {
   refreshTip();
   initBottomNav();
   initModalSwipe();
+  initCityDatalist();
+  updateLongitudeFromCity();
 
   // 設置默認日期
   let today = new Date();
