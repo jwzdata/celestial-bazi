@@ -59,9 +59,13 @@ function renderPillars(pillars, dayGan) {
 
     let ganColor = WX_COLORS[WX_GAN[p.gan]];
     let zhiColor = WX_COLORS[WX_ZHI[p.zhi]];
+    const hiddenShiShen = (typeof getShiShenForHiddenStems === 'function')
+      ? getShiShenForHiddenStems(dayGan, p.zhi)
+      : CANG_GAN[p.zhi].map(g => getShiShen(dayGan, g));
     let cangGanHTML = CANG_GAN[p.zhi].map((g, ci) => {
       let w = ['本氣','中氣','餘氣'][ci];
-      return `<span class="text-xs" style="color:${WX_COLORS[WX_GAN[g]]};opacity:${1-ci*0.25}">${TG[g]}<span class="text-accent/30" style="font-size:.55rem">${w}</span></span>`;
+      let sh = hiddenShiShen[ci] || '';
+      return `<span class="text-xs" style="color:${WX_COLORS[WX_GAN[g]]};opacity:${1-ci*0.25};display:inline-block;text-align:center;min-width:2.25rem;margin:0 .1rem">${TG[g]}<span class="text-accent/30" style="font-size:.55rem">${w}</span><span class="text-accent/50" style="font-size:.55rem;display:block;line-height:1">${sh}</span></span>`;
     }).join(' ');
 
     let card = document.createElement('div');
@@ -205,28 +209,31 @@ function renderWuXing(wxCount) {
 function renderStrength(dayGan, monthZhi, strength) {
   document.getElementById('dayMasterLabel').textContent = TG[dayGan] + WX_GAN[dayGan];
   document.getElementById('monthLabel').textContent = DZ[monthZhi] + '月';
-  
+
+  const TIER_STYLES = {
+    '極強': { cls: 'bg-fire/15 text-fire border border-fire/30',      gradient: 'linear-gradient(90deg, rgba(255,152,0,0.45), rgba(255,152,0,0.9))' },
+    '偏強': { cls: 'bg-earth/15 text-earth border border-earth/30',   gradient: 'linear-gradient(90deg, rgba(196,162,101,0.4), rgba(196,162,101,0.8))' },
+    '中和': { cls: 'bg-accent/15 text-accent border border-accent/30',gradient: 'linear-gradient(90deg, rgba(240,215,140,0.4), rgba(240,215,140,0.8))' },
+    '偏弱': { cls: 'bg-water/15 text-water border border-water/30',   gradient: 'linear-gradient(90deg, rgba(90,139,168,0.4), rgba(90,139,168,0.8))' },
+    '極弱': { cls: 'bg-wood/15 text-wood border border-wood/30',      gradient: 'linear-gradient(90deg, rgba(129,199,132,0.4), rgba(129,199,132,0.8))' }
+  };
+  const tier = strength.tier || (strength.isStrong ? '偏強' : '偏弱');
+  const style = TIER_STYLES[tier] || TIER_STYLES['中和'];
+
   let badge = document.getElementById('strengthBadge');
-  if (strength.isStrong) {
-    badge.textContent = '身強';
-    badge.className = 'px-4 py-1.5 rounded-full text-sm font-600 bg-earth/15 text-earth border border-earth/30';
-  } else {
-    badge.textContent = '身弱';
-    badge.className = 'px-4 py-1.5 rounded-full text-sm font-600 bg-water/15 text-water border border-water/30';
-  }
-  
+  badge.textContent = tier;
+  badge.className = `px-4 py-1.5 rounded-full text-sm font-600 ${style.cls}`;
+
   let bar = document.getElementById('strengthBar');
   bar.style.width = strength.score + '%';
-  bar.style.background = strength.isStrong
-    ? 'linear-gradient(90deg, rgba(196,162,101,0.4), rgba(196,162,101,0.8))'
-    : 'linear-gradient(90deg, rgba(90,139,168,0.4), rgba(90,139,168,0.8))';
+  bar.style.background = style.gradient;
 
   let dayWX = WX_GAN[dayGan];
   let motherEl = strength.motherEl;
   let text = `${TG[dayGan]}${dayWX}日主生於${DZ[monthZhi]}月`;
   // 判斷得令
-  if (WX_ZHI[monthZhi] === dayWX || WX_ZHI[monthZhi] === motherEl) {
-    text += `，${DZ[monthZhi]}爲${dayWX === WX_ZHI[monthZhi] ? dayWX+'之餘氣' : '生'+dayWX+'之印星'}，日主得令`;
+  if (strength.deLing) {
+    text += `，${DZ[monthZhi]}為${WX_ZHI[monthZhi] === dayWX ? dayWX+'之本氣' : '生'+dayWX+'之印星'}，日主得令`;
   } else {
     text += `，月支${DZ[monthZhi]}${WX_ZHI[monthZhi]}不助日主`;
   }
@@ -236,6 +243,31 @@ function renderStrength(dayGan, monthZhi, strength) {
     text += `。綜合五行力量分析，日主${dayWX}力量偏弱，屬於身弱之命格。身弱則宜扶宜生，需要通過印星生扶或比劫助身來增強命局。`;
   }
   document.getElementById('strengthText').textContent = text;
+
+  // 得令 / 得地 / 得勢 明細（插入 strengthText 之後；若不存在容器則動態建立）
+  const host = document.getElementById('strengthText').parentElement;
+  let detail = document.getElementById('strengthDetail');
+  if (!detail) {
+    detail = document.createElement('div');
+    detail.id = 'strengthDetail';
+    detail.className = 'mt-4 grid gap-2 text-xs text-accent/70';
+    host.appendChild(detail);
+  }
+  const pillarLabels = ['年柱','月柱','日柱','時柱'];
+  const diLabel = strength.deDi && strength.deDi.length
+    ? strength.deDi.map(i => pillarLabels[i]).join('、') + `（通根：${strength.rootedBranches.join('、')}）`
+    : '無';
+  const shiLabel = strength.deShi && strength.deShi.length
+    ? strength.deShi.map(i => pillarLabels[i]).join('、') + `（透干：${strength.penetratedStems.join('、')}）`
+    : '無';
+  const lingLabel = strength.deLing
+    ? `是（月令屬${WX_ZHI[monthZhi]}，助${dayWX}日主）`
+    : `否（月令屬${WX_ZHI[monthZhi]}，不助${dayWX}日主）`;
+  detail.innerHTML = `
+    <div class="flex gap-2"><span class="text-accent/50 shrink-0">得令：</span><span>${lingLabel}</span></div>
+    <div class="flex gap-2"><span class="text-accent/50 shrink-0">得地：</span><span>${diLabel}</span></div>
+    <div class="flex gap-2"><span class="text-accent/50 shrink-0">得勢：</span><span>${shiLabel}</span></div>
+  `;
 }
 
 function renderTraits(dayGan, isStrong) {
@@ -561,11 +593,11 @@ function analyze() {
     let dp = pillars[2];
     let hp = pillars[3];
     
-    // 五行統計
-    let wxCount = countWuXing(pillars);
+    // 五行統計（四柱以月支為主，採位置加權）
+    let wxCount = countWuXing(pillars, [1.0, 1.5, 1.2, 1.0]);
     
-    // 身強身弱
-    let strength = judgeStrength(dp.gan, mp.zhi, wxCount);
+    // 身強身弱（得令 / 得地 / 得勢）
+    let strength = judgeStrength(dp.gan, mp.zhi, wxCount, pillars);
     
     // 喜用神
     let xiYong = getXiYong(dp.gan, strength.isStrong, strength.ctrlEl, strength.motherEl, strength.childWX, strength.wealthEl);
