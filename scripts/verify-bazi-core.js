@@ -277,7 +277,88 @@ function run() {
   }
 
   // -----------------------------------------------------------------
-  // Issue #1 (review 2026-05-09): hour-stem day-rollover.
+  // Issue #2 (review 2026-05-09): getXiYong override conflict.
+  // 弱 金 day master in 子月 (winter) with no fire → 調候 extreme fires
+  // and returns wx='火'. Before the fix base.ji contained 火 so the
+  // override emitted yong=火 and ji=[火,水] simultaneously. After the
+  // fix ji must NOT include 火.
+  // -----------------------------------------------------------------
+  {
+    // Construct a weak 庚 day master in 子月 with zero fire.
+    const pillars = [
+      { gan: G('癸'), zhi: Z('亥') },
+      { gan: G('甲'), zhi: Z('子') },
+      { gan: G('庚'), zhi: Z('子') }, // day
+      { gan: G('乙'), zhi: Z('酉') }
+    ];
+    const wx = countWuXing(pillars, [1.0, 1.5, 1.2, 1.0]);
+    if ((wx['火'] || 0) > 0.5) fail('override test precondition: wxCount 火 should be ~0');
+
+    const s = judgeStrength(G('庚'), Z('子'), wx, pillars);
+    const frames = computeYongShenFrameworks({
+      dayGan: G('庚'), monthZhi: Z('子'), strength: s, wxCount: wx
+    });
+    if (!frames.調候.extreme) fail('override test: 調候.extreme should fire for 庚+子月+無火');
+    if (frames.調候.wx !== '火') fail(`override test: 調候.wx should be 火, got ${frames.調候.wx}`);
+
+    frames._direction = s.direction;
+    const { getXiYong } = bazi;
+    const xy = getXiYong(G('庚'), s.isStrong, s.ctrlEl, s.motherEl, s.childWX, s.wealthEl, frames);
+    if (xy.primaryFramework !== '調候') fail(`override test: primaryFramework expected 調候, got ${xy.primaryFramework}`);
+    if (xy.yong !== '火') fail(`override test: yong expected 火, got ${xy.yong}`);
+    const jiArr = Array.isArray(xy.ji) ? xy.ji : [xy.ji];
+    if (jiArr.includes('火')) fail(`override test: ji must NOT contain 火 when yong=火, got ${JSON.stringify(jiArr)}`);
+  }
+
+  // -----------------------------------------------------------------
+  // Issue #3 (review 2026-05-09): isStrong cliff inside 中和.
+  // strength.direction must be 'neutral' for any score in [45, 54],
+  // 'strong' for >=55, 'weak' for <45.
+  // -----------------------------------------------------------------
+  {
+    // Craft a neutral-ish chart by tweaking a moderate balance.
+    const pillars = [
+      { gan: G('甲'), zhi: Z('辰') },
+      { gan: G('戊'), zhi: Z('辰') },
+      { gan: G('丙'), zhi: Z('辰') },
+      { gan: G('乙'), zhi: Z('未') }
+    ];
+    const wx = countWuXing(pillars, [1.0, 1.5, 1.2, 1.0]);
+    const s = judgeStrength(G('丙'), Z('辰'), wx, pillars);
+    if (!['strong','weak','neutral'].includes(s.direction)) fail(`direction must be one of strong/weak/neutral, got ${s.direction}`);
+    if (s.tier === '中和' && s.direction !== 'neutral') fail('中和 tier must map to direction=neutral');
+    if (s.tier === '極強' && s.direction !== 'strong') fail('極強 tier must map to direction=strong');
+    if (s.tier === '極弱' && s.direction !== 'weak') fail('極弱 tier must map to direction=weak');
+    // getXiYong with a neutral direction + no extreme 調候 should not crash
+    const frames = computeYongShenFrameworks({
+      dayGan: G('丙'), monthZhi: Z('辰'), strength: s, wxCount: wx
+    });
+    frames._direction = s.direction;
+    const { getXiYong } = bazi;
+    const xy = getXiYong(G('丙'), s.isStrong, s.ctrlEl, s.motherEl, s.childWX, s.wealthEl, frames);
+    if (typeof xy.yong !== 'string') fail('getXiYong neutral path: yong must be a string');
+    const jiArr = Array.isArray(xy.ji) ? xy.ji : [xy.ji];
+    if (jiArr.includes(xy.yong)) fail(`neutral getXiYong: yong=${xy.yong} must not appear in ji=${JSON.stringify(jiArr)}`);
+  }
+
+  // -----------------------------------------------------------------
+  // Issue #4 (review 2026-05-09): ctrlEnemyEl must be gone.
+  // The field was tautological and unused; verify it is no longer set
+  // on the strength object.
+  // -----------------------------------------------------------------
+  {
+    const pillars = [
+      { gan: G('甲'), zhi: Z('寅') },
+      { gan: G('丙'), zhi: Z('寅') },
+      { gan: G('甲'), zhi: Z('寅') },
+      { gan: G('乙'), zhi: Z('亥') }
+    ];
+    const wx = countWuXing(pillars, [1.0, 1.5, 1.2, 1.0]);
+    const s = judgeStrength(G('甲'), Z('寅'), wx, pillars);
+    if ('ctrlEnemyEl' in s) fail('strength object should no longer expose ctrlEnemyEl');
+  }
+
+
   // `trueSolarBazi.getTimeGan()` is derived from the SHIFTED day stem,
   // so a longitude shift that crosses midnight (e.g. 23:50 Beijing +
   // 東經 130° shifting into the next calendar date) produces the wrong

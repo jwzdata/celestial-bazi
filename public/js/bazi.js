@@ -29,11 +29,13 @@ function countWuXing(pillars, pillarWeights) {
 //                扶抑差額縮放為 ±12
 //   tier         極弱 / 偏弱 / 中和 / 偏強 / 極強
 //   isStrong     score >= 50（向下相容 getXiYong 與舊 renderTraits）
+//   direction    'strong' | 'weak' | 'neutral'；由 tier 推出，供新版 getXiYong
+//                避免 isStrong 在 中和 區間跳變造成的喜/忌相反
 //   deLing       月令是否助日主（月支本氣為日主或印星）
 //   deDi         非日柱柱位索引陣列，地支藏干含日主或印星之五行（通根 / 有印庫）
 //   deShi        非日柱柱位索引陣列，天干同屬日主或印星（比劫 / 印透干）
 //   rootedBranches / penetratedStems  可讀字串陣列
-//   motherEl / childWX / wealthEl / ctrlEl / ctrlEnemyEl  與舊版 getXiYong 相容
+//   motherEl / childWX / wealthEl / ctrlEl  與舊版 getXiYong 相容
 function judgeStrength(dayGan, monthZhi, wxCount, pillars) {
   const dayWX = WX_GAN[dayGan];
   const mi = ELEMENT_CYCLE.indexOf(dayWX);
@@ -41,9 +43,6 @@ function judgeStrength(dayGan, monthZhi, wxCount, pillars) {
   const childWX     = ELEMENT_CYCLE[(mi + 1) % 5];     // 我生者（食傷）
   const wealthEl    = ELEMENT_CYCLE[(mi + 2) % 5];     // 我剋者（財）
   const ctrlEl      = ELEMENT_CYCLE[(mi + 3) % 5];     // 剋我者（官殺）
-  const ctrlEnemyEl = ELEMENT_CYCLE[(mi + 4) % 5] === motherEl
-    ? motherEl
-    : ELEMENT_CYCLE[(mi + 4) % 5];                     // 剋制官殺者（同 motherEl）
 
   // 得令：月支本氣或主氣（第一個藏干）同屬日主或印星
   const monthHidden = CANG_GAN[monthZhi] || [];
@@ -92,47 +91,90 @@ function judgeStrength(dayGan, monthZhi, wxCount, pillars) {
   score = Math.max(0, Math.min(100, Math.round(score)));
 
   let tier;
-  if (score < 30) tier = '極弱';
-  else if (score < 45) tier = '偏弱';
-  else if (score < 55) tier = '中和';
-  else if (score < 70) tier = '偏強';
-  else tier = '極強';
+  let direction; // 'strong' / 'weak' / 'neutral'
+  if (score < 30)       { tier = '極弱'; direction = 'weak';    }
+  else if (score < 45)  { tier = '偏弱'; direction = 'weak';    }
+  else if (score < 55)  { tier = '中和'; direction = 'neutral'; }
+  else if (score < 70)  { tier = '偏強'; direction = 'strong';  }
+  else                  { tier = '極強'; direction = 'strong';  }
+  // isStrong 保留為 boolean 供舊呼叫端（renderTraits/舊版 getXiYong）使用；
+  // 新版 getXiYong 改以 direction 判斷方向，避免 中和 區間 49/50 的跳變。
   const isStrong = score >= 50;
 
   return {
-    score, tier, isStrong,
+    score, tier, isStrong, direction,
     deLing, deDi, deShi,
     rootedBranches, penetratedStems,
-    motherEl, childWX, wealthEl, ctrlEl, ctrlEnemyEl
+    motherEl, childWX, wealthEl, ctrlEl
   };
 }
 
 function getXiYong(dayGan, isStrong, ctrlEl, motherEl, childWX, wealthEl, frameworks) {
+  const dayWX = WX_GAN[dayGan];
   // 基礎 扶抑 結果（向下相容：不帶 frameworks 時與舊版完全一致）
   const base = isStrong
-    ? { xi: childWX, yong: ctrlEl, ji: [WX_GAN[dayGan], motherEl], xian: wealthEl }
-    : { xi: motherEl, yong: WX_GAN[dayGan], ji: [ctrlEl, childWX], xian: wealthEl };
+    ? { xi: childWX, yong: ctrlEl, ji: [dayWX, motherEl], xian: wealthEl }
+    : { xi: motherEl, yong: dayWX, ji: [ctrlEl, childWX], xian: wealthEl };
 
-  if (!frameworks || !frameworks.調候) return base;
+  if (!frameworks || !frameworks.扶抑) return base;
 
-  // 當命局處於季節極端失衡時，調候 優先於 扶抑：
-  //   冬令 + 日主 金/水 + 命局無火 → 須火暖局
-  //   夏令 + 日主 火/土 + 命局無水 → 須水潤局
-  const tiao = frameworks.調候;
+  // 新版路徑：以 strength.direction 取代 isStrong 作為方向來源，
+  // 避免 中和 區間 49/50 的跳變。direction 可能由呼叫端注入於 frameworks._direction。
+  const direction = frameworks._direction || (isStrong ? 'strong' : 'weak');
   const fuYi = frameworks.扶抑;
+  const tiao = frameworks.調候;
   const tiaoWX = tiao && tiao.wx;
-  if (tiaoWX && tiao.extreme) {
-    // 以 調候 用神覆蓋 yong，其餘仍依扶抑排列，使 喜/忌/閒 語義穩定
+
+  // 中和：扶抑 本身方向不明，僅採 調候（若有）或 通關，否則退回基礎 base。
+  let primary;
+  if (direction === 'neutral') {
+    primary = (tiaoWX && tiao.extreme) ? '調候'
+            : (frameworks.通關 && frameworks.通關.wx) ? '通關'
+            : '扶抑';
+  } else if (tiaoWX && tiao.extreme) {
+    primary = '調候';
+  } else {
+    primary = '扶抑';
+  }
+
+  // helper: 剔除某五行於 ji 陣列。
+  const pruneJi = (jiArr, wxList) => jiArr.filter(v => !wxList.includes(v));
+
+  if (primary === '調候' && tiaoWX) {
+    // 以 調候 用神覆蓋 yong，並重新推導 ji 使其不再包含調候用神
+    // （否則會出現同一五行同時為用神與忌神的荒謬狀態）。
+    // 若調候用神原屬 base.xi，將其升級為新的 yong；原 xi 退為舊 base.xi 或 fuYi.wx。
+    const newJi = pruneJi(base.ji, [tiaoWX]);
+    // 被從 ji 剔除的元素，若原為忌神則視為新的 喜神候選（中和之象）
+    const removed = base.ji.filter(v => v === tiaoWX);
+    const extraXi = removed.length ? removed : [];
+    const rawXi = (fuYi && fuYi.wx) ? fuYi.wx : base.xi;
+    const xiArr = Array.from(new Set([rawXi, ...extraXi].filter(v => v && v !== tiaoWX)));
     return {
-      xi: (fuYi && fuYi.wx) ? fuYi.wx : base.xi,
+      xi: xiArr.length === 1 ? xiArr[0] : (xiArr[0] || base.xi),
       yong: tiaoWX,
-      ji: base.ji,
+      ji: newJi,
       xian: base.xian,
       primaryFramework: '調候',
       secondaryFramework: '扶抑'
     };
   }
-  return Object.assign(base, { primaryFramework: '扶抑' });
+
+  if (primary === '通關' && frameworks.通關 && frameworks.通關.wx) {
+    const bridge = frameworks.通關.wx;
+    // 通關用神不應同時在忌神內
+    return {
+      xi: base.xi,
+      yong: bridge,
+      ji: pruneJi(base.ji, [bridge]),
+      xian: base.xian,
+      primaryFramework: '通關',
+      secondaryFramework: '扶抑'
+    };
+  }
+
+  // primary === '扶抑'
+  return Object.assign({}, base, { primaryFramework: '扶抑' });
 }
 
 // 僞隨機
@@ -444,11 +486,23 @@ function computeYongShenFrameworks(input) {
   let tiao = { framework: '調候', wx: null, note: '日主季節資訊不足，調候暫略。', extreme: false };
   if (season && TIAO_HOU[dayWX] && TIAO_HOU[dayWX][season]) {
     const wx = TIAO_HOU[dayWX][season];
-    // 季節極端判定：冬+金水+命局無火、或夏+火土+命局無水 → 調候 優先
-    const noFire = (wxCount['火'] || 0) < 1;
-    const noWater = (wxCount['水'] || 0) < 1;
-    const extreme = (season === '冬' && (dayWX === '金' || dayWX === '水') && noFire) ||
-                    (season === '夏' && (dayWX === '火' || dayWX === '土') && noWater);
+    // 季節極端判定：放寬為「候氣不足」而非「完全缺席」，以捕捉一絲火光都缺的深冬金水。
+    //   冬 + 金/水 + 命局火 < 2                → 寒冬須火暖局
+    //   夏 + 火/土 + 命局水 < 2                → 夏炎須水潤局
+    //   秋 + 甲乙木 + 命局水 < 2               → 秋木逢金，無水則枯
+    //   春 + 丙丁火 + 命局水 < 2               → 春火燥烈，無水則焚
+    // 範圍刻意不完全覆蓋窮通寶鑑全部 20 節，主要補齊古典 "秋木須水"/"春火須水"
+    // 兩組被原版遺漏的場景；其餘節氣仍取 TIAO_HOU 表的首選五行但不作 extreme。
+    const wxFire  = wxCount['火'] || 0;
+    const wxWater = wxCount['水'] || 0;
+    const dayGanChar = TG[dayGan];
+    const isJiaYi = (dayGanChar === '甲' || dayGanChar === '乙');
+    const isBingDing = (dayGanChar === '丙' || dayGanChar === '丁');
+    const extreme =
+      (season === '冬' && (dayWX === '金' || dayWX === '水') && wxFire < 2) ||
+      (season === '夏' && (dayWX === '火' || dayWX === '土') && wxWater < 2) ||
+      (season === '秋' && isJiaYi && wxWater < 2) ||
+      (season === '春' && isBingDing && wxWater < 2);
     tiao = {
       framework: '調候',
       wx,

@@ -666,6 +666,11 @@ function analyze() {
     const frameworks = window.computeYongShenFrameworks ? window.computeYongShenFrameworks({
       dayGan: dp.gan, monthZhi: mp.zhi, strength, wxCount
     }) : null;
+    if (frameworks && strength && strength.direction) {
+      // 將 strength.direction 注入 frameworks，使 getXiYong 以 direction 判斷
+      // 中和 / 強 / 弱，避免 isStrong 在 49/50 的跳變導致喜忌翻轉。
+      frameworks._direction = strength.direction;
+    }
 
     // 喜用神
     let xiYong = getXiYong(dp.gan, strength.isStrong, strength.ctrlEl, strength.motherEl, strength.childWX, strength.wealthEl, frameworks);
