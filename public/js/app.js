@@ -301,6 +301,12 @@ function renderTraits(dayGan, isStrong) {
   cList.innerHTML = career.map(t => `<li class="flex gap-2"><span class="text-accent/30 mt-0.5">•</span><span>${t}</span></li>`).join('');
 }
 
+function getPrimaryLuckyElement(xiYong) {
+  return [xiYong.yong, xiYong.xi, xiYong.ji, xiYong.xian]
+    .flat()
+    .find(wx => wx && LUCKY_DATA[wx]) || '木';
+}
+
 function renderXiYong(xiYong) {
   const grid = document.getElementById('xiYongGrid');
 
@@ -360,16 +366,19 @@ function renderXiYong(xiYong) {
   ];
   grid.innerHTML = '';
   items.forEach(it => {
-    let wxArr = Array.isArray(it.wx) ? it.wx : [it.wx];
+    let wxArr = (Array.isArray(it.wx) ? it.wx : [it.wx]).filter(Boolean);
     let card = document.createElement('div');
     card.className = `xi-yong-card ${it.cls}`;
+    const wxHTML = wxArr.length
+      ? wxArr.map(w => `<div class="flex items-center justify-center gap-2">
+          <span class="text-lg">${WX_ICONS[w]}</span>
+          <span class="font-serif text-lg font-600" style="color:${WX_COLORS[w]}">${w}</span>
+        </div>`).join('')
+      : '<div class="text-accent/40 text-sm">—</div>';
     card.innerHTML = `
       <div class="text-xs text-accent/50 mb-2">${it.label}</div>
       <div class="space-y-1">
-        ${wxArr.map(w => `<div class="flex items-center justify-center gap-2">
-          <span class="text-lg">${WX_ICONS[w]}</span>
-          <span class="font-serif text-lg font-600" style="color:${WX_COLORS[w]}">${w}</span>
-        </div>`).join('')}
+        ${wxHTML}
       </div>
     `;
     grid.appendChild(card);
@@ -381,16 +390,20 @@ function renderXiYong(xiYong) {
   let isStrong = baziResult.isStrong;
   let lines = [];
   
-  if (isStrong) {
+  const jiList = Array.isArray(xiYong.ji) ? xiYong.ji.filter(Boolean) : [xiYong.ji].filter(Boolean);
+  const jiStr = jiList.join('、') || '暫無明顯忌神';
+  if (!xiYong.yong) {
+    lines.push(`<li><strong style="color:${WX_COLORS[xiYong.xi]}">${xiYong.xi}爲喜神</strong>：日主氣勢較為中和，先取${xiYong.xi}調和命局，不強行指定單一用神</li>`);
+    lines.push(`<li><strong style="color:var(--fire)">${jiStr}</strong>：中和格局忌神不宜武斷，應結合大運流年再細分取捨</li>`);
+    lines.push(`<li><strong style="color:var(--accent)">${xiYong.xian}爲閒神</strong>：可作輔助參考，需視命局配合而定</li>`);
+  } else if (isStrong) {
     lines.push(`<li><strong style="color:${WX_COLORS[xiYong.yong]}">${xiYong.yong}爲用神</strong>：${xiYong.yong}能剋制過旺之${dayWX}，有效抑制日主過強帶來的剛愎自用之弊，使命局趨於平衡</li>`);
     lines.push(`<li><strong style="color:${WX_COLORS[xiYong.xi]}">${xiYong.xi}爲喜神</strong>：${xiYong.xi}爲${dayWX}所生，能泄化日主過剩之氣，轉化爲才華與創造力，增強命局的流通性</li>`);
-    let jiStr = xiYong.ji.join('、');
     lines.push(`<li><strong style="color:var(--fire)">${jiStr}爲忌神</strong>：${jiStr}會進一步助旺日主，加劇命局失衡，應儘量迴避</li>`);
     lines.push(`<li><strong style="color:var(--accent)">${xiYong.xian}爲閒神</strong>：${xiYong.xian}雖耗日主之力，但作用有限，需視命局配合而定</li>`);
   } else {
     lines.push(`<li><strong style="color:${WX_COLORS[xiYong.yong]}">${xiYong.yong}爲用神</strong>：${xiYong.yong}與日主同屬${dayWX}，能直接增強日主力量，是最有效的扶助之力</li>`);
     lines.push(`<li><strong style="color:${WX_COLORS[xiYong.xi]}">${xiYong.xi}爲喜神</strong>：${xiYong.xi}能生助日主${dayWX}，如同母親滋養子女，爲命局注入溫暖與支持</li>`);
-    let jiStr = xiYong.ji.join('、');
     lines.push(`<li><strong style="color:var(--fire)">${jiStr}爲忌神</strong>：${jiStr}會進一步消耗或剋制本已偏弱的日主，應儘量避免</li>`);
     lines.push(`<li><strong style="color:var(--accent)">${xiYong.xian}爲閒神</strong>：${xiYong.xian}耗日主之力但有時也可激發鬥志，需視大運配合</li>`);
   }
@@ -430,7 +443,7 @@ function renderCalendar() {
     daysContainer.appendChild(empty);
   }
   
-  let xiElements = [baziResult.xiYong.xi, baziResult.xiYong.yong];
+  let xiElements = [baziResult.xiYong.xi, getPrimaryLuckyElement(baziResult.xiYong)];
   let jiElements = baziResult.xiYong.ji;
   
   // 展平數組，以防喜用神是數組
@@ -462,6 +475,7 @@ function renderCalendar() {
     const lunar = solar.getLunar();
     const bazi = lunar.getEightChar();
     const dGan = TG.indexOf(bazi.getDayGan());
+    const dZhi = DZ.indexOf(bazi.getDayZhi());
     let shishen = getShiShen(baziResult.dayGan, dGan);
     
     let isToday = (year === todayDate.getFullYear() && month === (todayDate.getMonth() + 1) && d === todayDate.getDate());
@@ -574,22 +588,24 @@ function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fo
 
 function renderLucky() {
   let xy = baziResult.xiYong;
-  let xiWX = xy.xi, yongWX = xy.yong;
-  
+  const wxKeys = [xy.xi, xy.yong]
+    .flat()
+    .filter((wx, idx, arr) => wx && LUCKY_DATA[wx] && arr.indexOf(wx) === idx);
+  if (!wxKeys.length) wxKeys.push('木');
+
   // 合併喜神和用神數據
-  let dirs = [...new Set([LUCKY_DATA[xiWX].dir, LUCKY_DATA[yongWX].dir])];
-  let colors = [...new Set([...LUCKY_DATA[xiWX].colors, ...LUCKY_DATA[yongWX].colors])];
-  let nums = [...new Set([...LUCKY_DATA[xiWX].nums, ...LUCKY_DATA[yongWX].nums])];
-  let plants = [...new Set([...LUCKY_DATA[xiWX].plants, ...LUCKY_DATA[yongWX].plants])];
-  
+  let dirs = [...new Set(wxKeys.map(wx => LUCKY_DATA[wx].dir))];
+  let colors = [...new Set(wxKeys.flatMap(wx => LUCKY_DATA[wx].colors))];
+  let nums = [...new Set(wxKeys.flatMap(wx => LUCKY_DATA[wx].nums))];
+  let plants = [...new Set(wxKeys.flatMap(wx => LUCKY_DATA[wx].plants))];
+
   document.getElementById('luckyDir').textContent = dirs.join('、');
   document.getElementById('luckyColor').textContent = colors.join('、');
   document.getElementById('luckyNum').textContent = nums.join('、');
   document.getElementById('luckyPlant').textContent = plants.join('、');
-  
+
   // 穿衣指南
-  let dress = DRESS_COLORS[xiWX] || DRESS_COLORS[yongWX];
-  if (!dress) dress = DRESS_COLORS['木'];
+  let dress = DRESS_COLORS[wxKeys[0]] || DRESS_COLORS['木'];
   
   function renderSwatches(container, items) {
     container.innerHTML = items.map(it => 
@@ -1093,7 +1109,7 @@ function showFeature(feature) {
     
     // 設置喜用神文本
     let xi = baziResult.xiYong.xi;
-    let yong = baziResult.xiYong.yong;
+    let yong = getPrimaryLuckyElement(baziResult.xiYong);
     if (Array.isArray(xi)) xi = xi[0];
     if (Array.isArray(yong)) yong = yong[0];
     document.getElementById('numXiYong').textContent = `喜${xi}用${yong}`;
@@ -1124,7 +1140,7 @@ function renderDaYun() {
   const dayunList = yun.getDaYun();
   const today = new Date();
   const currentYear = today.getFullYear();
-  const xiArr = [baziResult.xiYong.xi, baziResult.xiYong.yong].flat();
+  const xiArr = [baziResult.xiYong.xi, getPrimaryLuckyElement(baziResult.xiYong)].flat();
   const jiArr = baziResult.xiYong.ji.flat();
 
   // 原局四支（字符）用於 大運/流年 × 原局 的 合/沖/刑/害/三合/三會 偵測
@@ -1410,7 +1426,8 @@ function renderAiReportContent() {
   const container = document.getElementById('aiReportContent');
   const dWX = baziResult.dayGanWX;
   const isS = baziResult.isStrong;
-  
+  const luckyWX = getPrimaryLuckyElement(baziResult.xiYong);
+
   // 模擬長篇報告
   let html = `
     <h4 class="text-lg font-serif text-accent font-bold mb-4 border-b border-accent/20 pb-2">一、 命局總評</h4>
@@ -1418,16 +1435,16 @@ function renderAiReportContent() {
     
     <h4 class="text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2">二、 財運與事業剖析</h4>
     <p>從財庫與大運走勢來看，您的財富積累屬於“${baziResult.wxCount['金'] > 1 ? '爆發型' : '穩健型'}”。在未來的3-5年內，將會迎來一波較為明顯的事業上升期。建議在處理財務時，多聽取專業人士意見，避免盲目跟風。</p>
-    <p class="mt-2"><strong>事業方向建議：</strong> 您的喜用神為 ${baziResult.xiYong.yong}，非常適合從事與之相關的行業。在職場中，您容易遇到貴人提攜，但需注意防範小人嫉妒。</p>
+    <p class="mt-2"><strong>事業方向建議：</strong> 您的喜用神為 ${luckyWX}，非常適合從事與之相關的行業。在職場中，您容易遇到貴人提攜，但需注意防範小人嫉妒。</p>
 
     <h4 class="text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2">三、 婚姻與感情歸宿</h4>
     <p>您的感情觀較為${isS ? '主動且強勢' : '被動且細膩'}。命盤顯示，您的正緣出現在${Math.random() > 0.5 ? '東方或東南方' : '西方或西北方'}。婚姻生活中，需多注意溝通方式，避免因固執己見而產生不必要的摩擦。</p>
     
     <h4 class="text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2">四、 專屬改運指導</h4>
     <ul class="list-disc pl-5 space-y-2">
-      <li><strong>色彩開運：</strong> 多穿戴 ${LUCKY_DATA[baziResult.xiYong.yong].colors.join('、')} 色的服飾。</li>
-      <li><strong>方位選擇：</strong> 床頭或辦公桌宜朝向 ${LUCKY_DATA[baziResult.xiYong.yong].dir}。</li>
-      <li><strong>日常建議：</strong> 保持規律作息，適當佩戴 ${DRESS_COLORS[baziResult.xiYong.yong].acc[0]} 等飾品以增強自身氣場。</li>
+      <li><strong>色彩開運：</strong> 多穿戴 ${LUCKY_DATA[luckyWX].colors.join('、')} 色的服飾。</li>
+      <li><strong>方位選擇：</strong> 床頭或辦公桌宜朝向 ${LUCKY_DATA[luckyWX].dir}。</li>
+      <li><strong>日常建議：</strong> 保持規律作息，適當佩戴 ${DRESS_COLORS[luckyWX].acc[0]} 等飾品以增強自身氣場。</li>
     </ul>
     
     <div class="mt-6 p-4 bg-accent/10 rounded-lg text-xs text-accent/60">
@@ -1568,7 +1585,7 @@ function calculateHehun() {
   let desc = "";
   
   let myXi = baziResult.xiYong.xi;
-  let myYong = baziResult.xiYong.yong;
+  let myYong = getPrimaryLuckyElement(baziResult.xiYong);
   if (Array.isArray(myXi)) myXi = myXi[0];
   if (Array.isArray(myYong)) myYong = myYong[0];
   
@@ -1642,7 +1659,7 @@ function generateNames() {
   
   // 獲取喜用神
   let xi = baziResult.xiYong.xi;
-  let yong = baziResult.xiYong.yong;
+  let yong = getPrimaryLuckyElement(baziResult.xiYong);
   
   // 處理可能返回數組的情況
   if (Array.isArray(xi)) xi = xi[0];
@@ -1742,7 +1759,7 @@ function generateLuckyNum() {
   setTimeout(() => {
     // 獲取用戶的喜用神五行對應的數字
     let xi = baziResult.xiYong.xi;
-    let yong = baziResult.xiYong.yong;
+    let yong = getPrimaryLuckyElement(baziResult.xiYong);
     if (Array.isArray(xi)) xi = xi[0];
     if (Array.isArray(yong)) yong = yong[0];
     

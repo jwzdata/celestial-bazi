@@ -9,7 +9,7 @@ A modern, commercial-ready Web Application for Bazi (Chinese Astrology) calculat
 - **True Solar Time**: Supports exact birth time, gender, birthplace longitude, longitude correction, and equation-of-time adjustment for more precise hour-pillar calculation.
 - **Searchable Birthplace Input**: Type a city name (for example `新泰`, `山東新泰`, or `山東省新泰市`) to auto-fill longitude, with manual longitude override for unlisted places.
 - **Smart Form Memory**: Logged-in users' birth information (date, time, gender, birthplace, longitude) is automatically saved and restored on next login for convenience.
-- **Professional Bazi Details**: Displays precision metadata, Ming Gong (命宮), Shen Gong (身宮), Tai Yuan (胎元), Na Yin (納音), Xun Kong (旬空), Ji Shen/Xiong Sha (吉神/凶煞), and Peng Zu notes.
+- **Professional Bazi Details**: Displays precision metadata, Ming Gong (命宮), Shen Gong (身宮), Tai Yuan (胎元), Na Yin (納音), Xun Kong (旬空), Ji Shen/Xiong Sha (吉神/凶煞), Peng Zu notes, and calendar-day scoring details.
 - **Interactive UI**: Deep-space blue & glowing gold theme with smooth animations.
 - **Premium Modules**:
   - 10-Year Fortune (大運流年) & Yearly Analysis — dynamically calculated based on your Bazi

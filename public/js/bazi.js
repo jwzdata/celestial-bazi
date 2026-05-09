@@ -500,8 +500,10 @@ function calculateDecadeFortune(userBazi, gender) {
 }
 
 // 導出函數
-window.calculateDayFortune = calculateDayFortune;
-window.calculateDecadeFortune = calculateDecadeFortune;
+if (typeof window !== 'undefined') {
+  window.calculateDayFortune = calculateDayFortune;
+  window.calculateDecadeFortune = calculateDecadeFortune;
+}
 
 // 為某地支的藏干序列回傳對應的十神（與 CANG_GAN[zhiIdx] 對齊）
 function getShiShenForHiddenStems(dayGan, zhiIdx) {
