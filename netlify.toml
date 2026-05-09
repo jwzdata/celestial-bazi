@@ -25,6 +25,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/preferences"
+  to = "/.netlify/functions/preferences"
+  status = 200
+
+[[redirects]]
   from = "/api/pay/create"
   to = "/.netlify/functions/pay-create"
   status = 200

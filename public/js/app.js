@@ -514,7 +514,19 @@ function analyze() {
   if (!genderVal) { showError('請選擇性別', 'inputGender'); return; }
   if (!Number.isFinite(longitudeVal) || longitudeVal < 73 || longitudeVal > 135) { showError('請輸入有效的中國/東亞經度（73-135）', 'inputLongitude'); return; }
   errEl.classList.add('hidden');
-  
+
+  // 儲存偏好（僅登入用戶會實際送出請求；錯誤已在 saveUserPreferences 內吞掉，不會阻塞分析動畫）
+  const cityVal = document.getElementById('inputCity').value;
+  const prefs = {
+    inputDate: dateVal,
+    inputTime: timeVal,
+    inputGender: genderVal,
+    inputCity: cityVal,
+    // 存使用者輸入的原字串而非 String(parseFloat(...))，避免 116.40740 → 116.4074 這種尾零丟失
+    inputLongitude: document.getElementById('inputLongitude').value
+  };
+  if (typeof saveUserPreferences === 'function') saveUserPreferences(prefs);
+
   // 禁用按鈕防連點
   btnEl.disabled = true;
   btnEl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>解析中...';

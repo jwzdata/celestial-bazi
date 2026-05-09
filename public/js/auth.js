@@ -4,6 +4,21 @@ let currentUser = null;
 let currentPayMethod = 'wechat';
 let currentOrderId = null;
 
+// 表單五個欄位的出廠預設值，與 public/index.html 上的 value= 屬性對齊。
+// 用作 applyPreferencesToForm 的「還是預設狀態嗎？」比較基準，避免在兩處重複寫死字串。
+// 若要調整 HTML 的預設，這裡也要同步更新。
+const BAZI_INPUT_DEFAULTS = {
+  inputDate: '',
+  inputTime: '12:00',
+  inputGender: '1',
+  inputCity: '北京',
+  inputLongitude: '116.4074'
+};
+
+// 使用者是否已經在表單上動過手腳；一旦為 true，偏好還原會自動跳過以免蓋掉使用者輸入。
+// 第一個 input/change 事件會把它翻成 true（見 DOMContentLoaded 裡的綁定）。
+let baziFormTouched = false;
+
 // 檢查邀請碼
 const urlParams = new URLSearchParams(window.location.search);
 const refCode = urlParams.get('ref');
@@ -29,10 +44,81 @@ async function initAuth() {
     const user = await apiFetch('/api/user');
     currentUser = user;
     document.getElementById('userStatusText').textContent = '用戶中心';
+    await loadUserPreferences();
   } catch (err) {
     currentUser = null;
     localStorage.removeItem('bazi_token');
     document.getElementById('userStatusText').textContent = '登錄 / 註冊';
+  }
+}
+
+// 載入已登入用戶的偏好設定並填入表單
+async function loadUserPreferences() {
+  try {
+    const res = await apiFetch('/api/preferences');
+    if (res && res.preferences && typeof res.preferences === 'object') {
+      applyPreferencesToForm(res.preferences);
+    }
+  } catch (err) {
+    // 靜默失敗：載入偏好不應該打擾使用者
+    return null;
+  }
+}
+
+// 將偏好值套用到表單，但只覆蓋仍是出廠預設的欄位，避免蓋掉使用者當前輸入
+function applyPreferencesToForm(prefs) {
+  if (!prefs || typeof prefs !== 'object') return;
+  // 使用者在兩次網路往返之間已經動過表單 → 不要還原，避免覆蓋他剛輸入/選擇的值
+  if (baziFormTouched) return;
+
+  const dateEl = document.getElementById('inputDate');
+  const timeEl = document.getElementById('inputTime');
+  const genderEl = document.getElementById('inputGender');
+  const cityEl = document.getElementById('inputCity');
+  const longitudeEl = document.getElementById('inputLongitude');
+
+  // inputDate 的出廠預設是空字串；但 app.js 的 DOMContentLoaded 會把它填成今天的日期，
+  // 因此把「今天的日期」也視為仍是預設狀態，讓還原的生日能覆蓋它。
+  const today = new Date().toISOString().split('T')[0];
+  const isDateDefault = dateEl && (dateEl.value === BAZI_INPUT_DEFAULTS.inputDate || dateEl.value === today);
+  if (dateEl && isDateDefault && typeof prefs.inputDate === 'string' && prefs.inputDate !== '') {
+    dateEl.value = prefs.inputDate;
+  }
+
+  if (timeEl && timeEl.value === BAZI_INPUT_DEFAULTS.inputTime && typeof prefs.inputTime === 'string' && prefs.inputTime !== '') {
+    timeEl.value = prefs.inputTime;
+  }
+
+  if (genderEl && genderEl.value === BAZI_INPUT_DEFAULTS.inputGender && typeof prefs.inputGender === 'string' && prefs.inputGender !== '') {
+    genderEl.value = prefs.inputGender;
+  }
+
+  const cityWasDefault = cityEl && cityEl.value === BAZI_INPUT_DEFAULTS.inputCity;
+  if (cityEl && cityWasDefault && typeof prefs.inputCity === 'string' && prefs.inputCity !== '') {
+    cityEl.value = prefs.inputCity;
+    // 如果沒有提供經度，就讓城市查找補上對應經度
+    const longitudeProvided = typeof prefs.inputLongitude === 'string' && prefs.inputLongitude !== '';
+    if (!longitudeProvided && longitudeEl && longitudeEl.value === BAZI_INPUT_DEFAULTS.inputLongitude && typeof updateLongitudeFromCity === 'function') {
+      updateLongitudeFromCity();
+    }
+  }
+
+  // 最後套用經度，讓明確提供的經度能勝過城市查找得到的預設值
+  if (longitudeEl && longitudeEl.value === BAZI_INPUT_DEFAULTS.inputLongitude && typeof prefs.inputLongitude === 'string' && prefs.inputLongitude !== '') {
+    longitudeEl.value = prefs.inputLongitude;
+  }
+}
+
+// 在背景儲存當前表單的偏好值，供下次登入時還原
+async function saveUserPreferences(prefs) {
+  if (!currentUser) return;
+  try {
+    await apiFetch('/api/preferences', {
+      method: 'PUT',
+      body: JSON.stringify({ preferences: prefs })
+    });
+  } catch (err) {
+    // 靜默失敗：背景儲存不應該打擾使用者
   }
 }
 
@@ -254,4 +340,15 @@ async function mockPaySuccess() {
 // 頁面加載完成初始化
 window.addEventListener('DOMContentLoaded', () => {
   initAuth();
+
+  // 監聽五個輸入欄位，一旦使用者互動就把 baziFormTouched 翻為 true，
+  // applyPreferencesToForm 會據此跳過覆蓋，避免還原流程蓋掉使用者剛輸入的值。
+  const touchFieldIds = ['inputDate', 'inputTime', 'inputGender', 'inputCity', 'inputLongitude'];
+  const markTouched = () => { baziFormTouched = true; };
+  touchFieldIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', markTouched, { once: true });
+    el.addEventListener('change', markTouched, { once: true });
+  });
 });
