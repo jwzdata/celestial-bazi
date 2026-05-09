@@ -66,10 +66,11 @@ async function loadUserPreferences() {
 }
 
 // 將偏好值套用到表單，但只覆蓋仍是出廠預設的欄位，避免蓋掉使用者當前輸入
-function applyPreferencesToForm(prefs) {
+function applyPreferencesToForm(prefs, options = {}) {
   if (!prefs || typeof prefs !== 'object') return;
+  const force = options.force === true;
   // 使用者在兩次網路往返之間已經動過表單 → 不要還原，避免覆蓋他剛輸入/選擇的值
-  if (baziFormTouched) return;
+  if (baziFormTouched && !force) return;
 
   const dateEl = document.getElementById('inputDate');
   const timeEl = document.getElementById('inputTime');
@@ -81,20 +82,20 @@ function applyPreferencesToForm(prefs) {
   // 因此把「今天的日期」也視為仍是預設狀態，讓還原的生日能覆蓋它。
   const today = new Date().toISOString().split('T')[0];
   const isDateDefault = dateEl && (dateEl.value === BAZI_INPUT_DEFAULTS.inputDate || dateEl.value === today);
-  if (dateEl && isDateDefault && typeof prefs.inputDate === 'string' && prefs.inputDate !== '') {
+  if (dateEl && (force || isDateDefault) && typeof prefs.inputDate === 'string' && prefs.inputDate !== '') {
     dateEl.value = prefs.inputDate;
   }
 
-  if (timeEl && timeEl.value === BAZI_INPUT_DEFAULTS.inputTime && typeof prefs.inputTime === 'string' && prefs.inputTime !== '') {
+  if (timeEl && (force || timeEl.value === BAZI_INPUT_DEFAULTS.inputTime) && typeof prefs.inputTime === 'string' && prefs.inputTime !== '') {
     timeEl.value = prefs.inputTime;
   }
 
-  if (genderEl && genderEl.value === BAZI_INPUT_DEFAULTS.inputGender && typeof prefs.inputGender === 'string' && prefs.inputGender !== '') {
+  if (genderEl && (force || genderEl.value === BAZI_INPUT_DEFAULTS.inputGender) && typeof prefs.inputGender === 'string' && prefs.inputGender !== '') {
     genderEl.value = prefs.inputGender;
   }
 
   const cityWasDefault = cityEl && cityEl.value === BAZI_INPUT_DEFAULTS.inputCity;
-  if (cityEl && cityWasDefault && typeof prefs.inputCity === 'string' && prefs.inputCity !== '') {
+  if (cityEl && (force || cityWasDefault) && typeof prefs.inputCity === 'string' && prefs.inputCity !== '') {
     cityEl.value = prefs.inputCity;
     // 如果沒有提供經度，就讓城市查找補上對應經度
     const longitudeProvided = typeof prefs.inputLongitude === 'string' && prefs.inputLongitude !== '';
@@ -104,9 +105,38 @@ function applyPreferencesToForm(prefs) {
   }
 
   // 最後套用經度，讓明確提供的經度能勝過城市查找得到的預設值
-  if (longitudeEl && longitudeEl.value === BAZI_INPUT_DEFAULTS.inputLongitude && typeof prefs.inputLongitude === 'string' && prefs.inputLongitude !== '') {
+  if (longitudeEl && (force || longitudeEl.value === BAZI_INPUT_DEFAULTS.inputLongitude) && typeof prefs.inputLongitude === 'string' && prefs.inputLongitude !== '') {
     longitudeEl.value = prefs.inputLongitude;
   }
+}
+
+function getCurrentFormPreferences() {
+  const dateEl = document.getElementById('inputDate');
+  const timeEl = document.getElementById('inputTime');
+  const genderEl = document.getElementById('inputGender');
+  const cityEl = document.getElementById('inputCity');
+  const longitudeEl = document.getElementById('inputLongitude');
+  if (!dateEl || !timeEl || !genderEl || !cityEl || !longitudeEl) return null;
+
+  return {
+    inputDate: dateEl.value,
+    inputTime: timeEl.value,
+    inputGender: genderEl.value,
+    inputCity: cityEl.value,
+    inputLongitude: longitudeEl.value
+  };
+}
+
+function hasMeaningfulFormPreferences(prefs) {
+  if (!prefs) return false;
+  const today = new Date().toISOString().split('T')[0];
+  return Boolean(
+    (prefs.inputDate && prefs.inputDate !== today) ||
+    (prefs.inputTime && prefs.inputTime !== BAZI_INPUT_DEFAULTS.inputTime) ||
+    (prefs.inputGender && prefs.inputGender !== BAZI_INPUT_DEFAULTS.inputGender) ||
+    (prefs.inputCity && prefs.inputCity !== BAZI_INPUT_DEFAULTS.inputCity) ||
+    (prefs.inputLongitude && prefs.inputLongitude !== BAZI_INPUT_DEFAULTS.inputLongitude)
+  );
 }
 
 // 在背景儲存當前表單的偏好值，供下次登入時還原
@@ -245,11 +275,17 @@ document.getElementById('btnAuthSubmit').addEventListener('click', async () => {
     const body = { username, password };
     if (!isLoginMode) body.ref = sessionStorage.getItem('bazi_ref');
     
+    const pendingPrefs = getCurrentFormPreferences();
+    const shouldSavePendingPrefs = hasMeaningfulFormPreferences(pendingPrefs);
     const res = await apiFetch(endpoint, { method: 'POST', body: JSON.stringify(body) });
     localStorage.setItem('bazi_token', res.token);
     showToast(res.message, 'success');
     closeModals();
     await initAuth();
+    if (shouldSavePendingPrefs) {
+      applyPreferencesToForm(pendingPrefs, { force: true });
+      await saveUserPreferences(pendingPrefs);
+    }
   } catch (err) {
     showToast(err.message, 'error');
   } finally {
