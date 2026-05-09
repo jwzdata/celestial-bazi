@@ -111,10 +111,17 @@ function judgeStrength(dayGan, monthZhi, wxCount, pillars) {
 
 function getXiYong(dayGan, isStrong, ctrlEl, motherEl, childWX, wealthEl, frameworks) {
   const dayWX = WX_GAN[dayGan];
-  // 基礎 扶抑 結果（向下相容：不帶 frameworks 時與舊版完全一致）
-  const base = isStrong
-    ? { xi: childWX, yong: ctrlEl, ji: [dayWX, motherEl], xian: wealthEl }
-    : { xi: motherEl, yong: dayWX, ji: [ctrlEl, childWX], xian: wealthEl };
+  // base 的骨架必須與方向一致，否則 49/50 的 isStrong 跳變會穿透到三個 primary paths
+  // （扶抑 fallthrough 直接回傳 base；調候 override 以 base.ji 做 prune；通關 繼承 base.xi/xian）。
+  // 當 frameworks._direction === 'neutral' 時 base 改採中性 sentinel：
+  //   { xi: motherEl, yong: null, ji: [], xian: wealthEl }
+  // 其他情況（或 舊 caller 不帶 frameworks 時）維持原 isStrong 三元路徑，確保向下相容。
+  const isNeutral = !!(frameworks && frameworks._direction === 'neutral');
+  const base = isNeutral
+    ? { xi: motherEl, yong: null, ji: [], xian: wealthEl }
+    : (isStrong
+        ? { xi: childWX, yong: ctrlEl, ji: [dayWX, motherEl], xian: wealthEl }
+        : { xi: motherEl, yong: dayWX, ji: [ctrlEl, childWX], xian: wealthEl });
 
   if (!frameworks || !frameworks.扶抑) return base;
 
@@ -533,18 +540,40 @@ function computeYongShenFrameworks(input) {
   }
 
   // 扶抑
+  // 以 strength.direction 取代 isStrong 作為方向來源，避免 中和 區間 49/50 的跳變
+  // 穿透進 fuYi.wx（進而被 getXiYong 之 調候/通關 override 以及扶抑 fallthrough 繼承）。
+  // 當 direction 缺席時（legacy caller）退回原 isStrong 路徑保持向下相容。
+  const direction = strength.direction
+    || (typeof strength.isStrong === 'boolean' ? (strength.isStrong ? 'strong' : 'weak') : null);
   let fuYi;
-  if (strength.isStrong) {
+  if (direction === 'neutral') {
+    fuYi = { framework: '扶抑', wx: null, note: '日主中和，暫不強扶強抑，取調候或通關為要。' };
+  } else if (direction === 'strong') {
     if (strength.score > 70) {
       fuYi = { framework: '扶抑', wx: strength.ctrlEl, note: `日主偏強，取${strength.ctrlEl}剋之以制其旺。` };
     } else {
       fuYi = { framework: '扶抑', wx: strength.childWX, note: `日主偏強，取${strength.childWX}洩秀以通其氣。` };
     }
-  } else {
+  } else if (direction === 'weak') {
     if (strength.score < 30) {
       fuYi = { framework: '扶抑', wx: strength.motherEl, note: `日主極弱，取${strength.motherEl}印生以扶身。` };
     } else {
       fuYi = { framework: '扶抑', wx: dayWX, note: `日主偏弱，取同類${dayWX}比劫助身。` };
+    }
+  } else {
+    // direction 缺席且 isStrong 也不是 boolean：退回舊版 isStrong 分支以保持向下相容
+    if (strength.isStrong) {
+      if (strength.score > 70) {
+        fuYi = { framework: '扶抑', wx: strength.ctrlEl, note: `日主偏強，取${strength.ctrlEl}剋之以制其旺。` };
+      } else {
+        fuYi = { framework: '扶抑', wx: strength.childWX, note: `日主偏強，取${strength.childWX}洩秀以通其氣。` };
+      }
+    } else {
+      if (strength.score < 30) {
+        fuYi = { framework: '扶抑', wx: strength.motherEl, note: `日主極弱，取${strength.motherEl}印生以扶身。` };
+      } else {
+        fuYi = { framework: '扶抑', wx: dayWX, note: `日主偏弱，取同類${dayWX}比劫助身。` };
+      }
     }
   }
 

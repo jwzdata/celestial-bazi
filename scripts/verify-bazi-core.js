@@ -396,6 +396,87 @@ function run() {
     if ('ctrlEnemyEl' in s) fail('strength object should no longer expose ctrlEnemyEl');
   }
 
+  // -----------------------------------------------------------------
+  // v2 #1 regression: with frameworks._direction === 'neutral' the
+  // 喜/用/忌/閒 shape must NOT depend on isStrong. The pre-fix code
+  // let isStrong leak into `base` inside getXiYong and into fuYi.wx
+  // inside computeYongShenFrameworks, so two 中和 charts with score
+  // 49 vs 50 produced opposite xi/ji across all three primary paths
+  // (扶抑 fallthrough / 調候 override / 通關 override).
+  //
+  // Probe with a synthetic frameworks bundle so we sit squarely on
+  // the 扶抑 fallthrough path first, then force 調候-extreme and
+  // 通關 and re-check both cover the same cliff.
+  // -----------------------------------------------------------------
+  {
+    const { getXiYong } = bazi;
+    const shape = r => JSON.stringify([r.xi, r.yong, r.ji, r.xian]);
+
+    // Case 1: 扶抑 fallthrough (neutral base, no 調候 extreme, no 通關 bridge).
+    const fakeFallthrough = {
+      _direction: 'neutral',
+      扶抑: { framework: '扶抑', wx: null, note: '' },
+      調候: { framework: '調候', wx: null, note: '', extreme: false },
+      通關: { framework: '通關', wx: null, note: '' }
+    };
+    const aF = getXiYong(G('丙'), false, '水', '木', '土', '金', fakeFallthrough);
+    const bF = getXiYong(G('丙'), true,  '水', '木', '土', '金', fakeFallthrough);
+    if (shape(aF) !== shape(bF)) {
+      fail(`v2 #1 (fallthrough): direction=neutral must yield identical 喜/用/忌/閒 across isStrong boundary; got ${shape(aF)} vs ${shape(bF)}`);
+    }
+
+    // Case 2: 調候 extreme override must not reintroduce the cliff.
+    const fakeTiao = {
+      _direction: 'neutral',
+      扶抑: { framework: '扶抑', wx: null, note: '' },
+      調候: { framework: '調候', wx: '水', note: '', extreme: true },
+      通關: { framework: '通關', wx: null, note: '' }
+    };
+    const aT = getXiYong(G('丙'), false, '水', '木', '土', '金', fakeTiao);
+    const bT = getXiYong(G('丙'), true,  '水', '木', '土', '金', fakeTiao);
+    if (shape(aT) !== shape(bT)) {
+      fail(`v2 #1 (調候): direction=neutral must yield identical 喜/用/忌/閒 across isStrong boundary under 調候 override; got ${shape(aT)} vs ${shape(bT)}`);
+    }
+    // Neutral branch must not accidentally block 調候 override:
+    // a neutral chart with 調候.extreme=true should still route to 調候 primary.
+    if (aT.primaryFramework !== '調候') {
+      fail(`v2 #1 (調候): neutral + 調候.extreme should route primary=調候, got ${aT.primaryFramework}`);
+    }
+    if (aT.yong !== '水') fail(`v2 #1 (調候): neutral + extreme should emit yong='水' (tiao.wx), got ${aT.yong}`);
+
+    // Case 3: 通關 override must not reintroduce the cliff either.
+    const fakeTong = {
+      _direction: 'neutral',
+      扶抑: { framework: '扶抑', wx: null, note: '' },
+      調候: { framework: '調候', wx: null, note: '', extreme: false },
+      通關: { framework: '通關', wx: '土', note: '' }
+    };
+    const aG = getXiYong(G('丙'), false, '水', '木', '土', '金', fakeTong);
+    const bG = getXiYong(G('丙'), true,  '水', '木', '土', '金', fakeTong);
+    if (shape(aG) !== shape(bG)) {
+      fail(`v2 #1 (通關): direction=neutral must yield identical 喜/用/忌/閒 across isStrong boundary under 通關 override; got ${shape(aG)} vs ${shape(bG)}`);
+    }
+    if (aG.primaryFramework !== '通關') {
+      fail(`v2 #1 (通關): neutral + 通關.wx should route primary=通關, got ${aG.primaryFramework}`);
+    }
+
+    // v2 #1 corollary at the computeYongShenFrameworks layer:
+    // 扶抑.wx must also be direction-driven, not isStrong-driven, so a
+    // neutral strength never leaks score-crossing fuYi.wx back into 調候
+    // override's rawXi = fuYi.wx || base.xi.
+    const neutralStrength = {
+      direction: 'neutral', isStrong: false, score: 49,
+      motherEl: '木', childWX: '土', wealthEl: '金', ctrlEl: '水'
+    };
+    const neutralStrengthIsStrongTrue = Object.assign({}, neutralStrength, { isStrong: true, score: 50 });
+    const wx = { '金': 0, '木': 0, '水': 0, '火': 0, '土': 0 };
+    const f1 = computeYongShenFrameworks({ dayGan: G('丙'), monthZhi: Z('辰'), strength: neutralStrength, wxCount: wx });
+    const f2 = computeYongShenFrameworks({ dayGan: G('丙'), monthZhi: Z('辰'), strength: neutralStrengthIsStrongTrue, wxCount: wx });
+    if (f1.扶抑.wx !== null || f2.扶抑.wx !== null) {
+      fail(`v2 #1 (framework): neutral direction must emit 扶抑.wx=null, got ${f1.扶抑.wx} / ${f2.扶抑.wx}`);
+    }
+  }
+
 
   // `trueSolarBazi.getTimeGan()` is derived from the SHIFTED day stem,
   // so a longitude shift that crosses midnight (e.g. 23:50 Beijing +
