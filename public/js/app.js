@@ -338,31 +338,28 @@ function renderCalendar() {
   let todayDate = new Date();
   
   for (let d = 1; d <= daysInMonth; d++) {
-    // 使用 lunar-javascript 獲取日柱干支索引用於吉凶判斷
+    // 使用優化版算法計算每日吉凶
+    const dayFortune = calculateDayFortune(
+      year,
+      month,
+      d,
+      {
+        dayGan: baziResult.dayGan,
+        dayZhi: baziResult.dayZhi,
+        monthZhi: baziResult.monthZhi,
+        xiYong: baziResult.xiYong
+      },
+      baziResult.meta ? baziResult.meta.longitude : 120
+    );
+
+    let percentScore = dayFortune.percentScore;
+    let fortune = dayFortune.fortune;
+
+    // 計算當天的十神
     const solar = Solar.fromYmdHms(year, month, d, 12, 0, 0);
     const lunar = solar.getLunar();
     const bazi = lunar.getEightChar();
-    
-    // 獲取日柱的乾和支索引
     const dGan = TG.indexOf(bazi.getDayGan());
-    const dZhi = DZ.indexOf(bazi.getDayZhi());
-    
-    let dGanWX = WX_GAN[dGan], dZhiWX = WX_ZHI[dZhi];
-    let score = 0;
-    if (xiElements.includes(dGanWX)) score += 2;
-    if (xiElements.includes(dZhiWX)) score += 1.5;
-    if (jiElements.includes(dGanWX)) score -= 2;
-    if (jiElements.includes(dZhiWX)) score -= 1.5;
-    
-    // 把 score 轉換成類似 bazi-daily 的百分制分數
-    let percentScore = 60 + Math.round(score * 10);
-    percentScore = Math.max(0, Math.min(100, percentScore));
-    
-    let fortune = 'ping';
-    if (score >= 1.5) fortune = 'ji';
-    else if (score <= -1.5) fortune = 'xiong';
-    
-    // 計算當天的十神
     let shishen = getShiShen(baziResult.dayGan, dGan);
     
     let isToday = (year === todayDate.getFullYear() && month === (todayDate.getMonth() + 1) && d === todayDate.getDate());
@@ -392,13 +389,13 @@ function renderCalendar() {
     
     // 如果是今天，或者是每月1號，初始化摘要數據
     if (isToday || (d === 1 && !document.getElementById('calSummaryDate').textContent)) {
-      updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fortune);
+      updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fortune, dayFortune);
       if(isToday) dayCell.classList.add('ring-1', 'ring-accent');
     }
   }
 }
 
-function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fortune) {
+function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fortune, dayFortune) {
   document.getElementById('calSummaryDate').textContent = `${solar.getMonth()}月${solar.getDay()}日`;
   let lunarMonth = lunar.getMonthInChinese().replace('腊', '臘').replace('闰', '閏');
   let lunarDay = lunar.getDayInChinese().replace('廿', '廿'); // 廿 is same
@@ -423,7 +420,22 @@ function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fo
   document.getElementById('calSummaryFortune').innerHTML = `<span class="w-2 h-2 rounded-full" style="background:${color}"></span> <span style="color:${color}">${fortuneText}</span>`;
   
   document.getElementById('calSummaryShiShen').textContent = shishen;
-  
+
+  // 顯示優化後的詳細分析
+  if (dayFortune && dayFortune.details) {
+    const details = dayFortune.details;
+    let analysisHtml = `
+      <div class="text-xs text-accent/70 mt-2 space-y-1">
+        <div>長生：${details.changSheng} (${details.changShengScore > 0 ? '+' : ''}${(details.changShengScore * 20).toFixed(0)})</div>
+        <div>納音：${details.naYin}</div>
+        <div>真太陽時：${details.trueSolarTime}</div>
+      </div>
+    `;
+    document.getElementById('calSummaryAnalysis').innerHTML = analysisHtml;
+  } else {
+    document.getElementById('calSummaryAnalysis').innerHTML = '';
+  }
+
   // 模擬生成宜忌和建議
   let seed = solar.getYear() * 10000 + solar.getMonth() * 100 + solar.getDay();
   
@@ -1178,6 +1190,22 @@ function generateAiReport() {
     
     setTimeout(() => {
       document.getElementById('aiReportGenerating').classList.add('hidden');
+
+      // 添加大運流年分析
+      if (baziResult) {
+        const daYun = calculateDecadeFortune(
+          {
+            dayGan: baziResult.dayGan,
+            solar: baziResult.meta.solar,
+            lunar: baziResult.meta.lunar,
+            eightChar: baziResult.meta.eightChar
+          },
+          baziResult.gender === 1 ? 'male' : 'female'
+        );
+
+        // 可以在這裡添加大運顯示邏輯
+        console.log('十年大運分析：', daYun);
+      }
       document.getElementById('aiReportResult').classList.remove('hidden');
       renderAiReportContent();
     }, 500);
