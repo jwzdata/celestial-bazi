@@ -341,15 +341,33 @@ function getShiShenForHiddenStems(dayGan, zhiIdx) {
 // 命盤神煞（以原局四柱為對象）
 // ============================
 // pillars = [{gan,zhi}, ...]（索引皆為 TG/DZ 內的 index）
-// 回傳：{ 天乙貴人:[idx...], 文昌貴人:[...], 驛馬:[...], 桃花:[...], 華蓋:[...],
-//         將星:[...], 祿神:[...], 羊刃:[...], 金輿:[...], 三刑:[...], 自刑:[...] }
-// 僅回傳非空的桶；empty 桶整體省略以降低 UI 噪聲。
+// 回傳：
+//   常規桶（legacy 形狀）[pillarIdx,...]：
+//     天乙貴人 / 文昌貴人 / 祿神 / 羊刃 / 金輿 / 自刑 / 三刑
+//   起三合 桶（provenance-aware）[{pillarIdx, ref}]：
+//     驛馬 / 桃花 / 華蓋 / 將星
+//     ref = 'year' | 'day' | 'both'（起於年支、日支，或同時）
+//   無禮之刑（子卯）單獨成桶 [pillarIdx,...]，與三刑(寅巳申/丑戌未) 區分
+// 僅回傳非空的桶。
 function computeChartShenSha(pillars) {
   if (!Array.isArray(pillars) || pillars.length < 4) return {};
   const res = {};
   const push = (key, idx) => {
     if (!res[key]) res[key] = [];
     if (!res[key].includes(idx)) res[key].push(idx);
+  };
+  // 帶來源 provenance 的 push：桶值為 [{pillarIdx, ref}]。
+  // 若同一 pillar 被 year 與 day 同時命中，合併為 ref='both'。
+  const pushWithRef = (key, idx, ref) => {
+    if (!res[key]) res[key] = [];
+    const existing = res[key].find(h => h.pillarIdx === idx);
+    if (!existing) {
+      res[key].push({ pillarIdx: idx, ref });
+      return;
+    }
+    if (existing.ref !== ref && existing.ref !== 'both') {
+      existing.ref = 'both';
+    }
   };
 
   const yearGan = TG[pillars[0].gan];
@@ -362,7 +380,10 @@ function computeChartShenSha(pillars) {
   // 日干 為主：祿神 / 羊刃 / 金輿（傳統以日主起）
   const dayGanRefs = [dayGan].filter(Boolean);
   // 年支 + 日支 各自對照一次：驛馬 / 桃花 / 華蓋 / 將星（三合起神煞）
-  const zhiRefs = [yearZhi, dayZhi].filter(Boolean);
+  // 以 {zhi, refName} tuple 追蹤來源（'year' or 'day'）。
+  const zhiRefsWithName = [];
+  if (yearZhi) zhiRefsWithName.push({ z: yearZhi, ref: 'year' });
+  if (dayZhi)  zhiRefsWithName.push({ z: dayZhi,  ref: 'day'  });
 
   for (let i = 0; i < 4; i++) {
     const zChar = DZ[pillars[i].zhi];
@@ -376,12 +397,12 @@ function computeChartShenSha(pillars) {
     for (const g of ganRefs) {
       if (WEN_CHANG[g] === zChar) { push('文昌貴人', i); break; }
     }
-    // 驛馬 / 桃花 / 華蓋 / 將星（以年支或日支起）
-    for (const z of zhiRefs) {
-      if (YI_MA[z] === zChar)      push('驛馬', i);
-      if (TAO_HUA[z] === zChar)    push('桃花', i);
-      if (HUA_GAI[z] === zChar)    push('華蓋', i);
-      if (JIANG_XING[z] === zChar) push('將星', i);
+    // 驛馬 / 桃花 / 華蓋 / 將星（以年支或日支起；provenance-aware）
+    for (const { z, ref } of zhiRefsWithName) {
+      if (YI_MA[z] === zChar)      pushWithRef('驛馬', i, ref);
+      if (TAO_HUA[z] === zChar)    pushWithRef('桃花', i, ref);
+      if (HUA_GAI[z] === zChar)    pushWithRef('華蓋', i, ref);
+      if (JIANG_XING[z] === zChar) pushWithRef('將星', i, ref);
     }
     // 祿神 / 羊刃 / 金輿（以日干起）
     for (const g of dayGanRefs) {
@@ -410,10 +431,10 @@ function computeChartShenSha(pillars) {
       const list = branchIdxByChar[c];
       if (list && list.length >= 2) list.forEach(idx => push('自刑', idx));
     });
-    // 子卯 無禮之刑 併入 三刑 桶
+    // 子卯 無禮之刑：獨立桶以與 三刑(寅巳申/丑戌未) 分開
     const ziMao = XING_GROUPS.子卯;
     if (ziMao && ziMao.every(c => branchIdxByChar[c])) {
-      ziMao.forEach(c => branchIdxByChar[c].forEach(idx => push('三刑', idx)));
+      ziMao.forEach(c => branchIdxByChar[c].forEach(idx => push('無禮之刑', idx)));
     }
   }
 
@@ -608,7 +629,7 @@ function detectBranchInteractions(target, originZhiChars) {
     if (ziMao && ziMao.includes(target)) {
       for (let i = 0; i < originZhiChars.length; i++) {
         if (originZhiChars[i] && ziMao.includes(originZhiChars[i]) && originZhiChars[i] !== target) {
-          out.push({ type: '刑', pillarIdx: i, label: `${['年支','月支','日支','時支'][i]}子卯刑` });
+          out.push({ type: '刑', pillarIdx: i, label: `${['年支','月支','日支','時支'][i]}子卯刑（無禮之刑）` });
         }
       }
     }

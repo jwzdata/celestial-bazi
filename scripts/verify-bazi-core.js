@@ -205,12 +205,50 @@ function run() {
     if (!ss.祿神 || !ss.祿神.includes(1)) {
       fail(`甲日 祿神 should include month pillar (寅), got ${JSON.stringify(ss.祿神)}`);
     }
-    if (!ss.驛馬 || !ss.驛馬.includes(1)) {
+    if (!ss.驛馬 || !ss.驛馬.length) {
       fail(`年支子 驛馬 should land on 寅 (month pillar), got ${JSON.stringify(ss.驛馬)}`);
     }
+    // Issue #7: 驛馬 bucket is provenance-aware — entries are
+    // {pillarIdx, ref} objects, not plain indices.
+    const yiMaHit = ss.驛馬.find(h => h && typeof h === 'object' && h.pillarIdx === 1);
+    if (!yiMaHit) fail(`驛馬 entry for month pillar missing, got ${JSON.stringify(ss.驛馬)}`);
+    if (!['year','day','both'].includes(yiMaHit.ref)) {
+      fail(`驛馬 ref must be one of year/day/both, got ${yiMaHit.ref}`);
+    }
+    // In this chart 年支子 and 日支丑 — only 年支 起 驛馬 (寅)。
+    // 日支丑 起馬在亥 (not in chart). So ref should be 'year'.
+    if (yiMaHit.ref !== 'year') fail(`驛馬 ref expected 'year' (only 年支子 起 寅馬), got '${yiMaHit.ref}'`);
     // 羊刃 甲刃卯 – not in chart, so bucket should be absent or empty
     if (ss.羊刃 && ss.羊刃.length) {
       fail(`羊刃 should not appear (no 卯), got ${JSON.stringify(ss.羊刃)}`);
+    }
+  }
+
+  // -----------------------------------------------------------------
+  // Issue #7 (continued): provenance 'both' — when year and day both
+  // trigger 驛馬/桃花/華蓋/將星 onto the SAME pillar, ref must be 'both'.
+  //   年支申(馬在寅) + 日支子(馬在寅) → 月支寅 被 both 起。
+  // Issue #8: 子卯 無禮之刑 lives in its own bucket, NOT in 三刑.
+  // -----------------------------------------------------------------
+  {
+    const pillars = [
+      { gan: G('甲'), zhi: Z('申') }, // 年柱：年支申 → 驛馬在寅
+      { gan: G('丙'), zhi: Z('寅') }, // 月柱：寅
+      { gan: G('戊'), zhi: Z('子') }, // 日柱：日支子 → 驛馬在寅（同落於月支寅）
+      { gan: G('辛'), zhi: Z('卯') }  // 時柱：卯
+    ];
+    const ss = computeChartShenSha(pillars);
+    const yiMa = (ss.驛馬 || []).find(h => h && h.pillarIdx === 1);
+    if (!yiMa) fail(`both-ref test: 驛馬 on month pillar missing, got ${JSON.stringify(ss.驛馬)}`);
+    if (yiMa.ref !== 'both') fail(`both-ref test: expected ref='both' (年支申+日支子 皆起寅馬), got '${yiMa.ref}'`);
+
+    // Issue #8: 日支子 + 時支卯 → 子卯 無禮之刑 in its own bucket
+    if (!ss.無禮之刑 || !ss.無禮之刑.includes(2) || !ss.無禮之刑.includes(3)) {
+      fail(`無禮之刑 bucket should include day(2) + hour(3), got ${JSON.stringify(ss.無禮之刑)}`);
+    }
+    // And must NOT be folded into 三刑
+    if (ss.三刑 && (ss.三刑.includes(2) || ss.三刑.includes(3))) {
+      fail(`三刑 bucket must not contain 子卯 hits, got ${JSON.stringify(ss.三刑)}`);
     }
   }
 

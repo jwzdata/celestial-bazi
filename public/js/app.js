@@ -123,15 +123,25 @@ function renderProInfo() {
   const xunKong = [call(eightChar, 'getYearXunKong'), call(eightChar, 'getMonthXunKong'), call(eightChar, 'getDayXunKong'), call(eightChar, 'getTimeXunKong')].join(' · ');
   const pengZu = `${call(lunar, 'getPengZuGan')}；${call(lunar, 'getPengZuZhi')}`;
 
-  // 命盤神煞：以原局四柱為對象，顯示每個非空桶及其落點
+  // 命盤神煞：以原局四柱為對象，顯示每個非空桶及其落點。
+  // 驛馬/桃花/華蓋/將星 桶為 provenance-aware 物件陣列 [{pillarIdx, ref}],
+  // 其餘桶仍維持純索引陣列 [pillarIdx,...]，以舊接口相容。
   const pillarLabels = ['年支','月支','日支','時支'];
+  const REF_LABEL = { year: '起於年支', day: '起於日支', both: '年/日支皆起' };
   let shenShaHTML = '<span class="text-accent/40">—</span>';
   if (typeof computeChartShenSha === 'function' && Array.isArray(baziResult.pillars)) {
     const ss = computeChartShenSha(baziResult.pillars);
     const keys = Object.keys(ss);
     if (keys.length) {
       shenShaHTML = keys.map(k => {
-        const tags = ss[k].map(i => pillarLabels[i]).join('、');
+        const bucket = ss[k] || [];
+        const tags = bucket.map(entry => {
+          if (entry && typeof entry === 'object' && 'pillarIdx' in entry) {
+            const refTag = entry.ref ? `（${REF_LABEL[entry.ref] || entry.ref}）` : '';
+            return `${pillarLabels[entry.pillarIdx]}${refTag}`;
+          }
+          return pillarLabels[entry];
+        }).join('、');
         return `<div class="flex gap-2 text-xs leading-relaxed"><span class="text-accent/60 shrink-0 min-w-[4.5rem]">${k}</span><span class="text-accent/85">${tags}</span></div>`;
       }).join('');
     }
