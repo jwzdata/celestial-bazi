@@ -152,15 +152,15 @@ function renderProInfo() {
     ['胎元 / 胎元納音', `${call(eightChar, 'getTaiYuan')} / ${call(eightChar, 'getTaiYuanNaYin')}`, '補充四柱外的先天氣場。'],
     ['四柱納音', naYin, '年、月、日、時納音。'],
     ['四柱旬空', xunKong, '年、月、日、時旬空，日旬空尤其常用。'],
-    ['命盤神煞', shenShaHTML, '依年干/日干與年支/日支起；落於何柱以標示。', true],
+    ['命盤神煞', shenShaHTML, '依年干/日干與年支/日支起；落於何柱以標示。'],
     ['彭祖百忌', pengZu, '日干日支忌諱參考。'],
     ['時柱校正', `${meta.hourName}（${meta.trueSolarTime}）`, '按真太陽時重新判定。']
   ];
 
-  grid.innerHTML = sections.map(([title, value, hint, raw]) => `
+  grid.innerHTML = sections.map(([title, value, hint]) => `
     <div class="glass-card p-5">
       <div class="text-xs text-accent/50 mb-2 tracking-wider">${title}</div>
-      <div class="font-serif text-base text-accent/90 leading-relaxed">${raw ? value : value}</div>
+      <div class="font-serif text-base text-accent/90 leading-relaxed">${value}</div>
       <div class="text-[10px] text-accent/35 mt-2 leading-relaxed">${hint}</div>
     </div>
   `).join('');
@@ -325,16 +325,23 @@ function renderXiYong(xiYong) {
     const tongWx = frameworks.通關 && frameworks.通關.wx;
     const primary = (xiYong.primaryFramework) || '扶抑';
     const agree = fuWx && tiWx && fuWx === tiWx;
+    // EN 模式下 TIAO_NOTES / 扶抑 runtime 模板缺乏逐句翻譯，substring
+    // fallback 會把「生於秋月清冷」等逐字譯為 Chinglish。此處直接於 EN 模式
+    // 省略 note 文本，只保留五行符號，避免顯示亂譯。
+    const showNotes = (typeof currentLang === 'undefined' || currentLang === 'zh');
     const cardHTML = (entry, isPrimary, extraTag) => {
       const color = entry.wx ? WX_COLORS[entry.wx] : 'rgba(255,215,0,0.3)';
       const wxLabel = entry.wx ? `<span class="font-serif text-xl font-700" style="color:${color}">${WX_ICONS[entry.wx]||''} ${entry.wx}</span>` : `<span class="text-accent/40">—</span>`;
       const highlight = isPrimary ? 'ring-1 ring-accent/40 bg-accent/5' : '';
       const tagHTML = extraTag ? `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent/70 align-middle">${extraTag}</span>` : '';
+      const noteHTML = (showNotes && entry.note)
+        ? `<div class="text-[11px] text-accent/55 leading-relaxed">${entry.note}</div>`
+        : '';
       return `
         <div class="glass-card p-4 ${highlight}">
           <div class="text-xs text-accent/60 mb-1 tracking-wider">${entry.framework}${tagHTML}</div>
           <div class="mb-2">${wxLabel}</div>
-          <div class="text-[11px] text-accent/55 leading-relaxed">${entry.note || ''}</div>
+          ${noteHTML}
         </div>
       `;
     };
@@ -1109,17 +1116,32 @@ function renderDaYun() {
   };
   const summarizeInteractions = (hits) => {
     if (!hits.length) return '';
-    const first = hits[0];
-    const label = PILLAR_LABELS[first.pillarIdx] || '';
-    switch (first.type) {
-      case '六沖': return `大運支沖${label}，此運變動較大，宜穩守、忌激進。`;
-      case '六合': return `大運支與${label}相合，人緣與合作機會增多。`;
-      case '六害': return `大運支害${label}，留意口舌是非與小人。`;
-      case '三合': return `大運支與${label}三合相助，順勢而為多得貴人。`;
-      case '三會': return `大運支與${label}三會成方，同氣相求，動蕩中成勢。`;
-      case '刑':   return `大運支刑${label}，宜防訴訟、健康、與親緣摩擦。`;
-      default:     return '';
+    // 類型強度排序：沖 ≥ 刑 > 合 > 害 > 三合 > 三會（依古典子平，沖/刑最為剋應）。
+    const WEIGHT = { '六沖': 6, '刑': 5, '六合': 4, '六害': 3, '三合': 2, '三會': 1 };
+    const sorted = hits.slice().sort((a, b) => (WEIGHT[b.type] || 0) - (WEIGHT[a.type] || 0));
+    const sentence = (hit) => {
+      const label = PILLAR_LABELS[hit.pillarIdx] || '';
+      switch (hit.type) {
+        case '六沖': return `大運支沖${label}，此運變動較大，宜穩守、忌激進。`;
+        case '六合': return `大運支與${label}相合，人緣與合作機會增多。`;
+        case '六害': return `大運支害${label}，留意口舌是非與小人。`;
+        case '三合': return `大運支與${label}三合相助，順勢而為多得貴人。`;
+        case '三會': return `大運支與${label}三會成方，同氣相求，動蕩中成勢。`;
+        case '刑':   return `大運支刑${label}，宜防訴訟、健康、與親緣摩擦。`;
+        default:     return '';
+      }
+    };
+    // 若頭兩個強度相近且落在不同柱位，串接；否則只取最強一句。
+    const first = sorted[0];
+    const second = sorted.find(h => h !== first && h.pillarIdx !== first.pillarIdx);
+    const firstSentence = sentence(first);
+    if (!second) return firstSentence;
+    const gap = (WEIGHT[first.type] || 0) - (WEIGHT[second.type] || 0);
+    if (gap <= 2) {
+      const secondSentence = sentence(second);
+      if (secondSentence) return `${firstSentence} 另${secondSentence}`;
     }
+    return firstSentence;
   };
 
   let html = `
@@ -1156,12 +1178,21 @@ function renderDaYun() {
     const dyHits = (typeof detectBranchInteractions === 'function')
       ? detectBranchInteractions(dZhiChar, originZhiChars)
       : [];
-    const badgesHTML = dyHits.length
-      ? `<div class="mt-2 flex flex-wrap gap-1.5">${dyHits.map(h =>
+    // 每柱互動 6 類 × 4 柱 最多 24 個 badge；為免佈局爆炸，排序後保留前 6，
+    // 其餘折合為 "+N" 提示。排序鍵與 summarizeInteractions 保持一致。
+    const BADGE_WEIGHT = { '六沖': 6, '刑': 5, '六合': 4, '六害': 3, '三合': 2, '三會': 1 };
+    const dyHitsSorted = dyHits.slice().sort((a, b) => (BADGE_WEIGHT[b.type] || 0) - (BADGE_WEIGHT[a.type] || 0));
+    const BADGE_CAP = 6;
+    const dyHitsVisible = dyHitsSorted.slice(0, BADGE_CAP);
+    const dyHitsOverflow = Math.max(0, dyHitsSorted.length - BADGE_CAP);
+    const badgesHTML = dyHitsVisible.length
+      ? `<div class="mt-2 flex flex-wrap gap-1.5">${dyHitsVisible.map(h =>
           `<span class="px-1.5 py-0.5 rounded text-[10px] ${TAG_STYLE[h.type] || 'bg-accent/10 text-accent/70 border border-accent/20'}">${h.label}</span>`
-        ).join('')}</div>`
+        ).join('')}${dyHitsOverflow
+          ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-accent/10 text-accent/60 border border-accent/20">+${dyHitsOverflow}</span>`
+          : ''}</div>`
       : '';
-    const interactionDesc = summarizeInteractions(dyHits);
+    const interactionDesc = summarizeInteractions(dyHitsSorted);
 
     const baseDesc = isXi
       ? `${ganZhi}大運，干支五行與喜用神呼應，整體更利於順勢發展。`
