@@ -151,3 +151,17 @@ const CAREER = {
     weak:['適合行政、後勤、物業管理等服務行業','宜從事與火土相關的行業','財運平穩增長，注重儲蓄','適合在大機構發展，穩定上升']
   }
 };
+
+// Node 端（僅 scripts/verify-bazi-core.js 使用）。
+// 瀏覽器環境 typeof module === 'undefined'，這段不會執行。
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    TG, DZ, SX,
+    WX_GAN, WX_ZHI, WX_LIST,
+    CANG_GAN, CG_WEIGHT,
+    ELEMENT_CYCLE, SHI_SHEN_MAP,
+    HOUR_BRANCH_NAMES, HOUR_BRANCH_RANGES,
+    CS_START, CS_NAMES, CS_POWER,
+    NA_YIN
+  };
+}
