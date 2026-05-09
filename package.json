@@ -22,5 +22,9 @@
     "url": "https://github.com/jwzdata/celestial-bazi.git"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "netlify-cli": "^25.1.0",
+    "vercel": "^51.8.0"
+  }
 }
