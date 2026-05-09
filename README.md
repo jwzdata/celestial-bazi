@@ -5,6 +5,7 @@ A modern, commercial-ready Web Application for Bazi (Chinese Astrology) calculat
 ## Features
 
 - **Accurate Calculation**: Powered by `lunar-javascript` for high-precision solar term and lunar calendar conversions.
+- **Deeper Ming-Li (命理) engine**: 得令/得地/得勢 strength tiers, chart-level shen-sha (天乙貴人/驛馬/桃花/華蓋/祿神/羊刃/金輿 ...), three-framework 用神 (扶抑/調候/通關), and 大運/流年 × 原局 六合/六沖/三合/刑害 interaction tags.
 - **True Solar Time**: Supports exact birth time, gender, birthplace longitude, longitude correction, and equation-of-time adjustment for more precise hour-pillar calculation.
 - **Searchable Birthplace Input**: Type a city name (for example `新泰`, `山東新泰`, or `山東省新泰市`) to auto-fill longitude, with manual longitude override for unlisted places.
 - **Professional Bazi Details**: Displays precision metadata, Ming Gong (命宮), Shen Gong (身宮), Tai Yuan (胎元), Na Yin (納音), Xun Kong (旬空), Ji Shen/Xiong Sha (吉神/凶煞), and Peng Zu notes.
