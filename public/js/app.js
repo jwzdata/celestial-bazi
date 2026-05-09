@@ -121,25 +121,36 @@ function renderProInfo() {
   const call = (obj, method, fallback = '') => (obj && typeof obj[method] === 'function') ? obj[method]() : fallback;
   const naYin = [call(eightChar, 'getYearNaYin'), call(eightChar, 'getMonthNaYin'), call(eightChar, 'getDayNaYin'), call(eightChar, 'getTimeNaYin')].join(' · ');
   const xunKong = [call(eightChar, 'getYearXunKong'), call(eightChar, 'getMonthXunKong'), call(eightChar, 'getDayXunKong'), call(eightChar, 'getTimeXunKong')].join(' · ');
-  const jiShen = call(lunar, 'getDayJiShen', []).slice(0, 8).join('、') || '—';
-  const xiongSha = call(lunar, 'getDayXiongSha', []).slice(0, 8).join('、') || '—';
   const pengZu = `${call(lunar, 'getPengZuGan')}；${call(lunar, 'getPengZuZhi')}`;
+
+  // 命盤神煞：以原局四柱為對象，顯示每個非空桶及其落點
+  const pillarLabels = ['年支','月支','日支','時支'];
+  let shenShaHTML = '<span class="text-accent/40">—</span>';
+  if (typeof computeChartShenSha === 'function' && Array.isArray(baziResult.pillars)) {
+    const ss = computeChartShenSha(baziResult.pillars);
+    const keys = Object.keys(ss);
+    if (keys.length) {
+      shenShaHTML = keys.map(k => {
+        const tags = ss[k].map(i => pillarLabels[i]).join('、');
+        return `<div class="flex gap-2 text-xs leading-relaxed"><span class="text-accent/60 shrink-0 min-w-[4.5rem]">${k}</span><span class="text-accent/85">${tags}</span></div>`;
+      }).join('');
+    }
+  }
 
   const sections = [
     ['命宮 / 身宮', `${call(eightChar, 'getMingGong')} / ${call(eightChar, 'getShenGong')}`, '命宮看先天格局，身宮看後天著力點。'],
     ['胎元 / 胎元納音', `${call(eightChar, 'getTaiYuan')} / ${call(eightChar, 'getTaiYuanNaYin')}`, '補充四柱外的先天氣場。'],
     ['四柱納音', naYin, '年、月、日、時納音。'],
     ['四柱旬空', xunKong, '年、月、日、時旬空，日旬空尤其常用。'],
-    ['吉神宜趨', jiShen, '當日吉神參考。'],
-    ['凶煞宜忌', xiongSha, '當日凶煞參考。'],
+    ['命盤神煞', shenShaHTML, '依年干/日干與年支/日支起；落於何柱以標示。', true],
     ['彭祖百忌', pengZu, '日干日支忌諱參考。'],
     ['時柱校正', `${meta.hourName}（${meta.trueSolarTime}）`, '按真太陽時重新判定。']
   ];
 
-  grid.innerHTML = sections.map(([title, value, hint]) => `
+  grid.innerHTML = sections.map(([title, value, hint, raw]) => `
     <div class="glass-card p-5">
       <div class="text-xs text-accent/50 mb-2 tracking-wider">${title}</div>
-      <div class="font-serif text-base text-accent/90 leading-relaxed">${value}</div>
+      <div class="font-serif text-base text-accent/90 leading-relaxed">${raw ? value : value}</div>
       <div class="text-[10px] text-accent/35 mt-2 leading-relaxed">${hint}</div>
     </div>
   `).join('');
@@ -282,6 +293,48 @@ function renderTraits(dayGan, isStrong) {
 
 function renderXiYong(xiYong) {
   const grid = document.getElementById('xiYongGrid');
+
+  // 三框架 用神（扶抑 / 調候 / 通關）。顯示於 xiYongGrid 之前。
+  if (baziResult && typeof computeYongShenFrameworks === 'function') {
+    const frameworks = computeYongShenFrameworks({
+      dayGan: baziResult.dayGan,
+      monthZhi: baziResult.monthZhi,
+      strength: baziResult.strength,
+      wxCount: baziResult.wxCount
+    });
+    baziResult.frameworks = frameworks;
+    let holder = document.getElementById('yongShenFrameworks');
+    if (!holder) {
+      holder = document.createElement('div');
+      holder.id = 'yongShenFrameworks';
+      holder.className = 'grid grid-cols-1 md:grid-cols-3 gap-3 mb-4';
+      grid.parentElement.insertBefore(holder, grid);
+    }
+    const fuWx = frameworks.扶抑 && frameworks.扶抑.wx;
+    const tiWx = frameworks.調候 && frameworks.調候.wx;
+    const tongWx = frameworks.通關 && frameworks.通關.wx;
+    const primary = (xiYong.primaryFramework) || '扶抑';
+    const agree = fuWx && tiWx && fuWx === tiWx;
+    const cardHTML = (entry, isPrimary, extraTag) => {
+      const color = entry.wx ? WX_COLORS[entry.wx] : 'rgba(255,215,0,0.3)';
+      const wxLabel = entry.wx ? `<span class="font-serif text-xl font-700" style="color:${color}">${WX_ICONS[entry.wx]||''} ${entry.wx}</span>` : `<span class="text-accent/40">—</span>`;
+      const highlight = isPrimary ? 'ring-1 ring-accent/40 bg-accent/5' : '';
+      const tagHTML = extraTag ? `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent/70 align-middle">${extraTag}</span>` : '';
+      return `
+        <div class="glass-card p-4 ${highlight}">
+          <div class="text-xs text-accent/60 mb-1 tracking-wider">${entry.framework}${tagHTML}</div>
+          <div class="mb-2">${wxLabel}</div>
+          <div class="text-[11px] text-accent/55 leading-relaxed">${entry.note || ''}</div>
+        </div>
+      `;
+    };
+    holder.innerHTML = [
+      cardHTML(frameworks.扶抑, primary === '扶抑', agree ? '與調候一致' : (primary !== '扶抑' ? '次要' : '')),
+      cardHTML(frameworks.調候, primary === '調候', agree ? '與扶抑一致' : (primary !== '調候' ? '次要' : '')),
+      cardHTML(frameworks.通關, false, tongWx ? '' : '未啟用')
+    ].join('');
+  }
+
   const items = [
     { label: '喜神', wx: xiYong.xi, cls: 'xi' },
     { label: '用神', wx: xiYong.yong, cls: 'yong' },
@@ -477,6 +530,16 @@ function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fo
   let advice = "運勢平穩，按部就班即可。";
   if (fortune === 'ji') advice = "今日運勢極佳，適合推進重要事項，把握機會。";
   if (fortune === 'xiong') advice = "今日運勢低迷，宜靜不宜動，注意情緒管理與風險防範。";
+
+  // 當日吉神/凶煞（萬年曆取自 lunar-javascript）——屬於日曆視角，
+  // 非原局命盤神煞，因此放在這裡、不進 renderProInfo。
+  const callLunar = (name, fb) => (lunar && typeof lunar[name] === 'function') ? lunar[name]() : fb;
+  const jiShen   = (callLunar('getDayJiShen', []) || []).slice(0, 6).join('、');
+  const xiongSha = (callLunar('getDayXiongSha', []) || []).slice(0, 6).join('、');
+  if (jiShen || xiongSha) {
+    advice += (jiShen   ? `｜吉神：${jiShen}` : '');
+    advice += (xiongSha ? `｜凶煞：${xiongSha}` : '');
+  }
   document.getElementById('calSummaryAdvice').textContent = advice;
 }
 
@@ -599,8 +662,13 @@ function analyze() {
     // 身強身弱（得令 / 得地 / 得勢）
     let strength = judgeStrength(dp.gan, mp.zhi, wxCount, pillars);
     
+    // 三框架 用神（扶抑 / 調候 / 通關）—— 用於讓 getXiYong 在極端季節時優先取 調候
+    const frameworks = window.computeYongShenFrameworks ? window.computeYongShenFrameworks({
+      dayGan: dp.gan, monthZhi: mp.zhi, strength, wxCount
+    }) : null;
+
     // 喜用神
-    let xiYong = getXiYong(dp.gan, strength.isStrong, strength.ctrlEl, strength.motherEl, strength.childWX, strength.wealthEl);
+    let xiYong = getXiYong(dp.gan, strength.isStrong, strength.ctrlEl, strength.motherEl, strength.childWX, strength.wealthEl, frameworks);
     
     // 存儲結果
     baziResult = {
@@ -610,6 +678,7 @@ function analyze() {
       monthZhi: mp.zhi,
       isStrong: strength.isStrong,
       gender,
+      frameworks,
       precision: pillars.meta
     };
     
@@ -1012,6 +1081,32 @@ function renderDaYun() {
   const xiArr = [baziResult.xiYong.xi, baziResult.xiYong.yong].flat();
   const jiArr = baziResult.xiYong.ji.flat();
 
+  // 原局四支（字符）用於 大運/流年 × 原局 的 合/沖/刑/害/三合/三會 偵測
+  const originZhiChars = (baziResult.pillars || []).map(p => DZ[p.zhi]);
+  const PILLAR_LABELS = ['年支','月支','日支','時支'];
+  const TAG_STYLE = {
+    '六沖': 'bg-fire/15 text-fire border border-fire/30',
+    '六合': 'bg-water/15 text-water border border-water/30',
+    '六害': 'bg-fire/10 text-fire/80 border border-fire/20',
+    '三合': 'bg-wood/15 text-wood border border-wood/30',
+    '三會': 'bg-wood/10 text-wood/80 border border-wood/20',
+    '刑':   'bg-earth/15 text-earth border border-earth/30'
+  };
+  const summarizeInteractions = (hits) => {
+    if (!hits.length) return '';
+    const first = hits[0];
+    const label = PILLAR_LABELS[first.pillarIdx] || '';
+    switch (first.type) {
+      case '六沖': return `大運支沖${label}，此運變動較大，宜穩守、忌激進。`;
+      case '六合': return `大運支與${label}相合，人緣與合作機會增多。`;
+      case '六害': return `大運支害${label}，留意口舌是非與小人。`;
+      case '三合': return `大運支與${label}三合相助，順勢而為多得貴人。`;
+      case '三會': return `大運支與${label}三會成方，同氣相求，動蕩中成勢。`;
+      case '刑':   return `大運支刑${label}，宜防訴訟、健康、與親緣摩擦。`;
+      default:     return '';
+    }
+  };
+
   let html = `
     <div class="mb-4 p-4 rounded-xl bg-accent/5 border border-accent/10">
       <div class="text-xs text-accent/50 mb-1">起運時間</div>
@@ -1026,6 +1121,7 @@ function renderDaYun() {
     const ganZhi = dy.getGanZhi();
     const dGan = TG.indexOf(ganZhi.charAt(0));
     const dZhi = DZ.indexOf(ganZhi.charAt(1));
+    const dZhiChar = DZ[dZhi];
     const dyElements = [WX_GAN[dGan], WX_ZHI[dZhi]].filter(Boolean);
     const isXi = dyElements.some(el => xiArr.includes(el));
     const isJi = dyElements.some(el => jiArr.includes(el));
@@ -1041,16 +1137,29 @@ function renderDaYun() {
     if (isCurrent) tag = '<span class="ml-2 px-2 py-0.5 rounded-full bg-accent/20 text-accent text-[10px] font-bold">當前</span>';
     else if (isFuture) tag = '<span class="ml-2 px-2 py-0.5 rounded-full bg-black/30 text-accent/50 text-[10px]">未來</span>';
 
-    const desc = isXi
+    // 大運支 × 原局 互動
+    const dyHits = (typeof detectBranchInteractions === 'function')
+      ? detectBranchInteractions(dZhiChar, originZhiChars)
+      : [];
+    const badgesHTML = dyHits.length
+      ? `<div class="mt-2 flex flex-wrap gap-1.5">${dyHits.map(h =>
+          `<span class="px-1.5 py-0.5 rounded text-[10px] ${TAG_STYLE[h.type] || 'bg-accent/10 text-accent/70 border border-accent/20'}">${h.label}</span>`
+        ).join('')}</div>`
+      : '';
+    const interactionDesc = summarizeInteractions(dyHits);
+
+    const baseDesc = isXi
       ? `${ganZhi}大運，干支五行與喜用神呼應，整體更利於順勢發展。`
       : isJi
         ? `${ganZhi}大運，干支五行觸及忌神，宜保守布局，避免高風險決策。`
         : `${ganZhi}大運，五行氣場中性，適合穩扎穩打、逐步積累。`;
+    const desc = baseDesc + (interactionDesc ? ` ${interactionDesc}` : '');
 
     const yearsHtml = liuNianList.slice(0, 10).map(ln => {
       const lnGz = ln.getGanZhi();
       const yGan = TG.indexOf(lnGz.charAt(0));
       const yZhi = DZ.indexOf(lnGz.charAt(1));
+      const yZhiChar = DZ[yZhi];
       const yElements = [WX_GAN[yGan], WX_ZHI[yZhi]].filter(Boolean);
       let yScore = 0;
       yElements.forEach(el => {
@@ -1060,7 +1169,13 @@ function renderDaYun() {
       let yFortune = '平', yColor = 'text-accent', yBg = 'bg-black/20';
       if (yScore > 0) { yFortune = '吉'; yColor = 'text-wood'; yBg = 'bg-wood/20'; }
       else if (yScore < 0) { yFortune = '慎'; yColor = 'text-fire'; yBg = 'bg-fire/20'; }
-      return `<div class="${yBg} p-1 rounded ${yColor}">${ln.getYear()}<br>${lnGz}<br>${yFortune}</div>`;
+      const lnHits = (typeof detectBranchInteractions === 'function')
+        ? detectBranchInteractions(yZhiChar, originZhiChars)
+        : [];
+      const tooltip = lnHits.length ? lnHits.map(h => h.label).join('、') : '';
+      const titleAttr = tooltip ? ` title="${tooltip}"` : '';
+      const hitDot = lnHits.length ? '<span class="inline-block w-1 h-1 rounded-full bg-accent ml-1 align-middle"></span>' : '';
+      return `<div class="${yBg} p-1 rounded ${yColor}"${titleAttr}>${ln.getYear()}<br>${lnGz}<br>${yFortune}${hitDot}</div>`;
     }).join('');
 
     html += `
@@ -1069,7 +1184,8 @@ function renderDaYun() {
           <i class="fas fa-${isCurrent ? 'arrow-up' : (isFuture ? 'arrow-right' : 'history')} mr-2"></i>
           ${dy.getStartAge()}歲起 · ${startYear} - ${endYear} (${ganZhi}大運)${tag}
         </h4>
-        <p class="text-xs text-accent/70 leading-relaxed">${desc}</p>
+        ${badgesHTML}
+        <p class="text-xs text-accent/70 leading-relaxed mt-2">${desc}</p>
         <div class="mt-3 grid grid-cols-5 gap-2 text-center text-[10px]">${yearsHtml}</div>
       </div>`;
   });
