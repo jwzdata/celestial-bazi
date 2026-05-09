@@ -7,6 +7,7 @@ A modern, commercial-ready Web Application for Bazi (Chinese Astrology) calculat
 - **Accurate Calculation**: Powered by `lunar-javascript` for high-precision solar term and lunar calendar conversions.
 - **True Solar Time**: Supports exact birth time, gender, birthplace longitude, longitude correction, and equation-of-time adjustment for more precise hour-pillar calculation.
 - **Searchable Birthplace Input**: Type a city name (for example `新泰`, `山東新泰`, or `山東省新泰市`) to auto-fill longitude, with manual longitude override for unlisted places.
+- **Smart Form Memory**: Logged-in users' birth information (date, time, gender, birthplace, longitude) is automatically saved and restored on next login for convenience.
 - **Professional Bazi Details**: Displays precision metadata, Ming Gong (命宮), Shen Gong (身宮), Tai Yuan (胎元), Na Yin (納音), Xun Kong (旬空), Ji Shen/Xiong Sha (吉神/凶煞), and Peng Zu notes.
 - **Interactive UI**: Deep-space blue & glowing gold theme with smooth animations.
 - **Premium Modules**:
@@ -27,16 +28,17 @@ celestial-bazi/
 │   ├── css/
 │   │   └── style.css       # Custom Theme & Animations
 │   └── js/
-│       ├── app.js          # Core UI Logic, Features & Rendering
+│       ├── app.js          # Core UI Logic, Features & Rendering (with form memory)
 │       ├── bazi.js         # Bazi Calculation, true solar time, Five Elements, Strength, etc.
 │       ├── data.js         # Constants (Stems, Branches, Elements, city longitudes, etc.)
-│       ├── auth.js         # User System & Payment UI
+│       ├── auth.js         # User System, Payment UI & Form Preferences
 │       └── i18n.js         # Internationalization (zh/en)
 ├── api/                    # Vercel Serverless Functions (shared by both platforms)
 │   ├── _db.js              # Shared Database Module (Turso/libsql)
 │   ├── register.js         # POST /api/register
 │   ├── login.js            # POST /api/login
 │   ├── user.js             # GET  /api/user
+│   ├── preferences.js      # GET/PUT /api/preferences (user form memory)
 │   └── pay/
 │       ├── create.js       # POST /api/pay/create
 │       └── mock-success.js # POST /api/pay/mock-success
@@ -45,6 +47,7 @@ celestial-bazi/
 ├── vercel.json             # Vercel Configuration
 ├── netlify.toml            # Netlify Configuration
 ├── package.json            # Project Dependencies
+├── deno.lock               # Netlify Edge Functions dependency lock
 ├── .env.example            # Environment Variables Template
 └── README.md
 ```

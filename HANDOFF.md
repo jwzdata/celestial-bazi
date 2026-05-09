@@ -92,6 +92,7 @@ npm install
 ```
 
 > 项目依赖仅 4 个包：@libsql/client、bcryptjs、jsonwebtoken、uuid。
+> 开发依赖包含 netlify-cli 和 vercel，用于本地开发调试。
 > 无需原生编译，直接安装即可。
 
 ### 第三步：配置环境变量
