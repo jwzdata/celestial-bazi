@@ -184,6 +184,17 @@ function getHourIndexFromTime(hour, minute = 0) {
   return Math.floor((total - 60) / 120) + 1;
 }
 
+// 五鼠遁：以未位移之日主（rawDayGanIdx）+ 時辰地支索引 推時干。
+//   甲己日 夜半甲子頭 → 甲子 乙丑 丙寅 ...
+//   乙庚日 丙子為首
+//   丙辛日 戊子為首
+//   丁壬日 庚子為首
+//   戊癸日 壬子為首
+// 起始時干 = (dayGanIdx % 5) * 2；對應 十干 索引 0/2/4/6/8（甲丙戊庚壬）。
+function getHourGanIdx(dayGanIdx, hourZhiIdx) {
+  return (((dayGanIdx % 5) * 2) + hourZhiIdx) % 10;
+}
+
 function pad2(n) { return String(n).padStart(2, '0'); }
 function formatDateTime(date) {
   return `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}-${pad2(date.getUTCDate())} ${pad2(date.getUTCHours())}:${pad2(date.getUTCMinutes())}`;
@@ -227,7 +238,13 @@ function getPillarsUsingLunar(year, month, day, timeArg = '12:00', longitude = 1
   const yp = { gan: ganIdx(call(rawLunar, 'getYearGanExact', rawBazi.getYearGan())), zhi: zhiIdx(call(rawLunar, 'getYearZhiExact', rawBazi.getYearZhi())) };
   const mp = { gan: ganIdx(call(rawLunar, 'getMonthGanExact', rawBazi.getMonthGan())), zhi: zhiIdx(call(rawLunar, 'getMonthZhiExact', rawBazi.getMonthZhi())) };
   const dp = { gan: ganIdx(call(rawLunar, 'getDayGanExact', rawBazi.getDayGan())), zhi: zhiIdx(call(rawLunar, 'getDayZhiExact', rawBazi.getDayZhi())) };
-  const hp = { gan: ganIdx(trueSolarBazi.getTimeGan()), zhi: zhiIdx(trueSolarBazi.getTimeZhi()) };
+  // 時柱天干採「五鼠遁」：以未位移之日主為準，搭配真太陽時位移後的時支。
+  // 直接沿用 trueSolarBazi.getTimeGan() 會讓經度位移跨過子夜時（如 23:50
+  // 北京時間 + 東經 130° 位移到隔日 00:10）使用了錯誤的日干，導致時干誤推一輪。
+  const rawDayGanIdx = dp.gan;
+  const hourZhiIdx = zhiIdx(trueSolarBazi.getTimeZhi());
+  const hourGanIdx = getHourGanIdx(rawDayGanIdx, hourZhiIdx);
+  const hp = { gan: hourGanIdx, zhi: hourZhiIdx };
 
   const pillars = [yp, mp, dp, hp];
   pillars.meta = {
@@ -568,6 +585,7 @@ if (typeof window !== 'undefined') {
   window.getPillarsUsingLunar = getPillarsUsingLunar;
   window.getTrueSolarDate = getTrueSolarDate;
   window.getHourIndexFromTime = getHourIndexFromTime;
+  window.getHourGanIdx = getHourGanIdx;
   window.countWuXing = countWuXing;
   window.judgeStrength = judgeStrength;
   window.getXiYong = getXiYong;
@@ -588,6 +606,7 @@ if (typeof module !== 'undefined' && module.exports) {
     getShiShenForHiddenStems,
     getTrueSolarDate,
     getHourIndexFromTime,
+    getHourGanIdx,
     computeChartShenSha,
     computeYongShenFrameworks,
     detectBranchInteractions,

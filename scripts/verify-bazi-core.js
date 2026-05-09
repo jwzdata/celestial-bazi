@@ -79,7 +79,8 @@ function run() {
   const bazi = loadBaziCore();
   const {
     countWuXing, judgeStrength, getShiShen, getShiShenForHiddenStems,
-    computeChartShenSha, computeYongShenFrameworks, detectBranchInteractions
+    computeChartShenSha, computeYongShenFrameworks, detectBranchInteractions,
+    getHourGanIdx
   } = bazi;
 
   if (typeof countWuXing !== 'function') fail('countWuXing not exported');
@@ -89,6 +90,7 @@ function run() {
   if (typeof computeChartShenSha !== 'function') fail('computeChartShenSha not exported');
   if (typeof computeYongShenFrameworks !== 'function') fail('computeYongShenFrameworks not exported');
   if (typeof detectBranchInteractions !== 'function') fail('detectBranchInteractions not exported');
+  if (typeof getHourGanIdx !== 'function') fail('getHourGanIdx not exported');
 
   // Heavenly stems / earthly branches
   const TG = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
@@ -275,7 +277,58 @@ function run() {
   }
 
   // -----------------------------------------------------------------
-  // The fix is that year/month/day pillars come from the raw Beijing
+  // Issue #1 (review 2026-05-09): hour-stem day-rollover.
+  // `trueSolarBazi.getTimeGan()` is derived from the SHIFTED day stem,
+  // so a longitude shift that crosses midnight (e.g. 23:50 Beijing +
+  // 東經 130° shifting into the next calendar date) produces the wrong
+  // hour gan. `getHourGanIdx(rawDayGanIdx, hourZhiIdx)` applies the
+  // 五鼠遁 rule against the UN-shifted day stem and must match the
+  // traditional table.
+  //
+  // Sanity: 甲己日 + 子時 → 甲子 (hourGanIdx=0)
+  //         乙庚日 + 子時 → 丙子 (hourGanIdx=2)
+  //         丙辛日 + 子時 → 戊子 (hourGanIdx=4)
+  //         丁壬日 + 子時 → 庚子 (hourGanIdx=6)
+  //         戊癸日 + 子時 → 壬子 (hourGanIdx=8)
+  // And monotonic across hours: 甲日 + 卯時(idx 3) → 丁卯 (hourGanIdx=3)
+  // -----------------------------------------------------------------
+  {
+    const cases = [
+      // [dayGanChar, hourZhiChar, expectedHourGanChar]
+      ['甲', '子', '甲'], ['己', '子', '甲'],
+      ['乙', '子', '丙'], ['庚', '子', '丙'],
+      ['丙', '子', '戊'], ['辛', '子', '戊'],
+      ['丁', '子', '庚'], ['壬', '子', '庚'],
+      ['戊', '子', '壬'], ['癸', '子', '壬'],
+      ['甲', '卯', '丁'],   // 甲子→乙丑→丙寅→丁卯
+      ['甲', '亥', '乙'],   // 甲子→…→乙亥 (11th, idx=11 mod 10 = 1)
+      ['庚', '午', '壬'],   // 乙庚起丙子 → 丙子+6 = 壬午
+      ['癸', '戌', '壬'],   // 戊癸起壬子 → 壬子+10 mod 10 = 壬戌
+    ];
+    for (const [dg, hz, exp] of cases) {
+      const got = TG[getHourGanIdx(G(dg), Z(hz))];
+      if (got !== exp) fail(`getHourGanIdx(${dg},${hz}) expected ${exp}, got ${got}`);
+    }
+
+    // Regression: shift-crosses-midnight synthetic case.
+    // Birth at 23:50 Beijing with longitude 130°E shifts by +40 min →
+    // real local time is 00:30 of the NEXT calendar day. Day stem stays
+    // on the un-shifted Beijing day; only the hour branch advances to
+    // 子時 of the shifted clock. If 甲日 (rawDayGanIdx=0), the correct
+    // hour gan is 甲 (via 五鼠遁)。If the old implementation pulled the
+    // shifted day stem it would read 乙日 (rawDayGanIdx=1) and emit 丙子
+    // 為首 → 丙 — catastrophically wrong. Our helper re-derives against
+    // the un-shifted day.
+    const shiftedDayGanIdx = (G('甲') + 1) % 10; // simulate 跨日 to 乙
+    const rawDayGanIdx = G('甲');
+    const hourZhiShifted = Z('子');
+    const good = TG[getHourGanIdx(rawDayGanIdx, hourZhiShifted)];
+    const bad  = TG[getHourGanIdx(shiftedDayGanIdx, hourZhiShifted)];
+    if (good !== '甲') fail(`cross-midnight regression: expected 甲子 from un-shifted 甲日, got ${good}子`);
+    if (bad === good) fail('cross-midnight regression: helper returned same gan for un-shifted and shifted day — check branch');
+  }
+
+
   // Solar (rawSolar), NOT from the true-solar-shifted `d`.
   // We assert the SHAPE of the source so a future regression that
   // re-routes year/month/day through the shifted clock fails loudly.
@@ -296,11 +349,14 @@ function run() {
     const yearLine  = /const\s+yp\s*=\s*\{\s*gan:\s*ganIdx\(call\(rawLunar/;
     const monthLine = /const\s+mp\s*=\s*\{\s*gan:\s*ganIdx\(call\(rawLunar/;
     const dayLine   = /const\s+dp\s*=\s*\{\s*gan:\s*ganIdx\(call\(rawLunar/;
-    const hourLine  = /const\s+hp\s*=\s*\{\s*gan:\s*ganIdx\(trueSolarBazi\.getTimeGan/;
+    // 時柱天干改走 五鼠遁：rawDayGanIdx + trueSolar 時支 → getHourGanIdx()
+    const hourLine  = /const\s+hp\s*=\s*\{\s*gan:\s*hourGanIdx/;
+    const hourGanRule = /const\s+hourGanIdx\s*=\s*getHourGanIdx\(\s*rawDayGanIdx\s*,\s*hourZhiIdx\s*\)/;
     if (!yearLine.test(src))  fail('true-solar invariant: year pillar must read from rawLunar (un-shifted)');
     if (!monthLine.test(src)) fail('true-solar invariant: month pillar must read from rawLunar (un-shifted)');
     if (!dayLine.test(src))   fail('true-solar invariant: day pillar must read from rawLunar (un-shifted)');
-    if (!hourLine.test(src))  fail('true-solar invariant: hour pillar must read from trueSolarBazi (shifted)');
+    if (!hourLine.test(src))  fail('hour-stem invariant: hour pillar must use 五鼠遁 hourGanIdx');
+    if (!hourGanRule.test(src)) fail('hour-stem invariant: hourGanIdx must be derived from rawDayGanIdx + hourZhiIdx');
   }
 
   console.log('OK');
