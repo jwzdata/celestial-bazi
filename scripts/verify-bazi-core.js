@@ -78,13 +78,17 @@ function assertInRange(label, v, lo, hi) {
 function run() {
   const bazi = loadBaziCore();
   const {
-    countWuXing, judgeStrength, getShiShen, getShiShenForHiddenStems
+    countWuXing, judgeStrength, getShiShen, getShiShenForHiddenStems,
+    computeChartShenSha, computeYongShenFrameworks, detectBranchInteractions
   } = bazi;
 
   if (typeof countWuXing !== 'function') fail('countWuXing not exported');
   if (typeof judgeStrength !== 'function') fail('judgeStrength not exported');
   if (typeof getShiShen !== 'function') fail('getShiShen not exported');
   if (typeof getShiShenForHiddenStems !== 'function') fail('getShiShenForHiddenStems not exported');
+  if (typeof computeChartShenSha !== 'function') fail('computeChartShenSha not exported');
+  if (typeof computeYongShenFrameworks !== 'function') fail('computeYongShenFrameworks not exported');
+  if (typeof detectBranchInteractions !== 'function') fail('detectBranchInteractions not exported');
 
   // Heavenly stems / earthly branches
   const TG = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
@@ -179,7 +183,98 @@ function run() {
   }
 
   // -----------------------------------------------------------------
-  // True-solar-time scope invariant (source-level check).
+  // FEAT-002: computeChartShenSha
+  //   年干甲 + 日支丑 → 天乙貴人 應落在含 丑/未 的柱位（甲戊庚見丑未）
+  //   日干甲 → 祿神 落在 寅
+  //   年支子 → 驛馬 落在 寅（申子辰馬在寅）
+  // -----------------------------------------------------------------
+  // Use a 甲 day master so the rule matrix is legible end-to-end.
+  {
+    const pillars = [
+      { gan: G('甲'), zhi: Z('子') }, // 年柱：年干甲、年支子（驛馬在寅）
+      { gan: G('丙'), zhi: Z('寅') }, // 月柱：月支寅 → 日干甲之祿神；年支子之驛馬
+      { gan: G('甲'), zhi: Z('丑') }, // 日柱：日支丑 → 年干甲/日干甲之天乙貴人
+      { gan: G('己'), zhi: Z('未') }  // 時柱：時支未 → 天乙貴人再次命中
+    ];
+    const ss = computeChartShenSha(pillars);
+    if (!ss.天乙貴人 || !ss.天乙貴人.includes(2) || !ss.天乙貴人.includes(3)) {
+      fail(`甲日+丑未 天乙貴人 missing expected pillars, got ${JSON.stringify(ss.天乙貴人)}`);
+    }
+    if (!ss.祿神 || !ss.祿神.includes(1)) {
+      fail(`甲日 祿神 should include month pillar (寅), got ${JSON.stringify(ss.祿神)}`);
+    }
+    if (!ss.驛馬 || !ss.驛馬.includes(1)) {
+      fail(`年支子 驛馬 should land on 寅 (month pillar), got ${JSON.stringify(ss.驛馬)}`);
+    }
+    // 羊刃 甲刃卯 – not in chart, so bucket should be absent or empty
+    if (ss.羊刃 && ss.羊刃.length) {
+      fail(`羊刃 should not appear (no 卯), got ${JSON.stringify(ss.羊刃)}`);
+    }
+  }
+
+  // -----------------------------------------------------------------
+  // FEAT-002: computeYongShenFrameworks
+  //   丙火 日主 + 子月 → 調候 取 木（水火交戰，冬生火寒須木為母）
+  //   根據表格: {火: {春:'水', 夏:'水', 秋:'木', 冬:'木'}}
+  // -----------------------------------------------------------------
+  {
+    const pillars = [
+      { gan: G('壬'), zhi: Z('子') },
+      { gan: G('壬'), zhi: Z('子') },
+      { gan: G('丙'), zhi: Z('子') }, // 丙火日主
+      { gan: G('癸'), zhi: Z('巳') }
+    ];
+    const wx = countWuXing(pillars, [1.0, 1.5, 1.2, 1.0]);
+    const s = judgeStrength(G('丙'), Z('子'), wx, pillars);
+    const frames = computeYongShenFrameworks({
+      dayGan: G('丙'), monthZhi: Z('子'), strength: s, wxCount: wx
+    });
+    if (!frames.扶抑 || !frames.調候 || !frames.通關) fail('frameworks must include 扶抑/調候/通關');
+    if (!frames.調候.wx) fail('調候 wx should be non-null for 丙 day master in 子月');
+    if (frames.調候.wx !== '木') fail(`丙日主+子月 調候 should be 木, got ${frames.調候.wx}`);
+    // 通關：此盤水盛火衰，wxCount 中 水 >= 3 但 火 <3 故未交戰 → 通關 wx = null
+    if (frames.通關.wx && (wx['水']||0) < 3) fail(`通關 should be null when no 3v3 clash, got ${frames.通關.wx}`);
+    if (typeof frames.調候.note !== 'string' || !frames.調候.note.length) fail('調候 note must be a non-empty string');
+  }
+
+  // -----------------------------------------------------------------
+  // FEAT-002: computeYongShenFrameworks 通關 (positive case)
+  //   命局同時金 >= 3 且 木 >= 3 → 通關 取 水
+  // -----------------------------------------------------------------
+  {
+    const wx = { '金': 4, '木': 4, '水': 0, '火': 0, '土': 0 };
+    const fakeStrength = { isStrong: true, score: 60, ctrlEl: '火', motherEl: '土', childWX: '水', wealthEl: '木' };
+    const frames = computeYongShenFrameworks({ dayGan: G('庚'), monthZhi: Z('寅'), strength: fakeStrength, wxCount: wx });
+    if (!frames.通關 || frames.通關.wx !== '水') fail(`金木交戰 通關 should be 水, got ${frames.通關 && frames.通關.wx}`);
+  }
+
+  // -----------------------------------------------------------------
+  // FEAT-002: detectBranchInteractions
+  //   大運支 午 對原局 [寅, 子, 子, 卯] → 應偵測到 子 vs 午 的 六沖（年支/日支 兩次）。
+  // -----------------------------------------------------------------
+  {
+    const hits = detectBranchInteractions('午', ['寅','子','子','卯']);
+    const chongs = hits.filter(h => h.type === '六沖');
+    if (chongs.length < 2) fail(`六沖 with 子 x2 should yield >=2 hits, got ${JSON.stringify(hits)}`);
+    if (!chongs.every(h => h.label.includes('六沖'))) fail(`六沖 labels malformed: ${JSON.stringify(chongs)}`);
+  }
+
+  // -----------------------------------------------------------------
+  // FEAT-002: detectBranchInteractions (六合 / 三合 / 刑 smoke)
+  // -----------------------------------------------------------------
+  {
+    // 子 vs 丑 → 六合
+    const h1 = detectBranchInteractions('子', ['丑','酉','申','未']);
+    if (!h1.some(h => h.type === '六合')) fail('六合 detector failed for 子 vs 丑');
+    // 申 + 原局含 子、辰 → 三合水局（部分合）
+    const h2 = detectBranchInteractions('申', ['子','辰','寅','卯']);
+    if (h2.filter(h => h.type === '三合').length < 2) fail('三合 (申子辰) detector failed');
+    // 寅 vs 巳 → 相刑（三刑 寅巳申）
+    const h3 = detectBranchInteractions('寅', ['巳','丑','子','戌']);
+    if (!h3.some(h => h.type === '刑')) fail('刑 detector failed for 寅 vs 巳');
+  }
+
+  // -----------------------------------------------------------------
   // The fix is that year/month/day pillars come from the raw Beijing
   // Solar (rawSolar), NOT from the true-solar-shifted `d`.
   // We assert the SHAPE of the source so a future regression that
