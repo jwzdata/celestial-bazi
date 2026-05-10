@@ -10,7 +10,7 @@ A modern, commercial-ready Web Application for Bazi (Chinese Astrology) calculat
 - **Searchable Birthplace Input**: Type a city name (for example `新泰`, `山東新泰`, or `山東省新泰市`) to auto-fill longitude, with manual longitude override for unlisted places.
 - **Smart Form Memory**: Birth information (date, time, gender, birthplace, longitude) is saved after login/analysis and restored on the next login for convenience.
 - **Professional Bazi Details**: Displays precision metadata, Ming Gong (命宮), Shen Gong (身宮), Tai Yuan (胎元), Na Yin (納音), Xun Kong (旬空), Ji Shen/Xiong Sha (吉神/凶煞), Peng Zu notes, and calendar-day scoring details.
-- **Interactive UI**: Deep-space blue & glowing gold theme with smooth animations.
+- **Interactive UI**: Deep-space blue & glowing gold theme with smooth animations, SEO metadata, sitemap/robots, and installable web manifest.
 - **Premium Modules**:
   - 10-Year Fortune (大運流年) & Yearly Analysis — dynamically calculated based on your Bazi
   - Matchmaking / Compatibility Test (合婚)
@@ -18,7 +18,8 @@ A modern, commercial-ready Web Application for Bazi (Chinese Astrology) calculat
   - Poster Generation (for social sharing & referrals)
 - **Daily Check-ins**: Draw daily lots (抽签) and generate lucky numbers.
 - **User & Payment System**: Built-in JWT authentication, form preferences, and a production-safe payment/VIP foundation ready for WeChat/Alipay integration.
-- **i18n**: Chinese/English bilingual support with dynamic switching.
+- **i18n**: Chinese/English bilingual support with dynamic switching, including document title and social metadata updates.
+- **Verification Scripts**: `npm test` runs syntax checks and Bazi core regressions for safer deployments.
 
 ## Project Structure
 

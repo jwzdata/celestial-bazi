@@ -1077,26 +1077,32 @@ function initModalSwipe() {
 // 高級功能邏輯
 // ============================
 
-function checkVipBeforeFeature() {
-  // 爲了方便驗證，暫時取消強制登錄和支付攔截
-  // if (!currentUser) {
-  //   showModal('authModal');
-  //   return false;
-  // }
-  // if (!currentUser.isVip) {
-  //   selectPay('wechat');
-  //   showModal('payModal');
-  //   return false;
-  // }
+function checkVipBeforeFeature(feature) {
   if (!baziResult) {
     showToast('請先在主頁輸入出生信息進行排盤分析！', 'error');
     return false;
+  }
+  const premiumFeatures = new Set(['dayun', 'hehun', 'qiming', 'luckynum', 'aiReport', 'wealth', 'poster']);
+  if (premiumFeatures.has(feature)) {
+    if (!currentUser) {
+      if (!isLoginMode) {
+        isLoginMode = true;
+        toggleAuthMode();
+      }
+      showModal('authModal');
+      return false;
+    }
+    if (!currentUser.isVip) {
+      selectPay('wechat');
+      showModal('payModal');
+      return false;
+    }
   }
   return true;
 }
 
 function showFeature(feature) {
-  if (!checkVipBeforeFeature()) return;
+  if (!checkVipBeforeFeature(feature)) return;
   
   // 每次打開彈窗前，重置內部狀態
   if (feature === 'hehun') {
@@ -1658,8 +1664,13 @@ const NAME_DICT = {
   }
 };
 
+function escapeHTML(value) {
+  return String(value).replace(/[&<>'"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[ch]));
+}
+
 function generateNames() {
   const ln = document.getElementById('lastName').value.trim();
+  const safeLn = escapeHTML(ln);
   if(!ln) return showToast('請輸入姓氏', 'error');
   
   const gender = document.getElementById('gender').value;
@@ -1700,7 +1711,7 @@ function generateNames() {
     
     return `
       <div class="p-3 bg-black/20 rounded border text-center" style="border-color:${borderColor}40">
-        <div class="text-lg font-serif text-accent mb-1 tracking-widest">${ln} ${char1} ${char2}</div>
+        <div class="text-lg font-serif text-accent mb-1 tracking-widest">${safeLn} ${char1} ${char2}</div>
         <div class="text-[10px] flex justify-center gap-2">
           <span style="color:${WX_COLORS[wx1]}">${wx1}</span>
           <span style="color:${WX_COLORS[wx2]}">${wx2}</span>
@@ -1825,7 +1836,7 @@ function generateLuckyNum() {
   }, 600);
 }
 async function generatePoster() {
-  if (!checkVipBeforeFeature()) return;
+  if (!checkVipBeforeFeature('poster')) return;
 
   showModal('posterModal');
   const resultDiv = document.getElementById('posterResult');

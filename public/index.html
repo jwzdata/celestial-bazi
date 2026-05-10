@@ -6,17 +6,30 @@
 <title>星曜命理 · 專業八字命盤分析</title>
 <meta name="description" content="基於傳統命理學的生辰八字專業分析，提供五行分析、喜用神推算、大運流年、合婚起名等服務。">
 <meta name="keywords" content="八字,命理,四柱,五行,大運,流年,合婚,起名,喜用神,天干地支">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#151b28">
+<link rel="canonical" href="https://celestial-bazi.vercel.app/">
 <meta property="og:title" content="星曜命理 · 專業八字命盤分析">
 <meta property="og:description" content="基於傳統命理學的生辰八字專業分析平台，精準排盤，深度解讀。">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://celestial-bazi.vercel.app/">
+<meta property="og:site_name" content="星曜命理">
 <meta property="og:image" content="https://celestial-bazi.vercel.app/og-image.png">
-<meta name="twitter:card" content="summary">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="星曜命理 · 專業八字命盤分析">
 <meta name="twitter:description" content="基於傳統命理學的生辰八字專業分析平台。">
+<meta name="twitter:image" content="https://celestial-bazi.vercel.app/og-image.png">
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔮</text></svg>">
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"星曜命理","alternateName":"Celestial Bazi","url":"https://celestial-bazi.vercel.app/","applicationCategory":"LifestyleApplication","operatingSystem":"Web","description":"基於傳統命理學的生辰八字專業分析平台，提供四柱八字、五行、喜用神、大運流年、合婚起名等功能。","inLanguage":["zh-Hant","en"]}
+</script>
 <script>
 tailwind.config={theme:{extend:{colors:{bg:'#0d1117','bg-s':'#151b28','bg-e':'#222b3a',accent:'#f0d78c','accent-w':'#e6a857','accent-d':'rgba(255, 215, 0, 0.2)',wood:'#81c784',fire:'#ff9800',earth:'#ffc107',metal:'#e0e0e0',water:'#64b5f6'},fontFamily:{serif:['Noto Serif SC','serif'],sans:['Noto Sans SC','sans-serif']}}}}
 </script>
@@ -788,22 +801,23 @@ tailwind.config={theme:{extend:{colors:{bg:'#0d1117','bg-s':'#151b28','bg-e':'#2
       <div class="absolute inset-0 rounded-full border border-accent animate-ping opacity-50"></div>
       <i class="fas fa-robot text-3xl text-accent"></i>
     </div>
-    <h3 class="font-serif text-2xl text-accent mb-2 text-center">AI 深度命理報告</h3>
-    <p class="text-xs text-accent/60 text-center mb-6">基於千億參數玄學大模型，為您生成專屬運程報告</p>
+    <h3 class="font-serif text-2xl text-accent mb-2 text-center">智能命理報告示範</h3>
+    <p class="text-xs text-accent/60 text-center mb-6">基於本站排盤規則與命理模板，生成示範版專屬運程報告</p>
     
     <div id="aiReportIntro" class="w-full">
       <div class="bg-black/20 p-4 rounded-xl mb-6 border border-accent/10">
         <ul class="space-y-3 text-sm text-accent/80">
-          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>萬字詳批，覆蓋一生起伏</span></li>
-          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>事業/財運/婚姻/健康全方位解析</span></li>
-          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>精確到每年的流年重大事件預測</span></li>
-          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>專屬改運化解指導方案</span></li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>示範版長文解讀，覆蓋核心命局起伏</span></li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>事業/財運/婚姻/健康多維度參考</span></li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>結合大運流年生成趨勢提示</span></li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-wood"></i> <span>專屬改運建議與行動清單</span></li>
         </ul>
       </div>
       <div class="flex justify-between items-center bg-accent/10 p-4 rounded-lg mb-6">
         <div class="text-sm text-accent">限時特惠價</div>
         <div class="text-2xl font-bold text-fire">¥19.9 <span class="text-xs text-accent/50 line-through">¥99.0</span></div>
       </div>
+      <p class="text-[10px] text-accent/40 leading-relaxed mb-4">目前為規則引擎生成示範版，用於展示報告結構與解讀深度；正式 AI 報告接入後將提供更完整內容。</p>
       <button onclick="generateAiReport()" class="btn-primary w-full animate-pulse" id="btnGenAi"><i class="fas fa-unlock-alt mr-2"></i>立即解鎖報告</button>
     </div>
 
@@ -866,11 +880,11 @@ tailwind.config={theme:{extend:{colors:{bg:'#0d1117','bg-s':'#151b28','bg-e':'#2
 </nav>
 
 </div>
-<script src="js/i18n.js"></script>
+<script src="js/i18n.js?v=2"></script>
 <script src="js/auth.js?v=4"></script>
 <script src="js/data.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lunar-javascript/1.6.12/lunar.min.js"></script>
 <script src="js/bazi.js?v=4"></script>
-<script src="js/app.js?v=5"></script>
+<script src="js/app.js?v=6"></script>
 </body>
 </html>

@@ -1,0 +1,20 @@
+{
+  "name": "星曜命理 · 專業八字命盤分析",
+  "short_name": "星曜命理",
+  "description": "專業生辰八字、五行、喜用神、大運流年分析工具。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#151b28",
+  "lang": "zh-Hant",
+  "categories": ["lifestyle", "utilities"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%AE%3C/text%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

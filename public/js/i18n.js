@@ -221,14 +221,66 @@ const translations = {
     '退出登錄': 'Logout',
     '複製': 'Copy',
     '您的專屬推廣鏈接：': 'Your Referral Link:',
+    '請先在主頁輸入出生信息進行排盤分析！': 'Please enter your birth information on the homepage and run an analysis first.',
+    '請先進行排盤分析': 'Please run a Bazi analysis first',
+    '解析中...': 'Analyzing...',
+    '海報生成中...': 'Generating poster...',
+    '海報生成失敗，請稍後重試': 'Poster generation failed. Please try again later.',
+    '生成中...': 'Generating...',
+    '生成完畢！': 'Done!',
+    '測算中...': 'Calculating...',
+    '匹配詩經楚辭...': 'Matching classic name sources...',
+    '年八字命盤日曆': 'Yearly Bazi Calendar',
+    '智能命理報告示範': 'Smart Bazi Report Demo',
+    '基於本站排盤規則與命理模板，生成示範版專屬運程報告': 'Generate a personalized demo report based on this site\'s charting rules and Bazi templates.',
+    '示範版長文解讀，覆蓋核心命局起伏': 'Demo long-form reading covering the core chart trends.',
+    '事業/財運/婚姻/健康多維度參考': 'Multi-dimensional guidance for career, wealth, relationships, and health.',
+    '結合大運流年生成趨勢提示': 'Trend prompts generated from 10-year and annual fortune cycles.',
+    '專屬改運建議與行動清單': 'Personalized luck-improvement suggestions and action checklist.',
+    '限時特惠價': 'Limited-time price',
+    '目前為規則引擎生成示範版，用於展示報告結構與解讀深度；正式 AI 報告接入後將提供更完整內容。': 'This is currently a rules-engine demo that shows the report structure and reading depth. The full AI report will provide richer content after integration.',
+    '立即解鎖報告': 'Unlock Report Now',
+    'AI 模型正在深度推演...': 'AI model is running an in-depth reading...',
+    '正在讀取八字天干地支能量...': 'Reading the energy of Bazi stems and branches...',
+    '規則引擎生成示範版': 'Rules-engine generated demo',
   }
 };
 
 let currentLang = localStorage.getItem('lang') || 'zh';
 
+const headLocales = {
+  zh: {
+    title: '星曜命理 · 專業八字命盤分析',
+    description: '基於傳統命理學的生辰八字專業分析，提供五行分析、喜用神推算、大運流年、合婚起名等服務。',
+    ogDescription: '基於傳統命理學的生辰八字專業分析平台，精準排盤，深度解讀。'
+  },
+  en: {
+    title: 'Celestial Bazi · Professional Four Pillars Analysis',
+    description: 'Professional Bazi analysis with Five Elements, favorable elements, 10-year fortune cycles, matchmaking, and naming tools.',
+    ogDescription: 'A professional Four Pillars astrology platform with precise charting and in-depth interpretation.'
+  }
+};
+
+function setMeta(selector, value) {
+  const el = document.head.querySelector(selector);
+  if (el) el.setAttribute('content', value);
+}
+
+function updateHeadMetadata() {
+  const meta = headLocales[currentLang] || headLocales.zh;
+  document.documentElement.lang = currentLang === 'en' ? 'en' : 'zh-Hant';
+  document.title = meta.title;
+  setMeta('meta[name="description"]', meta.description);
+  setMeta('meta[property="og:title"]', meta.title);
+  setMeta('meta[property="og:description"]', meta.ogDescription);
+  setMeta('meta[name="twitter:title"]', meta.title);
+  setMeta('meta[name="twitter:description"]', meta.ogDescription);
+}
+
 function toggleLanguage() {
   currentLang = currentLang === 'zh' ? 'en' : 'zh';
   localStorage.setItem('lang', currentLang);
+  updateHeadMetadata();
 
   const btnLang = document.getElementById('btnLang');
   if (btnLang) {
@@ -377,6 +429,7 @@ function translateDOMNode(node) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  updateHeadMetadata();
   const btnLang = document.getElementById('btnLang');
   if (btnLang) {
     btnLang.innerHTML = currentLang === 'zh' ? '<i class="fas fa-globe mr-1"></i>EN' : '<i class="fas fa-globe mr-1"></i>中文';
