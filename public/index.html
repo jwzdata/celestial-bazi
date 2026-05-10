@@ -100,13 +100,13 @@ tailwind.config={theme:{extend:{colors:{bg:'#0d1117','bg-s':'#151b28','bg-e':'#2
         </div>
         <div>
           <label class="block text-xs text-accent/60 mb-2 tracking-wider">出生地</label>
-          <input type="text" id="inputCity" class="input-field" value="北京" list="cityList" placeholder="輸入城市，如：山東新泰">
+          <input type="text" id="inputCity" class="input-field" value="上海" list="cityList" placeholder="輸入城市，如：上海">
           <datalist id="cityList"></datalist>
         </div>
       </div>
       <div>
         <label class="block text-xs text-accent/60 mb-2 tracking-wider">出生地經度（東經）</label>
-        <input type="number" id="inputLongitude" class="input-field" value="116.4074" min="73" max="135" step="0.0001" inputmode="decimal">
+        <input type="number" id="inputLongitude" class="input-field" value="121.4737" min="73" max="135" step="0.0001" inputmode="decimal">
         <p class="text-[10px] text-accent/35 mt-2 leading-relaxed">用於真太陽時校正：經度差 + 均時差可能改變時辰邊界，出生時間越接近交界越重要。</p>
       </div>
       <div class="bg-black/20 border border-accent/10 rounded-xl p-4 space-y-3">
@@ -556,7 +556,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#0d1117','bg-s':'#151b28','bg-e':'#2
     <h3 class="font-serif text-2xl text-accent mb-6 text-center">用戶中心</h3>
     <div class="space-y-4 text-sm text-accent/80">
       <p>用戶名：<span id="uName" class="font-bold text-accent"></span></p>
-      <p>VIP狀態：<span id="uVip" class="font-bold"></span></p>
+      <p>功能狀態：<span id="uVip" class="font-bold"></span></p>
       <p>推廣收益：<span id="uBalance" class="font-bold text-wood"></span> 元</p>
       <div class="pt-4 border-t border-accent/20">
         <p class="mb-2">您的專屬推廣鏈接：</p>
@@ -564,32 +564,18 @@ tailwind.config={theme:{extend:{colors:{bg:'#0d1117','bg-s':'#151b28','bg-e':'#2
           <input type="text" id="refLink" class="input-field text-xs py-2" readonly>
           <button onclick="copyRef()" class="btn-primary py-2 px-4 text-xs whitespace-nowrap">複製</button>
         </div>
-        <p class="text-[10px] text-accent/50 mt-2">邀請好友註冊並訂閱，您可獲得 30% 佣金分成（3元/單）。</p>
+        <p class="text-[10px] text-accent/50 mt-2">邀請好友體驗命盤分析，推廣分成將在正式收費後開放。</p>
       </div>
       <button onclick="logout()" class="w-full py-2 border border-fire/50 text-fire rounded-lg mt-4 hover:bg-fire/10 transition-colors">退出登錄</button>
     </div>
   </div>
 
-  <!-- 支付框 -->
+  <!-- 付費預留：推廣期暫不展示支付碼 -->
   <div id="payModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#151b28]">
     <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
-    <h3 class="font-serif text-2xl text-accent mb-2 text-center">解鎖專業命盤</h3>
-    <p class="text-xs text-accent/60 text-center mb-6">訂閱 1 個月 VIP，暢享無限次專業分析</p>
-    
-    <div class="flex justify-center gap-4 mb-6">
-      <button onclick="selectPay('wechat')" id="btnWechat" class="flex-1 py-3 border-2 border-wood bg-wood/10 text-wood rounded-xl font-bold transition-all"><i class="fab fa-weixin mr-2"></i>微信支付</button>
-      <button onclick="selectPay('alipay')" id="btnAlipay" class="flex-1 py-3 border-2 border-transparent bg-water/10 text-water rounded-xl font-bold transition-all opacity-60"><i class="fab fa-alipay mr-2"></i>支付寶</button>
-    </div>
-    
-    <div class="bg-white p-2 rounded-lg w-48 h-48 mx-auto flex items-center justify-center relative shadow-inner">
-      <div id="qrcodePlaceholder" class="text-center text-gray-400">
-        <i class="fas fa-qrcode text-4xl mb-2"></i>
-        <p class="text-xs font-bold text-gray-800">支付 ￥10.00</p>
-        <p class="text-[10px] mt-1">請掃碼支付</p>
-      </div>
-      <button id="btnMockPay" onclick="mockPaySuccess()" class="hidden absolute bottom-2 bg-accent text-bg text-xs px-3 py-1 rounded shadow-lg hover:scale-105 transition-transform">模擬支付成功</button>
-    </div>
-    <p class="text-center text-xs text-accent/40 mt-4">請使用<span id="payMethodText">微信</span>掃碼支付</p>
+    <h3 class="font-serif text-2xl text-accent mb-2 text-center">功能免費體驗中</h3>
+    <p class="text-xs text-accent/60 text-center mb-6">推廣期暫不收費，所有命理功能均可直接使用。</p>
+    <button onclick="closeModals()" class="btn-primary w-full">開始體驗</button>
   </div>
 <!-- 大運流年彈窗 -->
   <div id="dayunModal" class="glass-card p-6 w-full max-w-2xl hidden relative mx-4 bg-[#151b28] max-h-[80vh] overflow-y-auto">
@@ -674,7 +660,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#0d1117','bg-s':'#151b28','bg-e':'#2
     <div class="flex items-center gap-4 mt-8 pt-4 border-t border-accent/20">
       <div class="w-16 h-16 bg-white p-1 rounded"><img id="posterQr" crossorigin="anonymous" class="w-full h-full" alt="推廣二維碼"></div>
       <div>
-        <p class="text-xs font-bold text-accent mb-1">長按掃碼，解鎖你的專屬命盤</p>
+        <p class="text-xs font-bold text-accent mb-1">長按掃碼，體驗你的專屬命盤</p>
         <p class="text-[10px] text-accent/50">測算事業 / 財運 / 婚姻 / 起名</p>
       </div>
     </div>
@@ -763,7 +749,7 @@ tailwind.config={theme:{extend:{colors:{bg:'#0d1117','bg-s':'#151b28','bg-e':'#2
     <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-xl text-accent mb-4">長按保存圖片發朋友圈</h3>
     <div id="posterResult" class="w-full rounded-lg overflow-hidden shadow-2xl shadow-accent/20"></div>
-    <p class="text-xs text-accent/50 mt-4 text-center">已包含您的專屬推廣碼<br>好友掃碼測算，您將獲得30%佣金</p>
+    <p class="text-xs text-accent/50 mt-4 text-center">已包含您的專屬推廣碼<br>好友掃碼即可免費體驗命盤測算</p>
   </div>
 
   <!-- 大師親算彈窗 -->
@@ -781,17 +767,15 @@ tailwind.config={theme:{extend:{colors:{bg:'#0d1117','bg-s':'#151b28','bg-e':'#2
       </ul>
       <div class="mt-4 pt-4 border-t border-accent/10 flex justify-between items-center">
         <span class="text-xs text-accent/50">諮詢潤金</span>
-        <span class="text-xl font-bold text-fire">¥298 <span class="text-xs text-accent/50 line-through">¥598</span></span>
+        <span class="text-xl font-bold text-fire">推廣期免費預約</span>
       </div>
     </div>
 
-    <div class="bg-white p-2 rounded-lg w-40 h-40 mx-auto flex items-center justify-center relative shadow-inner mb-4">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=wechat:master_bazi" alt="大師微信" class="w-full h-full opacity-80 blur-[2px]">
-      <div class="absolute inset-0 flex items-center justify-center">
-        <span class="bg-black/60 text-white text-xs px-2 py-1 rounded">掃碼添加大師微信</span>
-      </div>
+    <div class="w-full bg-accent/10 border border-accent/20 rounded-xl p-4 text-center">
+      <i class="fas fa-calendar-check text-3xl text-accent mb-3"></i>
+      <p class="text-sm text-accent font-bold mb-1">推廣期暫不接入付費諮詢</p>
+      <p class="text-xs text-accent/60 leading-relaxed">先開放站內所有自助命理功能，待後續推廣穩定後再接入預約與收費。</p>
     </div>
-    <p class="text-center text-xs text-accent/60">微信號：<span class="font-mono text-accent select-all">master_bazi_123</span></p>
   </div>
 
   <!-- AI 深度報告彈窗 -->
@@ -814,11 +798,11 @@ tailwind.config={theme:{extend:{colors:{bg:'#0d1117','bg-s':'#151b28','bg-e':'#2
         </ul>
       </div>
       <div class="flex justify-between items-center bg-accent/10 p-4 rounded-lg mb-6">
-        <div class="text-sm text-accent">限時特惠價</div>
-        <div class="text-2xl font-bold text-fire">¥19.9 <span class="text-xs text-accent/50 line-through">¥99.0</span></div>
+        <div class="text-sm text-accent">推廣期體驗</div>
+        <div class="text-2xl font-bold text-fire">免費開放</div>
       </div>
       <p class="text-[10px] text-accent/40 leading-relaxed mb-4">目前為規則引擎生成示範版，用於展示報告結構與解讀深度；正式 AI 報告接入後將提供更完整內容。</p>
-      <button onclick="generateAiReport()" class="btn-primary w-full animate-pulse" id="btnGenAi"><i class="fas fa-unlock-alt mr-2"></i>立即解鎖報告</button>
+      <button onclick="generateAiReport()" class="btn-primary w-full animate-pulse" id="btnGenAi"><i class="fas fa-file-alt mr-2"></i>立即生成報告</button>
     </div>
 
     <div id="aiReportGenerating" class="hidden w-full text-center py-8">

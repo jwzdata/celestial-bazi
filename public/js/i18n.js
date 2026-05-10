@@ -55,8 +55,6 @@ const translations = {
     '大運流年深度剖析': 'In-depth 10-Year & Annual Fortune Analysis',
     '起名改運/風水建議': 'Naming / Feng Shui Advice',
     '諮詢潤金': 'Consultation Fee',
-    '掃碼添加大師微信': 'Scan to add Master on WeChat',
-    '微信號：': 'WeChat ID:',
 
     // Analysis Sections
     '您的八字命盤': 'Your Bazi Chart',
@@ -237,9 +235,12 @@ const translations = {
     '事業/財運/婚姻/健康多維度參考': 'Multi-dimensional guidance for career, wealth, relationships, and health.',
     '結合大運流年生成趨勢提示': 'Trend prompts generated from 10-year and annual fortune cycles.',
     '專屬改運建議與行動清單': 'Personalized luck-improvement suggestions and action checklist.',
-    '限時特惠價': 'Limited-time price',
+    '推廣期體驗': 'Promotion trial',
+    '免費開放': 'Free access',
     '目前為規則引擎生成示範版，用於展示報告結構與解讀深度；正式 AI 報告接入後將提供更完整內容。': 'This is currently a rules-engine demo that shows the report structure and reading depth. The full AI report will provide richer content after integration.',
-    '立即解鎖報告': 'Unlock Report Now',
+    '立即生成報告': 'Generate Report Now',
+    '推廣期暫不接入付費諮詢': 'Paid consultations are not connected during the promotion period',
+    '先開放站內所有自助命理功能，待後續推廣穩定後再接入預約與收費。': 'All self-service Bazi features are open first. Booking and paid services will be added after promotion stabilizes.',
     'AI 模型正在深度推演...': 'AI model is running an in-depth reading...',
     '正在讀取八字天干地支能量...': 'Reading the energy of Bazi stems and branches...',
     '規則引擎生成示範版': 'Rules-engine generated demo',

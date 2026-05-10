@@ -1,8 +1,6 @@
 
 // 全局狀態
 let currentUser = null;
-let currentPayMethod = 'wechat';
-let currentOrderId = null;
 
 // 表單五個欄位的出廠預設值，與 public/index.html 上的 value= 屬性對齊。
 // 用作 applyPreferencesToForm 的「還是預設狀態嗎？」比較基準，避免在兩處重複寫死字串。
@@ -11,8 +9,8 @@ const BAZI_INPUT_DEFAULTS = {
   inputDate: '',
   inputTime: '12:00',
   inputGender: '1',
-  inputCity: '北京',
-  inputLongitude: '116.4074',
+  inputCity: '上海',
+  inputLongitude: '121.4737',
   inputUseTrueSolarTime: '1',
   inputDayChangeRule: '23:00'
 };
@@ -238,8 +236,8 @@ function showToast(message, type = 'info') {
 document.getElementById('btnUser').addEventListener('click', () => {
   if (currentUser) {
     document.getElementById('uName').textContent = currentUser.username;
-    document.getElementById('uVip').textContent = currentUser.isVip ? `VIP (至 ${new Date(currentUser.vip_expire_time).toLocaleDateString()})` : '普通用戶';
-    document.getElementById('uVip').className = currentUser.isVip ? 'font-bold text-fire' : 'font-bold text-accent/50';
+    document.getElementById('uVip').textContent = '推廣期免費開放';
+    document.getElementById('uVip').className = 'font-bold text-wood';
 
     document.getElementById('uBalance').textContent = currentUser.balance.toFixed(2);
     document.getElementById('refLink').value = `${window.location.origin}/?ref=${currentUser.invite_code}`;
@@ -324,11 +322,11 @@ function copyRef() {
   const text = input.value;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => {
-      showToast('推廣鏈接已複製！發送給好友，好友訂閱您將獲得 30% 佣金。', 'success');
+      showToast('推廣鏈接已複製！發送給好友即可邀請體驗。', 'success');
     }).catch(() => fallbackCopy(text));
   } else {
     fallbackCopy(text);
-    showToast('推廣鏈接已複製！發送給好友，好友訂閱您將獲得 30% 佣金。', 'success');
+    showToast('推廣鏈接已複製！發送給好友即可邀請體驗。', 'success');
   }
 }
 function fallbackCopy(text) {
@@ -342,70 +340,9 @@ function fallbackCopy(text) {
   tmp.remove();
 }
 
-function isLocalDevHost() {
-  return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
-}
-
-function initMockPaymentButton() {
-  const btn = document.getElementById('btnMockPay');
-  if (!btn || !isLocalDevHost()) return;
-  btn.classList.remove('hidden');
-}
-
-// 支付邏輯
-function selectPay(method) {
-  currentPayMethod = method;
-  const btnW = document.getElementById('btnWechat');
-  const btnA = document.getElementById('btnAlipay');
-  
-  if (method === 'wechat') {
-    btnW.className = 'flex-1 py-3 border-2 border-wood bg-wood/10 text-wood rounded-xl font-bold transition-all';
-    btnA.className = 'flex-1 py-3 border-2 border-transparent bg-water/10 text-water rounded-xl font-bold transition-all opacity-60';
-    document.getElementById('payMethodText').textContent = '微信';
-  } else {
-    btnW.className = 'flex-1 py-3 border-2 border-transparent bg-wood/10 text-wood rounded-xl font-bold transition-all opacity-60';
-    btnA.className = 'flex-1 py-3 border-2 border-water bg-water/10 text-water rounded-xl font-bold transition-all';
-    document.getElementById('payMethodText').textContent = '支付寶';
-  }
-  createOrder();
-}
-
-async function createOrder() {
-  try {
-    const res = await apiFetch('/api/pay/create', { 
-      method: 'POST', 
-      body: JSON.stringify({ method: currentPayMethod }) 
-    });
-    currentOrderId = res.orderId;
-    // 實際項目中這裏會把 res.payUrl 生成二維碼顯示
-    console.log('訂單已創建:', res);
-  } catch (err) {
-    showToast('訂單創建失敗：' + err.message, 'error');
-  }
-}
-
-async function mockPaySuccess() {
-  if (!isLocalDevHost()) return showToast('模擬支付僅限本地開發環境', 'error');
-  if (!currentOrderId) return showToast('訂單未生成', 'error');
-  try {
-    const res = await apiFetch('/api/pay/mock-success', {
-      method: 'POST',
-      body: JSON.stringify({ orderId: currentOrderId })
-    });
-    showToast(res.message, 'success');
-    closeModals();
-    await initAuth();
-    // 重新觸發分析
-    document.getElementById('btnAnalyze').click();
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
-}
-
 // 頁面加載完成初始化
 window.addEventListener('DOMContentLoaded', () => {
   initAuth();
-  initMockPaymentButton();
 
   // 監聽輸入欄位，一旦使用者互動就把 baziFormTouched 翻為 true，
   // applyPreferencesToForm 會據此跳過覆蓋，避免還原流程蓋掉使用者剛輸入的值。

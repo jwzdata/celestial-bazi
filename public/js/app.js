@@ -662,20 +662,6 @@ function analyze() {
   // 禁用按鈕防連點
   btnEl.disabled = true;
   btnEl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>解析中...';
-  
-  
-  // 【VIP 攔截邏輯】
-  // 爲了方便驗證，暫時取消強制登錄和支付攔截，直接放行
-  // if (!currentUser) {
-  //   showModal('authModal');
-  //   return;
-  // }
-  // if (!currentUser.isVip) {
-  //   selectPay('wechat'); // 默認選中微信
-  //   showModal('payModal');
-  //   return;
-  // }
-
 
   let parts = dateVal.split('-');
   let year = parseInt(parts[0]), month = parseInt(parts[1]), day = parseInt(parts[2]);
@@ -839,7 +825,7 @@ document.getElementById('inputCity').addEventListener('change', updateLongitudeF
 document.getElementById('inputCity').addEventListener('input', updateLongitudeFromCity);
 
 function normalizeCityName(name) {
-  return String(name || '').replace(/[\s省市县縣區区]/g, '').replace(/^山東/, '山东');
+  return String(name || '').replace(/[\s省市县縣區区]/g, '');
 }
 
 function findCityLongitude(name) {
@@ -1081,22 +1067,6 @@ function checkVipBeforeFeature(feature) {
   if (!baziResult) {
     showToast('請先在主頁輸入出生信息進行排盤分析！', 'error');
     return false;
-  }
-  const premiumFeatures = new Set(['dayun', 'hehun', 'qiming', 'luckynum', 'aiReport', 'wealth', 'poster']);
-  if (premiumFeatures.has(feature)) {
-    if (!currentUser) {
-      if (!isLoginMode) {
-        isLoginMode = true;
-        toggleAuthMode();
-      }
-      showModal('authModal');
-      return false;
-    }
-    if (!currentUser.isVip) {
-      selectPay('wechat');
-      showModal('payModal');
-      return false;
-    }
   }
   return true;
 }
@@ -1464,7 +1434,7 @@ function renderAiReportContent() {
     </ul>
     
     <div class="mt-6 p-4 bg-accent/10 rounded-lg text-xs text-accent/60">
-      <i class="fas fa-lock mr-2"></i> 完整版萬字報告（包含未來20年逐年流年精批）已解鎖。
+      <i class="fas fa-gift mr-2"></i> 推廣期完整版示範報告已免費開放。
     </div>
   `;
   container.innerHTML = html;
