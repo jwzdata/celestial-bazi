@@ -2261,6 +2261,7 @@ function translatePengZuGan(pengZuGan) {
     "戊不伐樹誰克斧頭": "Wu: Do not cut trees (conflict with tools)",
     "己不買豬猡必見瘟": "Ji: Do not buy pigs (disease may occur)",
     "庚不修倉必見凶殃": "Geng: Do not repair granaries (bad omen may appear)",
+    "庚不经络织机虚张": "Geng: Do not repair granaries (bad omen may appear)",
     "辛不合醬必有瘟疾": "Xin: Do not make sauce (plague or illness may occur)",
     "壬不決水水必反": "Ren: Do not drain water (water will flow back)",
     "癸不詞訟必見凶": "Gui: Do not engage in lawsuits (bad outcome guaranteed)"
