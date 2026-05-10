@@ -1,10 +1,10 @@
-// 共享数据库连接模块
-// 本地开发使用文件 SQLite，Vercel 生产环境使用 Turso
+// Shared database connection module
+// Local development uses file SQLite, Vercel production uses Turso
 const { createClient } = require('@libsql/client');
 
 let _client = null;
-// 标记 preferences 列迁移是否已经完成（成功 ALTER 或观察到 duplicate column）
-// 避免每次请求都发起 ALTER TABLE + 触发一次异常
+// Track if preferences column migration is complete (successful ALTER or duplicate column observed)
+// Avoid issuing ALTER TABLE + triggering an exception on every request
 let _migrated = false;
 
 function getDb() {
