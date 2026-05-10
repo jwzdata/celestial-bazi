@@ -72,6 +72,12 @@ function renderPillars(pillars, dayGan) {
   });
 }
 
+function formatLongitudeDisplay(longitude) {
+  const value = Number(longitude);
+  if (!Number.isFinite(value)) return '—';
+  return `${Math.abs(value).toFixed(4)}°${value < 0 ? 'W' : 'E'}`;
+}
+
 function renderPrecisionMeta() {
   if (!baziResult?.precision) return;
   const meta = baziResult.precision;
@@ -83,7 +89,7 @@ function renderPrecisionMeta() {
     ['時柱用時', meta.appliedHourTime || meta.trueSolarTime, clockLabel],
     ['真太陽時', meta.trueSolarTime, meta.useTrueSolarTime ? '已啟用校正' : '僅作參考'],
     ['日界規則', meta.dayChangeRuleText || '子初換日（23:00）', '影響 23:00-23:59 出生的日柱'],
-    ['出生經度', `${meta.longitude.toFixed(4)}°E`, '東經'],
+    ['出生經度', formatLongitudeDisplay(meta.longitude), '出生地經度'],
     ['判定時辰', `${meta.hourName}`, meta.hourRange],
     ['總校正', meta.totalOffsetText, '經度 + 均時差'],
     ['起運性別', baziResult.gender === 1 ? '男命' : '女命', '用於大運順逆']
@@ -614,11 +620,11 @@ function renderLucky() {
 // ============================
 // 主分析流程
 // ============================
-function analyze() {
+async function analyze() {
   let dateVal = document.getElementById('inputDate').value;
   let timeVal = document.getElementById('inputTime').value;
   let genderVal = document.getElementById('inputGender').value;
-  let longitudeVal = parseFloat(document.getElementById('inputLongitude').value);
+  const longitudeEl = document.getElementById('inputLongitude');
   const useTrueSolarTime = document.getElementById('inputUseTrueSolarTime').checked;
   const dayChangeRule = document.getElementById('inputDayChangeRule').value === '00:00' ? '00:00' : '23:00';
   const baziRules = { useTrueSolarTime, dayChangeRule };
@@ -642,11 +648,16 @@ function analyze() {
   if (!dateVal) { showError('請選擇出生日期', 'inputDate'); return; }
   if (!timeVal) { showError('請選擇出生時間', 'inputTime'); return; }
   if (!genderVal) { showError('請選擇性別', 'inputGender'); return; }
-  if (!Number.isFinite(longitudeVal) || longitudeVal < 73 || longitudeVal > 135) { showError('請輸入有效的中國/東亞經度（73-135）', 'inputLongitude'); return; }
+
+  const cityVal = document.getElementById('inputCity').value;
+  if (!Number.isFinite(parseFloat(longitudeEl.value))) {
+    await updateLongitudeFromCity({ silent: true });
+  }
+  let longitudeVal = parseFloat(longitudeEl.value);
+  if (!Number.isFinite(longitudeVal) || longitudeVal < -180 || longitudeVal > 180) { showError('請輸入有效的全球經度（-180 到 180）', 'inputLongitude'); return; }
   errEl.classList.add('hidden');
 
   // 儲存偏好（僅登入用戶會實際送出請求；錯誤已在 saveUserPreferences 內吞掉，不會阻塞分析動畫）
-  const cityVal = document.getElementById('inputCity').value;
   const prefs = {
     inputDate: dateVal,
     inputTime: timeVal,
@@ -821,11 +832,38 @@ document.getElementById('calBackToday').addEventListener('click', () => {
 document.getElementById('inputDate').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
 document.getElementById('inputTime').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
 document.getElementById('inputLongitude').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
-document.getElementById('inputCity').addEventListener('change', updateLongitudeFromCity);
-document.getElementById('inputCity').addEventListener('input', updateLongitudeFromCity);
+let cityLookupTimer = null;
+let cityLookupRequestId = 0;
+const CITY_GEOCODE_ALIASES = {
+  '伦敦': 'London',
+  '倫敦': 'London',
+  '纽约': 'New York',
+  '紐約': 'New York',
+  '巴黎': 'Paris',
+  '东京': 'Tokyo',
+  '東京': 'Tokyo',
+  '首尔': 'Seoul',
+  '首爾': 'Seoul',
+  '洛杉矶': 'Los Angeles',
+  '洛杉磯': 'Los Angeles'
+};
+
+const cityInput = document.getElementById('inputCity');
+cityInput.addEventListener('change', () => updateLongitudeFromCity());
+cityInput.addEventListener('input', () => {
+  window.clearTimeout(cityLookupTimer);
+  const longitudeEl = document.getElementById('inputLongitude');
+  const localLongitude = findCityLongitude(cityInput.value);
+  if (localLongitude != null) {
+    longitudeEl.value = localLongitude;
+    return;
+  }
+  longitudeEl.value = '';
+  cityLookupTimer = window.setTimeout(() => updateLongitudeFromCity({ silent: true }), 600);
+});
 
 function normalizeCityName(name) {
-  return String(name || '').replace(/[\s省市县縣區区]/g, '');
+  return String(name || '').trim().replace(/[\s省市县縣區区]/g, '');
 }
 
 function findCityLongitude(name) {
@@ -840,9 +878,53 @@ function findCityLongitude(name) {
   return null;
 }
 
-function updateLongitudeFromCity() {
-  const longitude = findCityLongitude(document.getElementById('inputCity').value);
-  if (longitude != null) document.getElementById('inputLongitude').value = longitude;
+function getCitySearchName(name) {
+  const raw = String(name || '').trim();
+  return CITY_GEOCODE_ALIASES[raw] || CITY_GEOCODE_ALIASES[normalizeCityName(raw)] || raw;
+}
+
+function pickBestGeocodingResult(results) {
+  if (!Array.isArray(results) || results.length === 0) return null;
+  return results
+    .filter(item => Number.isFinite(Number(item.longitude)))
+    .sort((a, b) => (Number(b.population) || 0) - (Number(a.population) || 0))[0] || null;
+}
+
+async function fetchCityLongitude(name) {
+  const searchName = getCitySearchName(name);
+  if (!searchName) return null;
+  const params = new URLSearchParams({ name: searchName, count: '10', language: currentLang === 'en' ? 'en' : 'zh', format: 'json' });
+  const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${params.toString()}`);
+  if (!response.ok) return null;
+  const data = await response.json();
+  const match = pickBestGeocodingResult(data.results);
+  if (!match) return null;
+  return Number(match.longitude).toFixed(4);
+}
+
+async function updateLongitudeFromCity(options = {}) {
+  const silent = options.silent === true;
+  const requestId = ++cityLookupRequestId;
+  const cityEl = document.getElementById('inputCity');
+  const longitudeEl = document.getElementById('inputLongitude');
+  const localLongitude = findCityLongitude(cityEl.value);
+  if (localLongitude != null) {
+    longitudeEl.value = localLongitude;
+    return true;
+  }
+  try {
+    const longitude = await fetchCityLongitude(cityEl.value);
+    if (requestId !== cityLookupRequestId) return false;
+    if (longitude == null) {
+      if (!silent) showToast('未找到該城市，請手動填寫出生地經度', 'error');
+      return false;
+    }
+    longitudeEl.value = longitude;
+    return true;
+  } catch (err) {
+    if (!silent) showToast('城市經度查詢失敗，請手動填寫出生地經度', 'error');
+    return false;
+  }
 }
 
 function initCityDatalist() {
