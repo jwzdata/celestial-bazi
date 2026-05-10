@@ -227,7 +227,7 @@ function showToast(message, type = 'info') {
   }
   const toast = document.createElement('div');
   toast.className = `toast${type !== 'info' ? ' toast-' + type : ''}`;
-  toast.textContent = message;
+  toast.textContent = typeof translateText === 'function' ? translateText(message) : message;
   container.appendChild(toast);
   setTimeout(() => toast.remove(), 3100);
 }
@@ -236,7 +236,7 @@ function showToast(message, type = 'info') {
 document.getElementById('btnUser').addEventListener('click', () => {
   if (currentUser) {
     document.getElementById('uName').textContent = currentUser.username;
-    document.getElementById('uVip').textContent = '推廣期免費開放';
+    document.getElementById('uVip').textContent = typeof translateText === 'function' ? translateText('推廣期免費開放') : '推廣期免費開放';
     document.getElementById('uVip').className = 'font-bold text-wood';
 
     document.getElementById('uBalance').textContent = currentUser.balance.toFixed(2);
@@ -258,15 +258,15 @@ function toggleAuthMode() {
   const toggleBtn = document.getElementById('btnAuthToggle');
   
   if (isLoginMode) {
-    title.textContent = '用戶登錄';
-    btn.textContent = '登錄';
-    toggleText.textContent = '沒有賬號？';
-    toggleBtn.textContent = '立即註冊';
+    title.textContent = typeof translateText === 'function' ? translateText('用戶登錄') : '用戶登錄';
+    btn.textContent = typeof translateText === 'function' ? translateText('登錄') : '登錄';
+    toggleText.textContent = typeof translateText === 'function' ? translateText('沒有賬號？') : '沒有賬號？';
+    toggleBtn.textContent = typeof translateText === 'function' ? translateText('立即註冊') : '立即註冊';
   } else {
-    title.textContent = '賬號註冊';
-    btn.textContent = '註冊';
-    toggleText.textContent = '已有賬號？';
-    toggleBtn.textContent = '直接登錄';
+    title.textContent = typeof translateText === 'function' ? translateText('賬號註冊') : '賬號註冊';
+    btn.textContent = typeof translateText === 'function' ? translateText('註冊') : '註冊';
+    toggleText.textContent = typeof translateText === 'function' ? translateText('已有賬號？') : '已有賬號？';
+    toggleBtn.textContent = typeof translateText === 'function' ? translateText('直接登錄') : '直接登錄';
   }
 }
 
@@ -281,10 +281,10 @@ document.getElementById('btnAuthSubmit').addEventListener('click', async () => {
   const password = document.getElementById('authPassword').value;
   const btn = document.getElementById('btnAuthSubmit');
   
-  if(!username || !password) return showToast('請填寫用戶名和密碼', 'error');
-  
+  if(!username || !password) return showToast(typeof translateText === 'function' ? translateText('請填寫用戶名和密碼') : '請填寫用戶名和密碼', 'error');
+
   btn.disabled = true;
-  btn.textContent = '處理中...';
+  btn.textContent = typeof translateText === 'function' ? translateText('處理中...') : '處理中...';
   
   try {
     const endpoint = isLoginMode ? '/api/login' : '/api/register';
@@ -322,11 +322,11 @@ function copyRef() {
   const text = input.value;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => {
-      showToast('推廣鏈接已複製！發送給好友即可邀請體驗。', 'success');
+      showToast(typeof translateText === 'function' ? translateText('推廣鏈接已複製！發送給好友即可邀請體驗。') : '推廣鏈接已複製！發送給好友即可邀請體驗。', 'success');
     }).catch(() => fallbackCopy(text));
   } else {
     fallbackCopy(text);
-    showToast('推廣鏈接已複製！發送給好友即可邀請體驗。', 'success');
+    showToast(typeof translateText === 'function' ? translateText('推廣鏈接已複製！發送給好友即可邀請體驗。') : '推廣鏈接已複製！發送給好友即可邀請體驗。', 'success');
   }
 }
 function fallbackCopy(text) {

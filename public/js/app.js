@@ -290,8 +290,9 @@ function renderTraits(dayGan, isStrong) {
   let cList = document.getElementById('careerList');
   let traits = TRAITS[wx][isStrong ? 'strong' : 'weak'];
   let career = CAREER[wx][isStrong ? 'strong' : 'weak'];
-  pList.innerHTML = traits.map(t => `<li class="flex gap-2"><span class="text-accent/30 mt-0.5">•</span><span>${t}</span></li>`).join('');
-  cList.innerHTML = career.map(t => `<li class="flex gap-2"><span class="text-accent/30 mt-0.5">•</span><span>${t}</span></li>`).join('');
+  const tr = value => typeof translateText === 'function' ? translateText(value) : value;
+  pList.innerHTML = traits.map(t => `<li class="flex gap-2"><span class="text-accent/30 mt-0.5">•</span><span>${tr(t)}</span></li>`).join('');
+  cList.innerHTML = career.map(t => `<li class="flex gap-2"><span class="text-accent/30 mt-0.5">•</span><span>${tr(t)}</span></li>`).join('');
 }
 
 function getPrimaryLuckyElement(xiYong) {
@@ -580,6 +581,7 @@ function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fo
 }
 
 function renderLucky() {
+  const tr = value => typeof translateText === 'function' ? translateText(value) : value;
   let xy = baziResult.xiYong;
   const wxKeys = [xy.xi, xy.yong]
     .flat()
@@ -592,10 +594,10 @@ function renderLucky() {
   let nums = [...new Set(wxKeys.flatMap(wx => LUCKY_DATA[wx].nums))];
   let plants = [...new Set(wxKeys.flatMap(wx => LUCKY_DATA[wx].plants))];
 
-  document.getElementById('luckyDir').textContent = dirs.join('、');
-  document.getElementById('luckyColor').textContent = colors.join('、');
-  document.getElementById('luckyNum').textContent = nums.join('、');
-  document.getElementById('luckyPlant').textContent = plants.join('、');
+  document.getElementById('luckyDir').textContent = dirs.map(tr).join(', ');
+  document.getElementById('luckyColor').textContent = colors.map(tr).join(', ');
+  document.getElementById('luckyNum').textContent = nums.join(', ');
+  document.getElementById('luckyPlant').textContent = plants.map(tr).join(', ');
 
   // 穿衣指南
   let dress = DRESS_COLORS[wxKeys[0]] || DRESS_COLORS['木'];
@@ -604,7 +606,7 @@ function renderLucky() {
     container.innerHTML = items.map(it => 
       `<div class="flex flex-col items-center gap-1">
         <div class="color-swatch" style="background:${it.c}"></div>
-        <span class="text-xs text-accent/40">${it.n}</span>
+        <span class="text-xs text-accent/40">${tr(it.n)}</span>
       </div>`
     ).join('');
   }
@@ -612,8 +614,8 @@ function renderLucky() {
   renderSwatches(document.getElementById('dressSecond'), dress.second);
   renderSwatches(document.getElementById('dressAvoid'), dress.avoid);
   
-  document.getElementById('dressAcc').innerHTML = dress.acc.map(a => 
-    `<span class="px-3 py-1 rounded-full bg-accent/5 border border-accent/10 text-xs">${a}</span>`
+  document.getElementById('dressAcc').innerHTML = dress.acc.map(a =>
+    `<span class="px-3 py-1 rounded-full bg-accent/5 border border-accent/10 text-xs">${tr(a)}</span>`
   ).join('');
 }
 
