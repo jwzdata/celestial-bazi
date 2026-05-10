@@ -12,7 +12,9 @@ const BAZI_INPUT_DEFAULTS = {
   inputTime: '12:00',
   inputGender: '1',
   inputCity: '北京',
-  inputLongitude: '116.4074'
+  inputLongitude: '116.4074',
+  inputUseTrueSolarTime: '1',
+  inputDayChangeRule: '23:00'
 };
 
 // 使用者是否已經在表單上動過手腳；一旦為 true，偏好還原會自動跳過以免蓋掉使用者輸入。
@@ -77,6 +79,8 @@ function applyPreferencesToForm(prefs, options = {}) {
   const genderEl = document.getElementById('inputGender');
   const cityEl = document.getElementById('inputCity');
   const longitudeEl = document.getElementById('inputLongitude');
+  const trueSolarEl = document.getElementById('inputUseTrueSolarTime');
+  const dayChangeEl = document.getElementById('inputDayChangeRule');
 
   // inputDate 的出廠預設是空字串；但 app.js 的 DOMContentLoaded 會把它填成今天的日期，
   // 因此把「今天的日期」也視為仍是預設狀態，讓還原的生日能覆蓋它。
@@ -108,6 +112,14 @@ function applyPreferencesToForm(prefs, options = {}) {
   if (longitudeEl && (force || longitudeEl.value === BAZI_INPUT_DEFAULTS.inputLongitude) && typeof prefs.inputLongitude === 'string' && prefs.inputLongitude !== '') {
     longitudeEl.value = prefs.inputLongitude;
   }
+
+  if (trueSolarEl && (force || (trueSolarEl.checked ? '1' : '0') === BAZI_INPUT_DEFAULTS.inputUseTrueSolarTime) && typeof prefs.inputUseTrueSolarTime === 'string') {
+    trueSolarEl.checked = prefs.inputUseTrueSolarTime !== '0';
+  }
+
+  if (dayChangeEl && (force || dayChangeEl.value === BAZI_INPUT_DEFAULTS.inputDayChangeRule) && typeof prefs.inputDayChangeRule === 'string' && prefs.inputDayChangeRule !== '') {
+    dayChangeEl.value = prefs.inputDayChangeRule;
+  }
 }
 
 function getCurrentFormPreferences() {
@@ -116,6 +128,8 @@ function getCurrentFormPreferences() {
   const genderEl = document.getElementById('inputGender');
   const cityEl = document.getElementById('inputCity');
   const longitudeEl = document.getElementById('inputLongitude');
+  const trueSolarEl = document.getElementById('inputUseTrueSolarTime');
+  const dayChangeEl = document.getElementById('inputDayChangeRule');
   if (!dateEl || !timeEl || !genderEl || !cityEl || !longitudeEl) return null;
 
   return {
@@ -123,7 +137,9 @@ function getCurrentFormPreferences() {
     inputTime: timeEl.value,
     inputGender: genderEl.value,
     inputCity: cityEl.value,
-    inputLongitude: longitudeEl.value
+    inputLongitude: longitudeEl.value,
+    inputUseTrueSolarTime: trueSolarEl && !trueSolarEl.checked ? '0' : '1',
+    inputDayChangeRule: dayChangeEl ? dayChangeEl.value : BAZI_INPUT_DEFAULTS.inputDayChangeRule
   };
 }
 
@@ -135,7 +151,9 @@ function hasMeaningfulFormPreferences(prefs) {
     (prefs.inputTime && prefs.inputTime !== BAZI_INPUT_DEFAULTS.inputTime) ||
     (prefs.inputGender && prefs.inputGender !== BAZI_INPUT_DEFAULTS.inputGender) ||
     (prefs.inputCity && prefs.inputCity !== BAZI_INPUT_DEFAULTS.inputCity) ||
-    (prefs.inputLongitude && prefs.inputLongitude !== BAZI_INPUT_DEFAULTS.inputLongitude)
+    (prefs.inputLongitude && prefs.inputLongitude !== BAZI_INPUT_DEFAULTS.inputLongitude) ||
+    (prefs.inputUseTrueSolarTime && prefs.inputUseTrueSolarTime !== BAZI_INPUT_DEFAULTS.inputUseTrueSolarTime) ||
+    (prefs.inputDayChangeRule && prefs.inputDayChangeRule !== BAZI_INPUT_DEFAULTS.inputDayChangeRule)
   );
 }
 
@@ -324,6 +342,16 @@ function fallbackCopy(text) {
   tmp.remove();
 }
 
+function isLocalDevHost() {
+  return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+}
+
+function initMockPaymentButton() {
+  const btn = document.getElementById('btnMockPay');
+  if (!btn || !isLocalDevHost()) return;
+  btn.classList.remove('hidden');
+}
+
 // 支付邏輯
 function selectPay(method) {
   currentPayMethod = method;
@@ -357,6 +385,7 @@ async function createOrder() {
 }
 
 async function mockPaySuccess() {
+  if (!isLocalDevHost()) return showToast('模擬支付僅限本地開發環境', 'error');
   if (!currentOrderId) return showToast('訂單未生成', 'error');
   try {
     const res = await apiFetch('/api/pay/mock-success', {
@@ -376,10 +405,11 @@ async function mockPaySuccess() {
 // 頁面加載完成初始化
 window.addEventListener('DOMContentLoaded', () => {
   initAuth();
+  initMockPaymentButton();
 
-  // 監聽五個輸入欄位，一旦使用者互動就把 baziFormTouched 翻為 true，
+  // 監聽輸入欄位，一旦使用者互動就把 baziFormTouched 翻為 true，
   // applyPreferencesToForm 會據此跳過覆蓋，避免還原流程蓋掉使用者剛輸入的值。
-  const touchFieldIds = ['inputDate', 'inputTime', 'inputGender', 'inputCity', 'inputLongitude'];
+  const touchFieldIds = ['inputDate', 'inputTime', 'inputGender', 'inputCity', 'inputLongitude', 'inputUseTrueSolarTime', 'inputDayChangeRule'];
   const markTouched = () => { baziFormTouched = true; };
   touchFieldIds.forEach(id => {
     const el = document.getElementById(id);

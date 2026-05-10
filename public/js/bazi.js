@@ -264,11 +264,14 @@ function formatSignedMinutes(value) {
 // meta.solar / meta.lunar / meta.eightChar 也都採用原始北京時間，
 // 讓 getYun / getMingGong / getShenGong / getTaiYuan / getXunKong 等下游 API
 // 以同一份未位移的命盤為基準。
-function getPillarsUsingLunar(year, month, day, timeArg = '12:00', longitude = 120) {
+function getPillarsUsingLunar(year, month, day, timeArg = '12:00', longitude = 120, options = {}) {
   const parsed = parseTimeArg(timeArg);
+  const useTrueSolarTime = options.useTrueSolarTime !== false;
+  const dayChangeRule = options.dayChangeRule === '00:00' ? '00:00' : '23:00';
   const trueSolar = getTrueSolarDate(year, month, day, parsed.hour, parsed.minute, longitude);
   const d = trueSolar.date;
-  const hourIndex = getHourIndexFromTime(d.getUTCHours(), d.getUTCMinutes());
+  const appliedHourDate = useTrueSolarTime ? d : new Date(Date.UTC(year, month - 1, day, parsed.hour, parsed.minute, 0));
+  const hourIndex = getHourIndexFromTime(appliedHourDate.getUTCHours(), appliedHourDate.getUTCMinutes());
 
   // 未位移的北京時間——決定年/月/日柱
   const rawSolar = Solar.fromYmdHms(year, month, day, parsed.hour, parsed.minute, 0);
@@ -283,16 +286,14 @@ function getPillarsUsingLunar(year, month, day, timeArg = '12:00', longitude = 1
   const ganIdx = (str) => TG.indexOf(str);
   const zhiIdx = (str) => DZ.indexOf(str);
   const call = (obj, method, fallback) => (obj && typeof obj[method] === 'function') ? obj[method]() : fallback;
+  const dayGanMethod = dayChangeRule === '00:00' ? 'getDayGanExact2' : 'getDayGanExact';
+  const dayZhiMethod = dayChangeRule === '00:00' ? 'getDayZhiExact2' : 'getDayZhiExact';
 
   const yp = { gan: ganIdx(call(rawLunar, 'getYearGanExact', rawBazi.getYearGan())), zhi: zhiIdx(call(rawLunar, 'getYearZhiExact', rawBazi.getYearZhi())) };
   const mp = { gan: ganIdx(call(rawLunar, 'getMonthGanExact', rawBazi.getMonthGan())), zhi: zhiIdx(call(rawLunar, 'getMonthZhiExact', rawBazi.getMonthZhi())) };
-  const dp = { gan: ganIdx(call(rawLunar, 'getDayGanExact', rawBazi.getDayGan())), zhi: zhiIdx(call(rawLunar, 'getDayZhiExact', rawBazi.getDayZhi())) };
-  // 時柱天干採「五鼠遁」：以未位移之日主為準，搭配真太陽時位移後的時支。
-  // 直接沿用 trueSolarBazi.getTimeGan() 會讓經度位移跨過子夜時（如 23:50
-  // 北京時間 + 東經 130° 位移到隔日 00:10）使用了錯誤的日干，導致時干誤推一輪。
-  const rawDayGanIdx = dp.gan;
-  const hourZhiIdx = zhiIdx(trueSolarBazi.getTimeZhi());
-  const hourGanIdx = getHourGanIdx(rawDayGanIdx, hourZhiIdx);
+  const dp = { gan: ganIdx(call(rawLunar, dayGanMethod, rawBazi.getDayGan())), zhi: zhiIdx(call(rawLunar, dayZhiMethod, rawBazi.getDayZhi())) };
+  const hourZhiIdx = hourIndex;
+  const hourGanIdx = getHourGanIdx(dp.gan, hourZhiIdx);
   const hp = { gan: hourGanIdx, zhi: hourZhiIdx };
 
   const pillars = [yp, mp, dp, hp];
@@ -300,6 +301,12 @@ function getPillarsUsingLunar(year, month, day, timeArg = '12:00', longitude = 1
     inputTime: `${pad2(parsed.hour)}:${pad2(parsed.minute)}`,
     trueSolarTime: `${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}`,
     trueSolarDateTime: formatDateTime(d),
+    appliedHourTime: `${pad2(appliedHourDate.getUTCHours())}:${pad2(appliedHourDate.getUTCMinutes())}`,
+    appliedHourDateTime: formatDateTime(appliedHourDate),
+    hourClockSource: useTrueSolarTime ? 'trueSolar' : 'beijing',
+    useTrueSolarTime,
+    dayChangeRule,
+    dayChangeRuleText: dayChangeRule === '00:00' ? '子正換日（00:00）' : '子初換日（23:00）',
     longitude: trueSolar.longitude,
     longitudeOffset: trueSolar.longitudeOffset,
     equationOffset: trueSolar.equationOffset,

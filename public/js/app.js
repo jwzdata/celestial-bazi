@@ -34,28 +34,14 @@ function renderPillars(pillars, dayGan) {
   const labels = ['年柱','月柱','日柱（命主）','時柱'];
   const grid = document.getElementById('pillarGrid');
   grid.innerHTML = '';
-  const eightChar = pillars.meta?.eightChar;
-  const naYinList = eightChar ? [
-    eightChar.getYearNaYin(),
-    eightChar.getMonthNaYin(),
-    eightChar.getDayNaYin(),
-    eightChar.getTimeNaYin()
-  ] : [];
-  const shiShenGanList = eightChar ? [
-    typeof eightChar.getYearShiShenGan === 'function' ? eightChar.getYearShiShenGan() : '',
-    typeof eightChar.getMonthShiShenGan === 'function' ? eightChar.getMonthShiShenGan() : '',
-    '日主',
-    typeof eightChar.getTimeShiShenGan === 'function' ? eightChar.getTimeShiShenGan() : ''
-  ] : [];
   pillars.forEach((p, i) => {
     let isDay = (i === 2);
-    let ss = shiShenGanList[i] || getShiShen(dayGan, p.gan);
-    // 六十甲子序號 → 納音
+    let ss = isDay ? '日主' : getShiShen(dayGan, p.gan);
     let gz60 = -1;
     for (let k = 0; k < 60; k++) {
       if (k % 10 === p.gan && k % 12 === p.zhi) { gz60 = k; break; }
     }
-    let ny = naYinList[i] || NA_YIN[Math.floor(gz60 / 2)];
+    let ny = NA_YIN[Math.floor(gz60 / 2)];
 
     let ganColor = WX_COLORS[WX_GAN[p.gan]];
     let zhiColor = WX_COLORS[WX_ZHI[p.zhi]];
@@ -91,13 +77,14 @@ function renderPrecisionMeta() {
   const meta = baziResult.precision;
   const grid = document.getElementById('precisionMetaGrid');
   if (!grid) return;
+  const clockLabel = meta.useTrueSolarTime ? '真太陽時' : '北京標準時';
   const items = [
     ['原始時間', meta.inputTime, '北京標準時間'],
-    ['真太陽時', meta.trueSolarTime, meta.trueSolarDateTime],
+    ['時柱用時', meta.appliedHourTime || meta.trueSolarTime, clockLabel],
+    ['真太陽時', meta.trueSolarTime, meta.useTrueSolarTime ? '已啟用校正' : '僅作參考'],
+    ['日界規則', meta.dayChangeRuleText || '子初換日（23:00）', '影響 23:00-23:59 出生的日柱'],
     ['出生經度', `${meta.longitude.toFixed(4)}°E`, '東經'],
     ['判定時辰', `${meta.hourName}`, meta.hourRange],
-    ['經度時差', meta.longitudeOffsetText, '相對東經120°'],
-    ['均時差', meta.equationOffsetText, '太陽視運動修正'],
     ['總校正', meta.totalOffsetText, '經度 + 均時差'],
     ['起運性別', baziResult.gender === 1 ? '男命' : '女命', '用於大運順逆']
   ];
@@ -154,7 +141,7 @@ function renderProInfo() {
     ['四柱旬空', xunKong, '年、月、日、時旬空，日旬空尤其常用。'],
     ['命盤神煞', shenShaHTML, '依年干/日干與年支/日支起；落於何柱以標示。'],
     ['彭祖百忌', pengZu, '日干日支忌諱參考。'],
-    ['時柱校正', `${meta.hourName}（${meta.trueSolarTime}）`, '按真太陽時重新判定。']
+    ['時柱校正', `${meta.hourName}（${meta.appliedHourTime || meta.trueSolarTime}）`, `${meta.useTrueSolarTime ? '按真太陽時' : '按北京標準時'}判定；${meta.dayChangeRuleText || '子初換日（23:00）'}。`]
   ];
 
   grid.innerHTML = sections.map(([title, value, hint]) => `
@@ -632,6 +619,9 @@ function analyze() {
   let timeVal = document.getElementById('inputTime').value;
   let genderVal = document.getElementById('inputGender').value;
   let longitudeVal = parseFloat(document.getElementById('inputLongitude').value);
+  const useTrueSolarTime = document.getElementById('inputUseTrueSolarTime').checked;
+  const dayChangeRule = document.getElementById('inputDayChangeRule').value === '00:00' ? '00:00' : '23:00';
+  const baziRules = { useTrueSolarTime, dayChangeRule };
   let errEl = document.getElementById('errorMsg');
   let formEl = document.getElementById('inputForm');
   let btnEl = document.getElementById('btnAnalyze');
@@ -663,7 +653,9 @@ function analyze() {
     inputGender: genderVal,
     inputCity: cityVal,
     // 存使用者輸入的原字串而非 String(parseFloat(...))，避免 116.40740 → 116.4074 這種尾零丟失
-    inputLongitude: document.getElementById('inputLongitude').value
+    inputLongitude: document.getElementById('inputLongitude').value,
+    inputUseTrueSolarTime: useTrueSolarTime ? '1' : '0',
+    inputDayChangeRule: dayChangeRule
   };
   if (typeof saveUserPreferences === 'function') saveUserPreferences(prefs);
 
@@ -705,9 +697,10 @@ function analyze() {
   }, 300);
   
   setTimeout(() => {
-    clearInterval(loadInterval);
-    // 排盤：使用真太陽時校正後的時間
-    let pillars = window.getPillarsUsingLunar(year, month, day, timeVal, longitudeVal);
+    let success = false;
+    try {
+    // 排盤：按使用者選擇的真太陽時與換日規則計算
+    let pillars = window.getPillarsUsingLunar(year, month, day, timeVal, longitudeVal, baziRules);
     let yp = pillars[0];
     let mp = pillars[1];
     let dp = pillars[2];
@@ -741,6 +734,7 @@ function analyze() {
       isStrong: strength.isStrong,
       gender,
       frameworks,
+      rules: baziRules,
       precision: pillars.meta
     };
     
@@ -758,6 +752,7 @@ function analyze() {
     renderCalendar();
     renderLucky();
     
+    success = true;
     // 切換顯示
     transitionSection(
       document.getElementById('loadingSection'),
@@ -777,6 +772,21 @@ function analyze() {
     btnEl.textContent = '開始解析';
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      console.error(err);
+      errEl.textContent = '排盤失敗，請檢查輸入後重試。';
+      errEl.classList.remove('hidden');
+      document.getElementById('bottomNav').classList.add('hidden');
+      transitionSection(
+        document.getElementById('loadingSection'),
+        document.getElementById('heroSection')
+      );
+    } finally {
+      clearInterval(loadInterval);
+      btnEl.disabled = false;
+      btnEl.textContent = '開始解析';
+      if (!success) document.getElementById('btnReset').classList.add('hidden');
+    }
   }, 1200);
 }
 
@@ -1751,6 +1761,26 @@ function drawQian() {
   }, 800);
 }
 
+const lazyScriptPromises = {};
+function loadScriptOnce(url, globalName) {
+  if (globalName && window[globalName]) return Promise.resolve();
+  if (lazyScriptPromises[url]) return lazyScriptPromises[url];
+  lazyScriptPromises[url] = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = url;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Failed to load ${url}`));
+    document.head.appendChild(script);
+  });
+  return lazyScriptPromises[url];
+}
+
+async function ensurePosterDependencies() {
+  await loadScriptOnce('https://html2canvas.hertzen.com/dist/html2canvas.min.js', 'html2canvas');
+  await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js', 'qrcode');
+}
+
 function generateLuckyNum() {
   const btn = document.getElementById('btnGenNum');
   btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>生成中...';
@@ -1787,12 +1817,14 @@ function generateLuckyNum() {
     btn.disabled = false;
   }, 600);
 }
-function generatePoster() {
+async function generatePoster() {
   if (!checkVipBeforeFeature()) return;
-  
+
   showModal('posterModal');
   const resultDiv = document.getElementById('posterResult');
   resultDiv.innerHTML = '<div class="py-20 text-center text-accent/50"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>海報生成中...</div>';
+  try {
+    await ensurePosterDependencies();
   
   // 填充海報數據
   document.getElementById('posterDayMaster').textContent = TG[baziResult.dayGan] + WX_GAN[baziResult.dayGan];
@@ -1815,7 +1847,7 @@ function generatePoster() {
 
   // 生成图片
   setTimeout(() => {
-    html2canvas(document.getElementById('posterCanvas'), {
+    window.html2canvas(document.getElementById('posterCanvas'), {
           backgroundColor: '#1a1a2e',
           scale: 2,
           useCORS: true
@@ -1830,6 +1862,10 @@ function generatePoster() {
           resultDiv.innerHTML = '<div class="py-20 text-center text-fire"><i class="fas fa-exclamation-triangle text-3xl mb-2"></i><br>海報生成失敗，請稍後重試</div>';
         });
       }, 500); // 等待图片渲染
+  } catch (err) {
+    console.error(err);
+    resultDiv.innerHTML = '<div class="py-20 text-center text-fire"><i class="fas fa-exclamation-triangle text-3xl mb-2"></i><br>海報生成失敗，請稍後重試</div>';
+  }
 }
 
 // ============================

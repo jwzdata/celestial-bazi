@@ -549,9 +549,9 @@ function run() {
     const yearLine  = /const\s+yp\s*=\s*\{\s*gan:\s*ganIdx\(call\(rawLunar/;
     const monthLine = /const\s+mp\s*=\s*\{\s*gan:\s*ganIdx\(call\(rawLunar/;
     const dayLine   = /const\s+dp\s*=\s*\{\s*gan:\s*ganIdx\(call\(rawLunar/;
-    // 時柱天干改走 五鼠遁：rawDayGanIdx + trueSolar 時支 → getHourGanIdx()
+    // 時柱天干改走 五鼠遁：選定換日規則後的日干 + 時支 → getHourGanIdx()
     const hourLine  = /const\s+hp\s*=\s*\{\s*gan:\s*hourGanIdx/;
-    const hourGanRule = /const\s+hourGanIdx\s*=\s*getHourGanIdx\(\s*rawDayGanIdx\s*,\s*hourZhiIdx\s*\)/;
+    const hourGanRule = /const\s+hourGanIdx\s*=\s*getHourGanIdx\(\s*dp\.gan\s*,\s*hourZhiIdx\s*\)/;
     if (!yearLine.test(src))  fail('true-solar invariant: year pillar must read from rawLunar (un-shifted)');
     if (!monthLine.test(src)) fail('true-solar invariant: month pillar must read from rawLunar (un-shifted)');
     if (!dayLine.test(src))   fail('true-solar invariant: day pillar must read from rawLunar (un-shifted)');

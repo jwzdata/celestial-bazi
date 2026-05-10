@@ -1,9 +1,7 @@
 // POST /api/pay/create
-const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { getDb, initDb } = require('../_db');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'bazi-secret-key-change-me-in-production';
+const { verifyJwtToken } = require('../_auth');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
@@ -14,7 +12,7 @@ module.exports = async (req, res) => {
 
   let decoded;
   try {
-    decoded = jwt.verify(token, JWT_SECRET);
+    decoded = verifyJwtToken(token);
   } catch {
     return res.status(403).json({ error: '登录已过期' });
   }

@@ -1,10 +1,8 @@
 // POST /api/login
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const { getDb, initDb } = require('./_db');
 const { rateLimit } = require('./_rateLimit');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'bazi-secret-key-change-me-in-production';
+const { signJwtToken } = require('./_auth');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
@@ -35,9 +33,8 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: '用户名或密码错误' });
     }
 
-    const token = jwt.sign(
+    const token = signJwtToken(
       { id: Number(user.id), username: user.username },
-      JWT_SECRET,
       { expiresIn: '7d' }
     );
     res.json({ token, message: '登录成功' });

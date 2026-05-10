@@ -1,10 +1,8 @@
 // GET /api/preferences -> { preferences: <object|null> }
 // PUT /api/preferences { preferences: <object> } -> { success: true }
-const jwt = require('jsonwebtoken');
 const { getDb, initDb } = require('./_db');
 const { rateLimit } = require('./_rateLimit');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'bazi-secret-key-change-me-in-production';
+const { verifyJwtToken } = require('./_auth');
 const MAX_PREFS_BYTES = 4096;
 
 module.exports = async (req, res) => {
@@ -27,7 +25,7 @@ module.exports = async (req, res) => {
 
   let decoded;
   try {
-    decoded = jwt.verify(token, JWT_SECRET);
+    decoded = verifyJwtToken(token);
   } catch {
     return res.status(403).json({ error: '登录已过期' });
   }
