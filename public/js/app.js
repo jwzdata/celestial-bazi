@@ -598,11 +598,23 @@ function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fo
   // 顯示優化後的詳細分析
   if (dayFortune && dayFortune.details) {
     const details = dayFortune.details;
+    let changShengLabel, naYinLabel, solarTimeLabel;
+
+    if (currentLang === 'en') {
+      changShengLabel = 'Growth Phase:';
+      naYinLabel = 'Na Yin:';
+      solarTimeLabel = 'True Solar Time:';
+    } else {
+      changShengLabel = '長生：';
+      naYinLabel = '納音：';
+      solarTimeLabel = '真太陽時：';
+    }
+
     let analysisHtml = `
       <div class="text-xs text-accent/70 mt-2 space-y-1">
-        <div>長生：${details.changSheng} (${details.changShengScore > 0 ? '+' : ''}${(details.changShengScore * 20).toFixed(0)})</div>
-        <div>納音：${details.naYin}</div>
-        <div>真太陽時：${details.trueSolarTime}</div>
+        <div>${changShengLabel} ${details.changSheng} (${details.changShengScore > 0 ? '+' : ''}${(details.changShengScore * 20).toFixed(0)})</div>
+        <div>${naYinLabel} ${translateNaYin(details.naYin)}</div>
+        <div>${solarTimeLabel} ${details.trueSolarTime}</div>
       </div>
     `;
     document.getElementById('calSummaryAnalysis').innerHTML = analysisHtml;
@@ -635,11 +647,26 @@ function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fo
   // 當日吉神/凶煞（萬年曆取自 lunar-javascript）——屬於日曆視角，
   // 非原局命盤神煞，因此放在這裡、不進 renderProInfo。
   const callLunar = (name, fb) => (lunar && typeof lunar[name] === 'function') ? lunar[name]() : fb;
-  const jiShen   = (callLunar('getDayJiShen', []) || []).slice(0, 6).join('、');
-  const xiongSha = (callLunar('getDayXiongSha', []) || []).slice(0, 6).join('、');
+  const jiShenRaw   = (callLunar('getDayJiShen', []) || []).slice(0, 6);
+  const xiongShaRaw = (callLunar('getDayXiongSha', []) || []).slice(0, 6);
+
+  let jiShen, xiongSha;
+  if (currentLang === 'en') {
+    jiShen = translateStarNames(jiShenRaw).join(', ');
+    xiongSha = translateStarNames(xiongShaRaw).join(', ');
+  } else {
+    jiShen = jiShenRaw.join('、');
+    xiongSha = xiongShaRaw.join('、');
+  }
+
   if (jiShen || xiongSha) {
-    advice += (jiShen   ? `｜吉神：${jiShen}` : '');
-    advice += (xiongSha ? `｜凶煞：${xiongSha}` : '');
+    if (currentLang === 'en') {
+      advice += (jiShen   ? ` | Auspicious Stars: ${jiShen}` : '');
+      advice += (xiongSha ? ` | Inauspicious Stars: ${xiongSha}` : '');
+    } else {
+      advice += (jiShen   ? `｜吉神：${jiShen}` : '');
+      advice += (xiongSha ? `｜凶煞：${xiongSha}` : '');
+    }
   }
   document.getElementById('calSummaryAdvice').textContent = advice;
 }
@@ -2100,4 +2127,105 @@ function generateQRCode(canvas, data) {
     ctx.font = `${Math.floor(size / 25)}px sans-serif`;
     ctx.fillText(window.location.origin, size / 2, size / 2 + 15);
   }
+}
+
+// Translate Na Yin values from Chinese to English
+function translateNaYin(naYin) {
+  if (currentLang !== "en") return naYin;
+
+  const naYinMap = {
+    "海中金": "Sea Gold",
+    "爐中火": "Furnace Fire",
+    "大林木": "Forest Wood",
+    "路旁土": "Road Earth",
+    "劍鋒金": "Sword Gold",
+    "山頭火": "Mountain Fire",
+    "澗下水": "Stream Water",
+    "城頭土": "Wall Earth",
+    "白蠟金": "White Wax Gold",
+    "楊柳木": "Willow Wood",
+    "泉中水": "Spring Water",
+    "屋上土": "Roof Earth",
+    "霹靂火": "Thunder Fire",
+    "松柏木": "Pine Wood",
+    "長流水": "Flowing Water",
+    "砂石金": "Gravel Gold",
+    "山下火": "Mountain Fire",
+    "平地木": "Field Wood",
+    "壁上土": "Wall Earth",
+    "金箔金": "Gold Foil",
+    "覆燈火": "Lamp Fire",
+    "天河水": "Heaven River Water",
+    "大驛土": "Post Station Earth",
+    "釵環金": "Hairpin Gold",
+    "桑柘木": "Mulberry Wood",
+    "大溪水": "Big Stream Water",
+    "沙中土": "Sand Earth",
+    "天上火": "Heaven Fire",
+    "石榴木": "Pomegranate Wood",
+    "大海水": "Ocean Water"
+  };
+
+  return naYinMap[naYin] || naYin;
+}
+
+// Translate Chinese star names to English
+function translateStarNames(starNames) {
+  if (currentLang !== "en") return starNames;
+
+  const starMap = {
+    // Auspicious Stars
+    "天乙貴人": "Tian Yi Noble",
+    "文昌貴人": "Wen Chang Noble",
+    "華蓋": "Hua Gai (Canopy)",
+    "將星": "General Star",
+    "祿神": "Lu (Prosperity) Star",
+    "羊刃": "Yang Ren (Blade)",
+    "金輿": "Jin Yu (Golden Carriage)",
+    "天德": "Heavenly Virtue",
+    "月德": "Monthly Virtue",
+    "天醫": "Heavenly Doctor",
+    "太極貴人": "Taiji Noble",
+    "福星貴人": "Lucky Star Noble",
+    "三奇": "Three Wonders",
+    "三合": "Three Harmony",
+    "臨官": "Official Position",
+    "帝旺": "Imperial Power",
+    "長生": "Growth",
+    "沐浴": "Bath",
+    "冠帶": "Crown",
+    "養": "Nurture",
+    "胎": "Conception",
+    "時陰": "Hour Yin",
+    "敬安": "Respectful Peace",
+    "除神": "Dispelling Spirit",
+    "金匱": "Golden Treasury",
+
+    // Inauspicious Stars
+    "月厭": "Month Hate",
+    "地火": "Earth Fire",
+    "死氣": "Death Qi",
+    "往亡": "Gone and Lost",
+    "五離": "Five Separations",
+    "行狠": "Cruel Action",
+    "劫煞": "Robbery Spirit",
+    "災煞": "Disaster Spirit",
+    "歲煞": "Year Spirit",
+    "勾絞": "Hook and Twist",
+    "孤辰": "Lonely Stem",
+    "寡宿": "Widowed Branch",
+    "天狗": "Heavenly Dog",
+    "白虎": "White Tiger",
+    "朱雀": "Vermilion Bird",
+    "玄武": "Black Tortoise",
+    "病符": "Sickness Token",
+    "大耗": "Great Loss",
+    "小耗": "Small Loss",
+    "破敗": "Broken and Defeated",
+    "咸池": "Salty Pool",
+    "桃花": "Peach Blossom",
+    "空亡": "Void and Extinct"
+  };
+
+  return starNames.map(star => starMap[star] || star);
 }
