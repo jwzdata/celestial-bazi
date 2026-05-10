@@ -114,7 +114,16 @@ function renderProInfo() {
   const call = (obj, method, fallback = '') => (obj && typeof obj[method] === 'function') ? obj[method]() : fallback;
   const naYin = [call(eightChar, 'getYearNaYin'), call(eightChar, 'getMonthNaYin'), call(eightChar, 'getDayNaYin'), call(eightChar, 'getTimeNaYin')].join(' · ');
   const xunKong = [call(eightChar, 'getYearXunKong'), call(eightChar, 'getMonthXunKong'), call(eightChar, 'getDayXunKong'), call(eightChar, 'getTimeXunKong')].join(' · ');
-  const pengZu = `${call(lunar, 'getPengZuGan')}；${call(lunar, 'getPengZuZhi')}`;
+  let pengZu;
+  if (currentLang === 'en') {
+    // English version - translate Peng Zu taboos
+    const pengZuGan = translatePengZuGan(call(lunar, 'getPengZuGan', ''));
+    const pengZuZhi = translatePengZuZhi(call(lunar, 'getPengZuZhi', ''));
+    pengZu = `${pengZuGan}; ${pengZuZhi}`;
+  } else {
+    // Chinese version
+    pengZu = `${call(lunar, 'getPengZuGan')}；${call(lunar, 'getPengZuZhi')}`;
+  }
 
   // 命盤神煞：以原局四柱為對象，顯示每個非空桶及其落點。
   // 驛馬/桃花/華蓋/將星 桶為 provenance-aware 物件陣列 [{pillarIdx, ref}],
@@ -2238,4 +2247,46 @@ function translateStarNames(starNames) {
   };
 
   return starNames.map(star => starMap[star] || star);
+}
+
+// Translate Peng Zu Gan (天干 taboos)
+function translatePengZuGan(pengZuGan) {
+  if (!pengZuGan) return "";
+
+  const ganMap = {
+    "甲不經絡織機虛張": "Jia: Do not engage in weaving or networking (excessive expansion)",
+    "乙不祭祀神鬼不尝": "Yi: Do not perform sacrifices to spirits (offerings will not be accepted)",
+    "丙不修灶必見火殃": "Bing: Do not repair stoves (fire disaster may occur)",
+    "丁不剃頭頭必生瘡": "Ding: Do not cut hair (sores may develop on the head)",
+    "戊不伐樹誰克斧頭": "Wu: Do not cut trees (conflict with tools)",
+    "己不買豬猡必見瘟": "Ji: Do not buy pigs (disease may occur)",
+    "庚不修倉必見凶殃": "Geng: Do not repair granaries (bad omen may appear)",
+    "辛不合醬必有瘟疾": "Xin: Do not make sauce (plague or illness may occur)",
+    "壬不決水水必反": "Ren: Do not drain water (water will flow back)",
+    "癸不詞訟必見凶": "Gui: Do not engage in lawsuits (bad outcome guaranteed)"
+  };
+
+  return ganMap[pengZuGan] || pengZuGan;
+}
+
+// Translate Peng Zu Zhi (地支 taboos)
+function translatePengZuZhi(pengZuZhi) {
+  if (!pengZuZhi) return "";
+
+  const zhiMap = {
+    "子不問卜自惹禍殃": "Zi: Do not consult divination (will invite disaster)",
+    "丑不冠帶主不還鄉": "Chou: Do not wear hats/crowns (will not return home)",
+    "寅不祭祀神鬼不尝": "Yin: Do not perform sacrifices (spirits will not accept)",
+    "卯不穿井常常更換": "Mao: Do not dig wells (will need constant replacement)",
+    "辰不哭泣必主重喪": "Chen: Do not cry (major funeral may occur)",
+    "巳不遠行財物伏藏": "Si: Do not travel far (wealth will be hidden/lost)",
+    "午不苫蓋屋主更張": "Wu: Do not thatch roofs (house will need reconstruction)",
+    "未不服藥毒氣入腸": "Wei: Do not take medicine (poison will enter intestines)",
+    "申不安床鬼祟入房": "Shen: Do not arrange beds (ghosts will enter room)",
+    "酉不會客賓主相傷": "You: Do not receive guests (both host and guest will be harmed)",
+    "戌不吃犬作怪上床": "Xu: Do not eat dog meat (strange things will happen)",
+    "亥不嫁娶不利新郎": "Hai: Do not marry (bad for the groom)"
+  };
+
+  return zhiMap[pengZuZhi] || pengZuZhi;
 }
