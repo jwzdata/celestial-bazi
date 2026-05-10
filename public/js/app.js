@@ -244,17 +244,34 @@ function renderStrength(dayGan, monthZhi, strength) {
 
   let dayWX = WX_GAN[dayGan];
   let motherEl = strength.motherEl;
-  let text = `${TG[dayGan]}${dayWX}日主生於${DZ[monthZhi]}月`;
-  // 判斷得令
-  if (strength.deLing) {
-    text += `，${DZ[monthZhi]}為${WX_ZHI[monthZhi] === dayWX ? dayWX+'之本氣' : '生'+dayWX+'之印星'}，日主得令`;
+  let text = '';
+
+  if (currentLang === 'en') {
+    // English version
+    text = `${TG[dayGan]}${dayWX} Day Master born in ${DZ[monthZhi]} Month`;
+    if (strength.deLing) {
+      text += `, ${DZ[monthZhi]} generates ${dayWX} (Resource Star), Day Master is in-season`;
+    } else {
+      text += `, ${DZ[monthZhi]} Branch ${WX_ZHI[monthZhi]} does not support Day Master`;
+    }
+    if (strength.isStrong) {
+      text += `. Based on Five Elements analysis, Day Master ${dayWX} strength is strong, belonging to a Strong Day Master destiny. A strong Day Master should be drained and restrained, requiring Output stars to drain excellence or Officer stars to balance the chart.`;
+    } else {
+      text += `. Based on Five Elements analysis, Day Master ${dayWX} strength is weak, belonging to a Weak Day Master destiny. A weak Day Master should be supported and generated, requiring Resource stars to support or Companion stars to strengthen the chart.`;
+    }
   } else {
-    text += `，月支${DZ[monthZhi]}${WX_ZHI[monthZhi]}不助日主`;
-  }
-  if (strength.isStrong) {
-    text += `。綜合五行力量分析，日主${dayWX}力量偏強，屬於身強之命格。身強則宜泄宜克，需要通過食傷泄秀或官殺制衡來平衡命局。`;
-  } else {
-    text += `。綜合五行力量分析，日主${dayWX}力量偏弱，屬於身弱之命格。身弱則宜扶宜生，需要通過印星生扶或比劫助身來增強命局。`;
+    // Chinese version
+    text = `${TG[dayGan]}${dayWX}日主生於${DZ[monthZhi]}月`;
+    if (strength.deLing) {
+      text += `，${DZ[monthZhi]}為${WX_ZHI[monthZhi] === dayWX ? dayWX+'之本氣' : '生'+dayWX+'之印星'}，日主得令`;
+    } else {
+      text += `，月支${DZ[monthZhi]}${WX_ZHI[monthZhi]}不助日主`;
+    }
+    if (strength.isStrong) {
+      text += `。綜合五行力量分析，日主${dayWX}力量偏強，屬於身強之命格。身強則宜泄宜克，需要通過食傷泄秀或官殺制衡來平衡命局。`;
+    } else {
+      text += `。綜合五行力量分析，日主${dayWX}力量偏弱，屬於身弱之命格。身弱則宜扶宜生，需要通過印星生扶或比劫助身來增強命局。`;
+    }
   }
   document.getElementById('strengthText').textContent = text;
 
@@ -267,20 +284,46 @@ function renderStrength(dayGan, monthZhi, strength) {
     detail.className = 'mt-4 grid gap-2 text-xs text-accent/70';
     host.appendChild(detail);
   }
-  const pillarLabels = ['年柱','月柱','日柱','時柱'];
-  const diLabel = strength.deDi && strength.deDi.length
-    ? strength.deDi.map(i => pillarLabels[i]).join('、') + `（通根：${strength.rootedBranches.join('、')}）`
-    : '無';
-  const shiLabel = strength.deShi && strength.deShi.length
-    ? strength.deShi.map(i => pillarLabels[i]).join('、') + `（透干：${strength.penetratedStems.join('、')}）`
-    : '無';
-  const lingLabel = strength.deLing
-    ? `是（月令屬${WX_ZHI[monthZhi]}，助${dayWX}日主）`
-    : `否（月令屬${WX_ZHI[monthZhi]}，不助${dayWX}日主）`;
+  let pillarLabels, diLabel, shiLabel, lingLabel, inSeasonLabel, rootedLabel, supportedLabel;
+
+  if (currentLang === 'en') {
+    // English version
+    pillarLabels = ['Year Pillar', 'Month Pillar', 'Day Pillar', 'Hour Pillar'];
+    diLabel = strength.deDi && strength.deDi.length
+      ? strength.deDi.map(i => pillarLabels[i]).join(', ') + ` (Roots: ${strength.rootedBranches.join(', ')})`
+      : 'None';
+    shiLabel = strength.deShi && strength.deShi.length
+      ? strength.deShi.map(i => pillarLabels[i]).join(', ') + ` (Transparent Stems: ${strength.penetratedStems.join(', ')})`
+      : 'None';
+    lingLabel = strength.deLing
+      ? `Yes (Month Branch belongs to ${WX_ZHI[monthZhi]}, supports ${dayWX} Day Master)`
+      : `No (Month Branch belongs to ${WX_ZHI[monthZhi]}, does not support ${dayWX} Day Master)`;
+
+    inSeasonLabel = 'In-season:';
+    rootedLabel = 'Rooted:';
+    supportedLabel = 'Supported:';
+  } else {
+    // Chinese version
+    pillarLabels = ['年柱','月柱','日柱','時柱'];
+    diLabel = strength.deDi && strength.deDi.length
+      ? strength.deDi.map(i => pillarLabels[i]).join('、') + `（通根：${strength.rootedBranches.join('、')}）`
+      : '無';
+    shiLabel = strength.deShi && strength.deShi.length
+      ? strength.deShi.map(i => pillarLabels[i]).join('、') + `（透干：${strength.penetratedStems.join('、')}）`
+      : '無';
+    lingLabel = strength.deLing
+      ? `是（月令屬${WX_ZHI[monthZhi]}，助${dayWX}日主）`
+      : `否（月令屬${WX_ZHI[monthZhi]}，不助${dayWX}日主）`;
+
+    inSeasonLabel = '得令：';
+    rootedLabel = '得地：';
+    supportedLabel = '得勢：';
+  }
+
   detail.innerHTML = `
-    <div class="flex gap-2"><span class="text-accent/50 shrink-0">得令：</span><span>${lingLabel}</span></div>
-    <div class="flex gap-2"><span class="text-accent/50 shrink-0">得地：</span><span>${diLabel}</span></div>
-    <div class="flex gap-2"><span class="text-accent/50 shrink-0">得勢：</span><span>${shiLabel}</span></div>
+    <div class="flex gap-2"><span class="text-accent/50 shrink-0">${inSeasonLabel}</span><span>${lingLabel}</span></div>
+    <div class="flex gap-2"><span class="text-accent/50 shrink-0">${rootedLabel}</span><span>${diLabel}</span></div>
+    <div class="flex gap-2"><span class="text-accent/50 shrink-0">${supportedLabel}</span><span>${shiLabel}</span></div>
   `;
 }
 
@@ -1519,34 +1562,66 @@ function renderAiReportContent() {
   const isS = baziResult.isStrong;
   const luckyWX = getPrimaryLuckyElement(baziResult.xiYong);
 
-  // 模擬長篇報告
-  let html = `
-    <h4 class="text-lg font-serif text-accent font-bold mb-4 border-b border-accent/20 pb-2">一、 命局總評</h4>
-    <p>您的日主為${dWX}，生於${DZ[baziResult.monthZhi]}月。整體命局屬於${isS ? '身強' : '身弱'}之格。此命格最大的特點在於其內在的韌性與潛力。${isS ? '您天生具備較強的抗壓能力與獨立精神，適合開創性的工作。' : '您善於借力打力，心思細膩，適合在團隊中發揮核心協調作用。'}</p>
-    
-    <h4 class="text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2">二、 財運與事業剖析</h4>
-    <p>從財庫與大運走勢來看，您的財富積累屬於“${baziResult.wxCount['金'] > 1 ? '爆發型' : '穩健型'}”。在未來的3-5年內，將會迎來一波較為明顯的事業上升期。建議在處理財務時，多聽取專業人士意見，避免盲目跟風。</p>
-    <p class="mt-2"><strong>事業方向建議：</strong> 您的喜用神為 ${luckyWX}，非常適合從事與之相關的行業。在職場中，您容易遇到貴人提攜，但需注意防範小人嫉妒。</p>
+  let html = '';
 
-    <h4 class="text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2">三、 婚姻與感情歸宿</h4>
-    <p>您的感情觀較為${isS ? '主動且強勢' : '被動且細膩'}。命盤顯示，您的正緣出現在${Math.random() > 0.5 ? '東方或東南方' : '西方或西北方'}。婚姻生活中，需多注意溝通方式，避免因固執己見而產生不必要的摩擦。</p>
-    
-    <h4 class="text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2">四、 專屬改運指導</h4>
-    <ul class="list-disc pl-5 space-y-2">
-      <li><strong>色彩開運：</strong> 多穿戴 ${LUCKY_DATA[luckyWX].colors.join('、')} 色的服飾。</li>
-      <li><strong>方位選擇：</strong> 床頭或辦公桌宜朝向 ${LUCKY_DATA[luckyWX].dir}。</li>
-      <li><strong>日常建議：</strong> 保持規律作息，適當佩戴 ${DRESS_COLORS[luckyWX].acc[0]} 等飾品以增強自身氣場。</li>
-    </ul>
-    
-    <div class="mt-6 p-4 bg-accent/10 rounded-lg text-xs text-accent/60">
-      <i class="fas fa-gift mr-2"></i> 推廣期完整版示範報告已免費開放。
-    </div>
-  `;
+  if (currentLang === 'en') {
+    // English version
+    html = `
+      <h4 class=”text-lg font-serif text-accent font-bold mb-4 border-b border-accent/20 pb-2”>1. Overall Chart Summary</h4>
+      <p>Your Day Master is ${dWX}, born in ${DZ[baziResult.monthZhi]} Month. The overall chart belongs to a ${isS ? 'Strong' : 'Weak'} Day Master pattern. The key characteristic of this destiny lies in its inner resilience and potential. ${isS ? 'You naturally possess strong stress resistance and independent spirit, suitable for pioneering work.' : 'You excel at leveraging resources and have a delicate mindset, suitable for playing a core coordinating role in teams.'}</p>
+
+      <h4 class=”text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2”>2. Wealth and Career Analysis</h4>
+      <p>From the wealth vault and fortune cycle trends, your wealth accumulation belongs to a “${baziResult.wxCount['金'] > 1 ? 'Breakthrough' : 'Steady'}” pattern. In the next 3-5 years, you will experience a significant career advancement period. When handling finances, seek professional advice and avoid following trends blindly.</p>
+      <p class=”mt-2”><strong>Career Direction:</strong> Your favorable element is ${luckyWX}, making you highly suitable for related industries. In the workplace, you will easily encounter benefactor support, but beware of jealousy from difficult people.</p>
+
+      <h4 class=”text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2”>3. Relationships and Marriage</h4>
+      <p>Your approach to relationships is relatively ${isS ? 'active and assertive' : 'passive and delicate'}. The chart shows that your true love appears in the ${Math.random() > 0.5 ? 'East or Southeast' : 'West or Northwest'}. In marriage, pay attention to communication styles to avoid unnecessary conflicts due to stubbornness.</p>
+
+      <h4 class=”text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2”>4. Personalized Improvement Guide</h4>
+      <ul class=”list-disc pl-5 space-y-2”>
+        <li><strong>Lucky Colors:</strong> Wear more clothing in ${LUCKY_DATA[luckyWX].colors.join(', ')} colors.</li>
+        <li><strong>Direction Choice:</strong> Your bed head or desk should face ${LUCKY_DATA[luckyWX].dir}.</li>
+        <li><strong>Daily Suggestion:</strong> Maintain regular sleep schedule and wear accessories like ${DRESS_COLORS[luckyWX].acc[0]} to enhance your energy field.</li>
+      </ul>
+
+      <div class=”mt-6 p-4 bg-accent/10 rounded-lg text-xs text-accent/60”>
+        <i class=”fas fa-gift mr-2”></i> Full demo report is free during the promotion period.
+      </div>
+    `;
+  } else {
+    // Chinese version
+    html = `
+      <h4 class=”text-lg font-serif text-accent font-bold mb-4 border-b border-accent/20 pb-2”>一、 命局總評</h4>
+      <p>您的日主為${dWX}，生於${DZ[baziResult.monthZhi]}月。整體命局屬於${isS ? '身強' : '身弱'}之格。此命格最大的特點在於其內在的韌性與潛力。${isS ? '您天生具備較強的抗壓能力與獨立精神，適合開創性的工作。' : '您善於借力打力，心思細膩，適合在團隊中發揮核心協調作用。'}</p>
+
+      <h4 class=”text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2”>二、 財運與事業剖析</h4>
+      <p>從財庫與大運走勢來看，您的財富積累屬於”${baziResult.wxCount['金'] > 1 ? '爆發型' : '穩健型'}”。在未來的3-5年內，將會迎來一波較為明顯的事業上升期。建議在處理財務時，多聽取專業人士意見，避免盲目跟風。</p>
+      <p class=”mt-2”><strong>事業方向建議：</strong> 您的喜用神為 ${luckyWX}，非常適合從事與之相關的行業。在職場中，您容易遇到貴人提攜，但需注意防範小人嫉妒。</p>
+
+      <h4 class=”text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2”>三、 婚姻與感情歸宿</h4>
+      <p>您的感情觀較為${isS ? '主動且強勢' : '被動且細膩'}。命盤顯示，您的正緣出現在${Math.random() > 0.5 ? '東方或東南方' : '西方或西北方'}。婚姻生活中，需多注意溝通方式，避免因固執己見而產生不必要的摩擦。</p>
+
+      <h4 class=”text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2”>四、 專屬改運指導</h4>
+      <ul class=”list-disc pl-5 space-y-2”>
+        <li><strong>色彩開運：</strong> 多穿戴 ${LUCKY_DATA[luckyWX].colors.join('、')} 色的服飾。</li>
+        <li><strong>方位選擇：</strong> 床頭或辦公桌宜朝向 ${LUCKY_DATA[luckyWX].dir}。</li>
+        <li><strong>日常建議：</strong> 保持規律作息，適當佩戴 ${DRESS_COLORS[luckyWX].acc[0]} 等飾品以增強自身氣場。</li>
+      </ul>
+
+      <div class=”mt-6 p-4 bg-accent/10 rounded-lg text-xs text-accent/60”>
+        <i class=”fas fa-gift mr-2”></i> 推廣期完整版示範報告已免費開放。
+      </div>
+    `;
+  }
+
   container.innerHTML = html;
 }
 
 function downloadAiReport() {
-  showToast('正在生成 PDF，請稍候... (此為演示功能)');
+  const message = currentLang === 'en'
+    ? 'Generating PDF, please wait... (demo feature)'
+    : '正在生成 PDF，請稍候... (此為演示功能)';
+  showToast(message);
 }
 
 function tossZhijiao() {
