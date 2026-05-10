@@ -1762,6 +1762,13 @@ function drawQian() {
 }
 
 const lazyScriptPromises = {};
+function withTimeout(promise, ms, message) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
+  ]);
+}
+
 function loadScriptOnce(url, globalName) {
   if (globalName && window[globalName]) return Promise.resolve();
   if (lazyScriptPromises[url]) return lazyScriptPromises[url];
@@ -1845,23 +1852,43 @@ async function generatePoster() {
   document.getElementById('posterQr').src = qrCanvas.toDataURL();
   document.getElementById('posterQr').style.display = 'block';
 
-  // 生成图片
-  setTimeout(() => {
-    window.html2canvas(document.getElementById('posterCanvas'), {
-          backgroundColor: '#1a1a2e',
-          scale: 2,
-          useCORS: true
-        }).then(canvas => {
-          const img = document.createElement('img');
-          img.src = canvas.toDataURL('image/jpeg');
-          img.className = 'w-full h-auto shadow-2xl rounded-xl';
-          resultDiv.innerHTML = '';
-          resultDiv.appendChild(img);
-        }).catch(err => {
-          console.error(err);
-          resultDiv.innerHTML = '<div class="py-20 text-center text-fire"><i class="fas fa-exclamation-triangle text-3xl mb-2"></i><br>海報生成失敗，請稍後重試</div>';
-        });
-      }, 500); // 等待图片渲染
+  const posterEl = document.getElementById('posterCanvas');
+  const previousStyle = posterEl.getAttribute('style') || '';
+  const restoreHiddenClass = posterEl.classList.contains('hidden');
+  const restoreOpacityClass = posterEl.classList.contains('opacity-0');
+  try {
+    posterEl.classList.remove('hidden', 'opacity-0');
+    Object.assign(posterEl.style, {
+      position: 'fixed',
+      left: '-420px',
+      top: '0',
+      width: '375px',
+      opacity: '1',
+      visibility: 'visible',
+      zIndex: '0',
+      pointerEvents: 'none'
+    });
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const canvas = await withTimeout(window.html2canvas(posterEl, {
+      backgroundColor: '#1a1a2e',
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      width: posterEl.offsetWidth,
+      height: posterEl.scrollHeight,
+      windowWidth: Math.max(document.documentElement.clientWidth, posterEl.offsetWidth),
+      windowHeight: Math.max(document.documentElement.clientHeight, posterEl.scrollHeight)
+    }), 10000, 'poster generation timed out');
+    const img = document.createElement('img');
+    img.src = canvas.toDataURL('image/jpeg');
+    img.className = 'w-full h-auto shadow-2xl rounded-xl';
+    resultDiv.innerHTML = '';
+    resultDiv.appendChild(img);
+  } finally {
+    posterEl.setAttribute('style', previousStyle);
+    if (restoreHiddenClass) posterEl.classList.add('hidden');
+    if (restoreOpacityClass) posterEl.classList.add('opacity-0');
+  }
   } catch (err) {
     console.error(err);
     resultDiv.innerHTML = '<div class="py-20 text-center text-fire"><i class="fas fa-exclamation-triangle text-3xl mb-2"></i><br>海報生成失敗，請稍後重試</div>';
