@@ -10,6 +10,30 @@ if (typeof window.ZIWEI_CONSTANTS === 'undefined') {
 
 const ZW = window.ZIWEI_CONSTANTS;
 
+// iztro 在浏览器 UMD 包中导出为 window.iztro，旧集成代码曾假设存在
+// window.astro；这里统一取到 astro 模块，方便浏览器和 Node 验证脚本共用。
+function getIztroAstro() {
+  if (typeof window !== 'undefined' && window.iztro?.astro?.bySolar) {
+    return window.iztro.astro;
+  }
+  if (typeof window !== 'undefined' && window.astro?.bySolar) {
+    return window.astro;
+  }
+  if (typeof globalThis !== 'undefined' && globalThis.iztro?.astro?.bySolar) {
+    return globalThis.iztro.astro;
+  }
+  if (typeof globalThis !== 'undefined' && globalThis.astro?.bySolar) {
+    return globalThis.astro;
+  }
+  return null;
+}
+
+function normalizePalaceName(name) {
+  if (!name) return '';
+  if (name === '仆役') return '交友宫';
+  return name.endsWith('宫') ? name : `${name}宫`;
+}
+
 // 亮度映射
 function mapBrightness(b) {
   if (!b) return 'normal';
@@ -83,12 +107,14 @@ function generateZiweiChart(birthInfo) {
     const solarDate = `${year}-${month}-${day}`;
     const iztroGender = gender === 'male' ? '男' : '女';
 
+    const iztroAstro = getIztroAstro();
+
     // 检查iztro是否可用
-    if (typeof astro === 'undefined' || !astro.bySolar) {
+    if (!iztroAstro) {
       throw new Error('iztro library not available');
     }
 
-    const astrolabe = astro.bySolar(solarDate, hour, iztroGender, true, 'zh-CN');
+    const astrolabe = iztroAstro.bySolar(solarDate, hour, iztroGender, true, 'zh-CN');
 
     // 组装十二宫
     const palaces = astrolabe.palaces.map(p => {
@@ -119,10 +145,10 @@ function generateZiweiChart(birthInfo) {
       return {
         branch: branch >= 0 ? branch : 0,
         stem: stem >= 0 ? stem : 0,
-        name: p.name,
+        name: normalizePalaceName(p.name),
         stars: allStars,
         daXianAge: range ? [range[0], range[1]] : undefined,
-        isMingGong: p.name === '命宫',
+        isMingGong: p.name === '命宫' || p.name === '命',
         isShenGong: p.isBodyPalace ?? false,
         isCurrentDaXian: false,
       };

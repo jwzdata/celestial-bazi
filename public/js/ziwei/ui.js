@@ -7,8 +7,8 @@ if (typeof window.ZIWEI_ALGORITHM === 'undefined') {
   console.error('ZIWEI_ALGORITHM not loaded. Please include algorithm.js first.');
 }
 
-const ZA = window.ZIWEI_ALGORITHM;
-const ZW = window.ZIWEI_CONSTANTS;
+const ZIWEI_UI_ALGORITHM = window.ZIWEI_ALGORITHM;
+const ZIWEI_UI_CONSTANTS = window.ZIWEI_CONSTANTS;
 
 // 全局状态
 let currentZiweiChart = null;
@@ -178,18 +178,18 @@ function validateFormData(data) {
 async function calculateZiweiChart(formData) {
   try {
     // 尝试使用完整算法
-    const chart = ZA.generateZiweiChart(formData);
+    const chart = ZIWEI_UI_ALGORITHM.generateZiweiChart(formData);
 
     // 如果iztro不可用，使用简化算法
     if (chart.error && chart.error.includes('iztro')) {
       console.warn('iztro不可用，使用简化算法');
-      return ZA.generateSimpleZiweiChart(formData);
+      return ZIWEI_UI_ALGORITHM.generateSimpleZiweiChart(formData);
     }
 
     return chart;
   } catch (error) {
     console.warn('完整算法失败，使用简化算法:', error);
-    return ZA.generateSimpleZiweiChart(formData);
+    return ZIWEI_UI_ALGORITHM.generateSimpleZiweiChart(formData);
   }
 }
 
@@ -291,24 +291,38 @@ function displayZiweiChart(chart) {
   const chartEl = document.getElementById('ziweiChart');
   if (!chartEl) return;
 
-  // 紫微斗数命盘布局（顺时针排列）
+  // 紫微斗数命盘布局（4x4外围十二宫，中间四格为天盘信息区）
   const layout = [
-    7, 8, 9, 10,  // 第一行：交友宫、官禄宫、田宅宫、福德宫
-    6, 11, 0, 11,  // 第二行：迁移宫、父母宫、命宫、子女宫
-    5, 4, 3, 2     // 第三行：疾厄宫、财帛宫、夫妻宫、兄弟宫
+    5, 6, 7, 8,
+    4, null, null, 9,
+    3, null, null, 10,
+    2, 1, 0, 11,
   ];
 
   let html = '<div class="ziwei-chart">';
 
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < layout.length; i++) {
     const palaceIndex = layout[i];
+    if (palaceIndex === null) {
+      if (i === 5) {
+        html += `
+          <div class="ziwei-chart-center" aria-label="命盘摘要">
+            <div class="ziwei-center-title">${chart.wuxingJuName}</div>
+            <div class="ziwei-center-meta">命宫：${ZIWEI_UI_CONSTANTS.BRANCHES[chart.mingGongBranch]} · 身宫：${ZIWEI_UI_CONSTANTS.BRANCHES[chart.shenGongBranch]}</div>
+            <div class="ziwei-center-meta">当前年龄：${chart.currentAge}岁</div>
+          </div>
+        `;
+      }
+      continue;
+    }
+
     const palace = chart.palaces[palaceIndex];
 
     if (!palace) continue;
 
     const isMingGong = palace.isMingGong;
     const isShenGong = palace.isShenGong;
-    const stemChar = ZW.STEMS[palace.stem];
+    const stemChar = ZIWEI_UI_CONSTANTS.STEMS[palace.stem];
 
     let palaceClass = 'ziwei-palace';
     if (isMingGong) palaceClass += ' ziwei-palace-minggong';

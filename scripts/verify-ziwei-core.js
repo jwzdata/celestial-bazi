@@ -9,6 +9,7 @@ const vm = require('vm');
 const ROOT = path.resolve(__dirname, '..');
 const CONSTANTS_PATH = path.join(ROOT, 'public/js/ziwei/constants.js');
 const ALGORITHM_PATH = path.join(ROOT, 'public/js/ziwei/algorithm.js');
+const IZTRO_PATH = require.resolve('iztro');
 
 function fail(msg) {
   console.error('FAIL:', msg);
@@ -34,6 +35,7 @@ function loadZiweiCore() {
   };
   sandbox.window = sandbox;
   sandbox.globalThis = sandbox;
+  sandbox.iztro = require(IZTRO_PATH);
   vm.createContext(sandbox);
 
   vm.runInContext(fs.readFileSync(CONSTANTS_PATH, 'utf8'), sandbox, { filename: 'public/js/ziwei/constants.js' });
@@ -96,9 +98,14 @@ function run() {
     assertChartShape(simpleChart, `simple sample ${index}`);
     assert(simpleChart.isSimple === true, `simple sample ${index}.isSimple expected true`);
 
-    const fallbackChart = algorithm.generateZiweiChart(sample);
-    assertChartShape(fallbackChart, `fallback sample ${index}`);
-    assert(typeof fallbackChart.error === 'string' && fallbackChart.error.includes('iztro'), `fallback sample ${index}.error should mention iztro`);
+    const fullChart = algorithm.generateZiweiChart(sample);
+    assertChartShape(fullChart, `full sample ${index}`);
+    assert(!fullChart.error, `full sample ${index} should use iztro without fallback: ${fullChart.error}`);
+    assert(fullChart.isSimple !== true, `full sample ${index} should not be simple fallback`);
+    assert(fullChart.daXians.length === 12, `full sample ${index}.daXians expected 12 entries`);
+    assert(fullChart.palaces.some(p => p.stars.some(s => s.type === 'major')), `full sample ${index} should include major stars`);
+    assert(fullChart.palaces.some(p => p.isMingGong), `full sample ${index} should mark 命宫`);
+    assert(fullChart.palaces.every(p => p.name.endsWith('宫')), `full sample ${index} palace names should end with 宫`);
   });
 
   console.log('OK: Ziwei core verification passed');
