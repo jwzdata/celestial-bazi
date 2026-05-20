@@ -1,15 +1,17 @@
 # Celestial Bazi (星曜命理)
 
-A modern, commercial-ready Web Application for Bazi (Chinese Astrology) calculation, matchmaking, naming, and fortune analysis. Deployed on **Vercel** & **Netlify** with **Turso** cloud database.
+A modern, commercial-ready Web Application for Chinese Astrology including **Bazi (八字)** and **Ziwei Doushu (紫微斗数)** calculation, matchmaking, naming, and fortune analysis. Deployed on **Vercel** & **Netlify** with **Turso** cloud database.
 
 ## Features
 
+- **Dual Astrology Systems**: Support for both **Bazi (八字)** and **Ziwei Doushu (紫微斗数)** calculations
 - **Accurate Calculation**: Powered by `lunar-javascript` for high-precision solar term and lunar calendar conversions.
 - **Deeper Bazi Engine**: 得令/得地/得勢 strength tiers, chart-level shen-sha (天乙貴人/驛馬/桃花/華蓋/祿神/羊刃/金輿), three-framework 用神 (扶抑/調候/通關), and 大運/流年 × 原局 六合/六沖/三合/刑害 interaction tags.
 - **Professional Calculation Rules**: Supports exact birth time, gender, birthplace longitude, optional true-solar-time correction, and selectable Zi-hour day-change rules (子初/子正).
 - **Searchable Birthplace Input**: Defaults to Shanghai, supports local city lookup plus Open-Meteo fallback for global cities like `London`/`倫敦`, and keeps manual longitude override for unlisted places.
 - **Smart Form Memory**: Birth information (date, time, gender, birthplace, longitude) is saved after login and analysis, then restored on the next login for convenience.
 - **Professional Bazi Details**: Displays precision metadata, Ming Gong (命宮), Shen Gong (身宮), Tai Yuan (胎元), Na Yin (納音), Xun Kong (旬空), Ji Shen/Xiong Sha (吉神/凶煞), Peng Zu taboos, and calendar-day scoring details.
+- **Ziwei Doushu Module**: Standalone 12-palace chart page with structured palace data, graceful fallback calculation, basic pattern display, and decade-luck section.
 - **Interactive UI**: Deep-space blue & glowing gold theme with smooth animations, SEO metadata, sitemap/robots, and installable web manifest.
 - **Free Trial Modules**:
   - 10-Year Fortune (大運流年) & Yearly Analysis — dynamically calculated based on your Bazi
@@ -19,22 +21,25 @@ A modern, commercial-ready Web Application for Bazi (Chinese Astrology) calculat
 - **Daily Check-ins**: Draw daily lots (抽签) and generate lucky numbers.
 - **User System**: Built-in JWT authentication and form preferences; all analysis modules are open during the free promotion period.
 - **i18n**: Chinese/English bilingual support with dynamic switching, including document title and social metadata updates.
-- **Verification Scripts**: `npm test` runs syntax checks and Bazi core regressions for safer deployments.
+- **Verification Scripts**: `npm test` runs syntax checks plus Bazi and Ziwei core regressions for safer deployments.
 
 ## Project Structure
 
 ```text
 celestial-bazi/
 ├── public/                 # Frontend Static Assets
-│   ├── index.html          # Main Application Entry
+│   ├── index.html          # Main Bazi Application Entry
+│   ├── ziwei.html          # Ziwei Doushu Application Entry
 │   ├── css/
-│   │   └── style.css       # Custom Theme & Animations
+│   │   ├── style.css       # Custom Theme & Animations
+│   │   └── ziwei.css       # Ziwei Chart Layout & Styling
 │   └── js/
 │       ├── app.js          # Core UI Logic, Features & Rendering (with form memory)
 │       ├── bazi.js         # Bazi Calculation, true solar time, Five Elements, Strength, etc.
 │       ├── data.js         # Constants (Stems, Branches, Elements, city longitudes, etc.)
 │       ├── auth.js         # User System, Payment UI & Form Preferences
-│       └── i18n.js         # Internationalization (zh/en)
+│       ├── i18n.js         # Internationalization (zh/en)
+│       └── ziwei/          # Ziwei constants, algorithm, UI, and JSDoc types
 ├── api/                    # Vercel Serverless Functions (shared by both platforms)
 │   ├── _db.js              # Shared Database Module (Turso/libsql)
 │   ├── register.js         # POST /api/register
@@ -46,6 +51,9 @@ celestial-bazi/
 │       └── mock-success.js # POST /api/pay/mock-success
 ├── netlify/                # Netlify Functions Adapters
 │   └── functions/          # Thin wrappers reusing api/ logic
+├── scripts/                # Regression verification scripts
+│   ├── verify-bazi-core.js # Bazi core self-checks
+│   └── verify-ziwei-core.js # Ziwei core self-checks
 ├── vercel.json             # Vercel Configuration
 ├── netlify.toml            # Netlify Configuration
 ├── package.json            # Project Dependencies

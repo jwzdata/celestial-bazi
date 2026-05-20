@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>紫微斗数排盘 - 星曜命理</title>
+
+    <!-- 复用主站样式 -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/ziwei.css">
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="紫微斗数在线排盘，基于倪海夏《天纪》体系，提供专业的紫微斗数命盘分析">
+    <meta name="keywords" content="紫微斗数,排盘,命理,星曜,倪海夏,天纪">
+
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+    <!-- 主题色彩 -->
+    <meta name="theme-color" content="#0a0e27">
+</head>
+<body>
+    <!-- 背景星空效果 -->
+    <div id="stars"></div>
+
+    <!-- 顶部导航 -->
+    <nav class="ziwei-nav">
+        <div class="ziwei-nav-container">
+            <a href="/" class="ziwei-logo">
+                <span class="ziwei-logo-icon">✦</span>
+                <span class="ziwei-logo-text">星曜命理</span>
+            </a>
+            <div class="ziwei-nav-links">
+                <a href="/" class="ziwei-nav-link">八字排盘</a>
+                <a href="/ziwei.html" class="ziwei-nav-link ziwei-nav-active">紫微斗数</a>
+                <a href="#" class="ziwei-nav-link">合婚分析</a>
+                <a href="#" class="ziwei-nav-link">起名服务</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="ziwei-main">
+        <div class="ziwei-container">
+            <!-- 页面标题 -->
+            <header class="ziwei-header">
+                <h1 class="ziwei-title">紫微斗数排盘</h1>
+                <p class="ziwei-subtitle">基于倪海夏《天纪》正统体系 · 专业命盘分析</p>
+            </header>
+
+            <!-- 排盘表单 -->
+            <section class="ziwei-form-section">
+                <div class="ziwei-form-card">
+                    <h2 class="ziwei-form-title">出生信息</h2>
+
+                    <form id="ziweiForm" class="ziwei-form">
+                        <div class="ziwei-form-grid">
+                            <!-- 姓名 -->
+                            <div class="ziwei-form-group">
+                                <label for="ziweiName" class="ziwei-label">姓名（可选）</label>
+                                <input type="text" id="ziweiName" class="ziwei-input" placeholder="请输入姓名">
+                            </div>
+
+                            <!-- 性别 -->
+                            <div class="ziwei-form-group">
+                                <label class="ziwei-label">性别</label>
+                                <div class="ziwei-radio-group">
+                                    <label class="ziwei-radio">
+                                        <input type="radio" name="gender" value="male" checked>
+                                        <span class="ziwei-radio-text">男</span>
+                                    </label>
+                                    <label class="ziwei-radio">
+                                        <input type="radio" name="gender" value="female">
+                                        <span class="ziwei-radio-text">女</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 出生日期 -->
+                            <div class="ziwei-form-group">
+                                <label for="ziweiDate" class="ziwei-label">出生日期</label>
+                                <input type="date" id="ziweiDate" class="ziwei-input" required>
+                            </div>
+
+                            <!-- 出生时间 -->
+                            <div class="ziwei-form-group">
+                                <label for="ziweiTime" class="ziwei-label">出生时间</label>
+                                <input type="time" id="ziweiTime" class="ziwei-input" required>
+                            </div>
+
+                            <!-- 出生地点 -->
+                            <div class="ziwei-form-group">
+                                <label for="ziweiCity" class="ziwei-label">出生城市</label>
+                                <input type="text" id="ziweiCity" class="ziwei-input" placeholder="如：北京、上海" value="上海">
+                            </div>
+
+                            <!-- 经度（高级选项）-->
+                            <div class="ziwei-form-group">
+                                <label for="ziweiLongitude" class="ziwei-label">经度（可选）</label>
+                                <input type="number" id="ziweiLongitude" class="ziwei-input" placeholder="如：121.4737" step="0.0001">
+                                <small class="ziwei-help-text">用于真太阳时校正，留空自动获取</small>
+                            </div>
+                        </div>
+
+                        <div class="ziwei-form-actions">
+                            <button type="submit" class="ziwei-btn ziwei-btn-primary">
+                                <span class="ziwei-btn-text">开始排盘</span>
+                                <span class="ziwei-btn-icon">→</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- 加载状态 -->
+            <section id="ziweiLoading" class="ziwei-loading" style="display: none;">
+                <div class="ziwei-loading-spinner"></div>
+                <p class="ziwei-loading-text">正在计算紫微斗数命盘...</p>
+            </section>
+
+            <!-- 命盘结果 -->
+            <section id="ziweiResult" class="ziwei-result" style="display: none;">
+                <!-- 命盘信息卡片 -->
+                <div class="ziwei-info-card">
+                    <h2 class="ziwei-info-title">命盘信息</h2>
+                    <div id="ziweiInfoContent" class="ziwei-info-content">
+                        <!-- 动态填充命盘基本信息 -->
+                    </div>
+                </div>
+
+                <!-- 紫微斗数命盘图 -->
+                <div class="ziwei-chart-card">
+                    <h2 class="ziwei-chart-title">紫微斗数命盘</h2>
+                    <div id="ziweiChart" class="ziwei-chart">
+                        <!-- 动态生成命盘图 -->
+                    </div>
+                </div>
+
+                <!-- 格局分析 -->
+                <div class="ziwei-patterns-card">
+                    <h2 class="ziwei-patterns-title">格局分析</h2>
+                    <div id="ziweiPatterns" class="ziwei-patterns">
+                        <!-- 动态填充格局信息 -->
+                    </div>
+                </div>
+
+                <!-- 大限流年 -->
+                <div class="ziwei-daxian-card">
+                    <h2 class="ziwei-daxian-title">大限流年</h2>
+                    <div id="ziweiDaXian" class="ziwei-daxian">
+                        <!-- 动态填充大限信息 -->
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="ziwei-actions">
+                    <button id="ziweiDownload" class="ziwei-btn ziwei-btn-secondary">
+                        下载命盘
+                    </button>
+                    <button id="ziweiShare" class="ziwei-btn ziwei-btn-secondary">
+                        分享结果
+                    </button>
+                    <button id="ziweiReCalculate" class="ziwei-btn ziwei-btn-outline">
+                        重新排盘
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="ziwei-footer">
+        <div class="ziwei-footer-content">
+            <p>&copy; 2024 星曜命理 · 基于倪海夏《天纪》体系</p>
+            <p class="ziwei-footer-note">
+                命理分析仅供参考，人生道路需理性对待
+            </p>
+        </div>
+    </footer>
+
+    <!-- 核心依赖 -->
+    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.7.3/dist/lunar.min.js"></script>
+
+    <!-- 紫微斗数模块 -->
+    <script src="js/ziwei/types.js"></script>
+    <script src="js/ziwei/constants.js"></script>
+    <script src="js/ziwei/algorithm.js"></script>
+    <script src="js/ziwei/ui.js"></script>
+
+    <!-- 页面逻辑 -->
+    <script>
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置默认日期为今天
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('ziweiDate').value = today;
+
+            // 设置默认时间为中午
+            document.getElementById('ziweiTime').value = '12:00';
+
+            // 初始化UI事件
+            if (typeof initZiweiUI === 'function') {
+                initZiweiUI();
+            }
+        });
+    </script>
+</body>
+</html>

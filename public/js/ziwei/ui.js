@@ -1,0 +1,505 @@
+// ============================
+// 紫微斗数UI交互逻辑
+// ============================
+
+// 确保依赖已加载
+if (typeof window.ZIWEI_ALGORITHM === 'undefined') {
+  console.error('ZIWEI_ALGORITHM not loaded. Please include algorithm.js first.');
+}
+
+const ZA = window.ZIWEI_ALGORITHM;
+const ZW = window.ZIWEI_CONSTANTS;
+
+// 全局状态
+let currentZiweiChart = null;
+
+// UI初始化
+function initZiweiUI() {
+  console.log('初始化紫微斗数UI...');
+
+  // 绑定表单提交事件
+  const form = document.getElementById('ziweiForm');
+  if (form) {
+    form.addEventListener('submit', handleFormSubmit);
+  }
+
+  // 绑定操作按钮事件
+  bindActionButtons();
+
+  // 初始化城市数据（复用八字项目的数据）
+  initCityData();
+
+  console.log('紫微斗数UI初始化完成');
+}
+
+// 绑定操作按钮事件
+function bindActionButtons() {
+  const downloadBtn = document.getElementById('ziweiDownload');
+  const shareBtn = document.getElementById('ziweiShare');
+  const recalculateBtn = document.getElementById('ziweiReCalculate');
+
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', handleDownload);
+  }
+
+  if (shareBtn) {
+    shareBtn.addEventListener('click', handleShare);
+  }
+
+  if (recalculateBtn) {
+    recalculateBtn.addEventListener('click', handleRecalculate);
+  }
+}
+
+// 初始化城市数据
+function initCityData() {
+  const cityInput = document.getElementById('ziweiCity');
+  const longitudeInput = document.getElementById('ziweiLongitude');
+
+  if (cityInput && longitudeInput) {
+    // 检查是否有八字项目的城市数据
+    if (typeof CITY_LONGITUDES !== 'undefined') {
+      cityInput.addEventListener('change', function() {
+        const city = this.value.trim();
+        if (CITY_LONGITUDES[city] && !longitudeInput.value) {
+          longitudeInput.value = CITY_LONGITUDES[city];
+        }
+      });
+    }
+  }
+}
+
+// 处理表单提交
+async function handleFormSubmit(e) {
+  e.preventDefault();
+
+  // 显示加载状态
+  showLoading(true);
+  hideResult();
+
+  try {
+    // 获取表单数据
+    const formData = getFormData();
+
+    // 验证数据
+    if (!validateFormData(formData)) {
+      throw new Error('请填写完整的出生信息');
+    }
+
+    // 计算紫微斗数命盘
+    const chart = await calculateZiweiChart(formData);
+
+    // 显示结果
+    displayZiweiResult(chart);
+
+  } catch (error) {
+    console.error('紫微斗数计算失败:', error);
+    alert('计算失败: ' + error.message);
+  } finally {
+    showLoading(false);
+  }
+}
+
+// 获取表单数据
+function getFormData() {
+  const dateInput = document.getElementById('ziweiDate');
+  const timeInput = document.getElementById('ziweiTime');
+  const genderInputs = document.querySelectorAll('input[name="gender"]');
+  const cityInput = document.getElementById('ziweiCity');
+  const longitudeInput = document.getElementById('ziweiLongitude');
+  const nameInput = document.getElementById('ziweiName');
+
+  // 解析日期和时间
+  const [year, month, day] = dateInput.value.split('-').map(Number);
+  const [hourStr, minuteStr] = timeInput.value.split(':');
+  const hour = parseInt(hourStr);
+
+  // 获取性别
+  let gender = 'male';
+  genderInputs.forEach(input => {
+    if (input.checked) gender = input.value;
+  });
+
+  // 计算时辰（地支索引）
+  const shichenIndex = getShichenIndex(hour, parseInt(minuteStr));
+
+  return {
+    year,
+    month,
+    day,
+    hour: shichenIndex,
+    gender,
+    name: nameInput.value.trim(),
+    city: cityInput.value.trim(),
+    longitude: longitudeInput.value ? parseFloat(longitudeInput.value) : undefined
+  };
+}
+
+// 获取时辰索引
+function getShichenIndex(hour, minute) {
+  const totalMinutes = hour * 60 + minute;
+
+  // 时辰对应表
+  const shichenRanges = [
+    { start: 23 * 60, end: 1 * 60 + 59, index: 0 },   // 子时 23:00-01:59
+    { start: 1 * 60, end: 3 * 60 + 59, index: 1 },    // 丑时 01:00-03:59
+    { start: 3 * 60, end: 5 * 60 + 59, index: 2 },    // 寅时 03:00-05:59
+    { start: 5 * 60, end: 7 * 60 + 59, index: 3 },    // 卯时 05:00-07:59
+    { start: 7 * 60, end: 9 * 60 + 59, index: 4 },    // 辰时 07:00-09:59
+    { start: 9 * 60, end: 11 * 60 + 59, index: 5 },   // 巳时 09:00-11:59
+    { start: 11 * 60, end: 13 * 60 + 59, index: 6 },  // 午时 11:00-13:59
+    { start: 13 * 60, end: 15 * 60 + 59, index: 7 },  // 未时 13:00-15:59
+    { start: 15 * 60, end: 17 * 60 + 59, index: 8 },  // 申时 15:00-17:59
+    { start: 17 * 60, end: 19 * 60 + 59, index: 9 },  // 酉时 17:00-19:59
+    { start: 19 * 60, end: 21 * 60 + 59, index: 10 }, // 戌时 19:00-21:59
+    { start: 21 * 60, end: 23 * 60 + 59, index: 11 }  // 亥时 21:00-23:59
+  ];
+
+  // 处理跨日的子时
+  if (totalMinutes >= 23 * 60 || totalMinutes <= 1 * 60 + 59) {
+    return 0;
+  }
+
+  for (const range of shichenRanges) {
+    if (totalMinutes >= range.start && totalMinutes <= range.end) {
+      return range.index;
+    }
+  }
+
+  return 6; // 默认午时
+}
+
+// 验证表单数据
+function validateFormData(data) {
+  return data.year && data.month && data.day && data.hour !== undefined;
+}
+
+// 计算紫微斗数命盘
+async function calculateZiweiChart(formData) {
+  try {
+    // 尝试使用完整算法
+    const chart = ZA.generateZiweiChart(formData);
+
+    // 如果iztro不可用，使用简化算法
+    if (chart.error && chart.error.includes('iztro')) {
+      console.warn('iztro不可用，使用简化算法');
+      return ZA.generateSimpleZiweiChart(formData);
+    }
+
+    return chart;
+  } catch (error) {
+    console.warn('完整算法失败，使用简化算法:', error);
+    return ZA.generateSimpleZiweiChart(formData);
+  }
+}
+
+// 显示加载状态
+function showLoading(show) {
+  const loadingEl = document.getElementById('ziweiLoading');
+  const formSection = document.querySelector('.ziwei-form-section');
+
+  if (loadingEl) {
+    loadingEl.style.display = show ? 'block' : 'none';
+  }
+
+  if (formSection) {
+    formSection.style.display = show ? 'none' : 'block';
+  }
+}
+
+// 显示结果
+function displayZiweiResult(chart) {
+  currentZiweiChart = chart;
+
+  // 显示结果区域
+  const resultEl = document.getElementById('ziweiResult');
+  if (resultEl) {
+    resultEl.style.display = 'flex';
+  }
+
+  // 填充基本信息
+  displayBasicInfo(chart);
+
+  // 生成命盘图
+  displayZiweiChart(chart);
+
+  // 显示格局分析
+  displayPatterns(chart);
+
+  // 显示大限信息
+  displayDaXian(chart);
+}
+
+// 隐藏结果
+function hideResult() {
+  const resultEl = document.getElementById('ziweiResult');
+  if (resultEl) {
+    resultEl.style.display = 'none';
+  }
+}
+
+// 显示基本信息
+function displayBasicInfo(chart) {
+  const contentEl = document.getElementById('ziweiInfoContent');
+  if (!contentEl) return;
+
+  const birth = chart.birthInfo;
+  const lunar = chart.lunarInfo;
+
+  let html = `
+    <div class="ziwei-info-grid">
+      <div class="ziwei-info-item">
+        <span class="ziwei-info-label">姓名：</span>
+        <span class="ziwei-info-value">${birth.name || '未填写'}</span>
+      </div>
+      <div class="ziwei-info-item">
+        <span class="ziwei-info-label">性别：</span>
+        <span class="ziwei-info-value">${birth.gender === 'male' ? '男' : '女'}</span>
+      </div>
+      <div class="ziwei-info-item">
+        <span class="ziwei-info-label">公历生日：</span>
+        <span class="ziwei-info-value">${birth.year}年${birth.month}月${birth.day}日</span>
+      </div>
+      <div class="ziwei-info-item">
+        <span class="ziwei-info-label">农历生日：</span>
+        <span class="ziwei-info-value">${lunar.lunarYear}年${lunar.lunarMonth}月${lunar.lunarDay}日</span>
+      </div>
+      <div class="ziwei-info-item">
+        <span class="ziwei-info-label">五行局：</span>
+        <span class="ziwei-info-value">${chart.wuxingJuName}</span>
+      </div>
+      <div class="ziwei-info-item">
+        <span class="ziwei-info-label">当前年龄：</span>
+        <span class="ziwei-info-value">${chart.currentAge}岁</span>
+      </div>
+    </div>
+  `;
+
+  if (chart.isSimple) {
+    html += `
+      <div class="ziwei-warning">
+        <p>⚠️ 当前使用简化算法，完整功能需要iztro库支持</p>
+      </div>
+    `;
+  }
+
+  contentEl.innerHTML = html;
+}
+
+// 生成命盘图
+function displayZiweiChart(chart) {
+  const chartEl = document.getElementById('ziweiChart');
+  if (!chartEl) return;
+
+  // 紫微斗数命盘布局（顺时针排列）
+  const layout = [
+    7, 8, 9, 10,  // 第一行：交友宫、官禄宫、田宅宫、福德宫
+    6, 11, 0, 11,  // 第二行：迁移宫、父母宫、命宫、子女宫
+    5, 4, 3, 2     // 第三行：疾厄宫、财帛宫、夫妻宫、兄弟宫
+  ];
+
+  let html = '<div class="ziwei-chart">';
+
+  for (let i = 0; i < 12; i++) {
+    const palaceIndex = layout[i];
+    const palace = chart.palaces[palaceIndex];
+
+    if (!palace) continue;
+
+    const isMingGong = palace.isMingGong;
+    const isShenGong = palace.isShenGong;
+    const stemChar = ZW.STEMS[palace.stem];
+
+    let palaceClass = 'ziwei-palace';
+    if (isMingGong) palaceClass += ' ziwei-palace-minggong';
+    if (isShenGong) palaceClass += ' ziwei-palace-shengong';
+
+    html += `<div class="${palaceClass}">`;
+    html += `<div class="ziwei-palace-name">${palace.name}</div>`;
+    html += `<div class="ziwei-palace-stem">${stemChar}</div>`;
+
+    if (palace.isEmpty) {
+      html += `<div class="ziwei-palace-empty">空宫</div>`;
+      if (palace.borrowedStars && palace.borrowedStars.length > 0) {
+        html += `<div class="ziwei-palace-borrowed">借自${palace.borrowedFromName}</div>`;
+      }
+    } else {
+      html += `<div class="ziwei-palace-stars">`;
+      palace.stars.forEach(star => {
+        const starClass = `ziwei-star ziwei-star-${star.type}`;
+        html += `<span class="${starClass}">${star.name}</span>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+  }
+
+  html += '</div>';
+  chartEl.innerHTML = html;
+}
+
+// 显示格局分析（简化版）
+function displayPatterns(chart) {
+  const patternsEl = document.getElementById('ziweiPatterns');
+  if (!patternsEl) return;
+
+  // 简化的格局检测
+  const patterns = detectBasicPatterns(chart);
+
+  if (patterns.length === 0) {
+    patternsEl.innerHTML = '<p class="ziwei-no-patterns">暂未识别到特殊格局</p>';
+    return;
+  }
+
+  let html = '';
+  patterns.forEach(pattern => {
+    const levelClass = `ziwei-pattern-${pattern.level}`;
+    html += `
+      <div class="ziwei-pattern ${levelClass}">
+        <div class="ziwei-pattern-name">${pattern.name}</div>
+        <div class="ziwei-pattern-description">${pattern.description}</div>
+        ${pattern.source ? `<div class="ziwei-pattern-source">出处：${pattern.source}</div>` : ''}
+      </div>
+    `;
+  });
+
+  patternsEl.innerHTML = html;
+}
+
+// 简化的格局检测
+function detectBasicPatterns(chart) {
+  const patterns = [];
+
+  // 查找紫微星系
+  const ziweiPalace = chart.palaces.find(p =>
+    p.stars.some(s => s.name === '紫微' && s.type === 'major')
+  );
+
+  if (ziweiPalace) {
+    // 紫微独坐
+    const majorStars = ziweiPalace.stars.filter(s => s.type === 'major');
+    if (majorStars.length === 1 && majorStars[0].name === '紫微') {
+      patterns.push({
+        name: '紫微独坐',
+        level: 'good',
+        description: '紫微星独坐命宫，具有领导才能，但需要辅佐之星配合',
+        source: '紫微斗数全书'
+      });
+    }
+  }
+
+  // 查找空宫情况
+  const emptyPalaces = chart.palaces.filter(p => p.isEmpty);
+  if (emptyPalaces.length > 6) {
+    patterns.push({
+      name: '空宫较多',
+      level: 'neutral',
+      description: '命盘中空宫较多，性格较为随和，适应能力强',
+      source: '倪海夏天纪'
+    });
+  }
+
+  return patterns;
+}
+
+// 显示大限信息
+function displayDaXian(chart) {
+  const daxianEl = document.getElementById('ziweiDaXian');
+  if (!daxianEl) return;
+
+  const daxians = chart.daXians || [];
+
+  if (daxians.length === 0) {
+    daxianEl.innerHTML = '<p class="ziwei-no-daxian">大限信息暂不可用</p>';
+    return;
+  }
+
+  let html = '';
+  daxians.forEach((daxian, index) => {
+    const isCurrent = index === chart.currentDaXianIndex;
+    const itemClass = isCurrent ? 'ziwei-daxian-item ziwei-daxian-current' : 'ziwei-daxian-item';
+
+    html += `
+      <div class="${itemClass}">
+        <div class="ziwei-daxian-info">
+          <div class="ziwei-daxian-age">${daxian.startAge}岁 - ${daxian.endAge}岁</div>
+          <div class="ziwei-daxian-palace">${daxian.palaceName}</div>
+        </div>
+        ${isCurrent ? '<div class="ziwei-daxian-status">当前大限</div>' : ''}
+      </div>
+    `;
+  });
+
+  daxianEl.innerHTML = html;
+}
+
+// 处理下载
+function handleDownload() {
+  if (!currentZiweiChart) {
+    alert('暂无命盘数据可下载');
+    return;
+  }
+
+  // 简单的文本导出
+  const data = JSON.stringify(currentZiweiChart, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `紫微斗数命盘_${currentZiweiChart.birthInfo.name || '匿名'}_${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// 处理分享
+function handleShare() {
+  if (!currentZiweiChart) {
+    alert('暂无命盘数据可分享');
+    return;
+  }
+
+  const text = `我的紫微斗数命盘分析 - 来自星曜命理`;
+
+  if (navigator.share) {
+    navigator.share({
+      title: '紫微斗数命盘',
+      text: text,
+      url: window.location.href
+    });
+  } else {
+    // 复制到剪贴板
+    navigator.clipboard.writeText(text + ' ' + window.location.href).then(() => {
+      alert('分享链接已复制到剪贴板');
+    });
+  }
+}
+
+// 处理重新计算
+function handleRecalculate() {
+  hideResult();
+  showLoading(false);
+
+  // 滚动到表单
+  const formSection = document.querySelector('.ziwei-form-section');
+  if (formSection) {
+    formSection.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+// 导出UI函数
+window.ZIWEI_UI = {
+  initZiweiUI,
+  calculateZiweiChart,
+  displayZiweiResult
+};
+
+// 页面加载完成后初始化
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initZiweiUI);
+} else {
+  initZiweiUI();
+}

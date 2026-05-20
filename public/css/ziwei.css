@@ -1,0 +1,629 @@
+/* ============================
+   紫微斗数专用样式
+   ============================ */
+
+/* 变量定义 */
+:root {
+  --ziwei-primary: #4a90e2;
+  --ziwei-secondary: #f39c12;
+  --ziwei-accent: #e74c3c;
+  --ziwei-success: #27ae60;
+  --ziwei-warning: #f1c40f;
+  --ziwei-text: #ffffff;
+  --ziwei-text-secondary: #b8c5d6;
+  --ziwei-bg: #0a0e27;
+  --ziwei-bg-card: rgba(255, 255, 255, 0.05);
+  --ziwei-border: rgba(255, 255, 255, 0.1);
+  --ziwei-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --ziwei-glow: 0 0 20px rgba(74, 144, 226, 0.3);
+
+  /* 星曜颜色 */
+  --star-major: #ffd700;
+  --star-lucky: #00ff88;
+  --star-sha: #ff4444;
+  --star-minor: #88ccff;
+}
+
+/* 导航栏样式 */
+.ziwei-nav {
+  background: rgba(10, 14, 39, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--ziwei-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.ziwei-nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ziwei-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--ziwei-text);
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.ziwei-logo-icon {
+  color: var(--ziwei-secondary);
+  font-size: 1.5rem;
+}
+
+.ziwei-nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.ziwei-nav-link {
+  color: var(--ziwei-text-secondary);
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.ziwei-nav-link:hover {
+  color: var(--ziwei-text);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ziwei-nav-active {
+  color: var(--ziwei-text);
+  background: var(--ziwei-primary);
+  box-shadow: var(--ziwei-glow);
+}
+
+/* 主容器 */
+.ziwei-main {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--ziwei-bg) 0%, #1a1f3a 100%);
+  padding: 2rem 0;
+}
+
+.ziwei-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* 页面标题 */
+.ziwei-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.ziwei-title {
+  font-size: 2.5rem;
+  font-weight: 300;
+  color: var(--ziwei-text);
+  margin-bottom: 0.5rem;
+  background: linear-gradient(45deg, var(--ziwei-primary), var(--ziwei-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ziwei-subtitle {
+  color: var(--ziwei-text-secondary);
+  font-size: 1.1rem;
+}
+
+/* 表单样式 */
+.ziwei-form-section {
+  margin-bottom: 3rem;
+}
+
+.ziwei-form-card {
+  background: var(--ziwei-bg-card);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: var(--ziwei-shadow);
+  border: 1px solid var(--ziwei-border);
+}
+
+.ziwei-form-title {
+  color: var(--ziwei-text);
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.ziwei-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.ziwei-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.ziwei-label {
+  color: var(--ziwei-text);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.ziwei-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--ziwei-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: var(--ziwei-text);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.ziwei-input:focus {
+  outline: none;
+  border-color: var(--ziwei-primary);
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.ziwei-input::placeholder {
+  color: var(--ziwei-text-secondary);
+}
+
+.ziwei-radio-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.ziwei-radio {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.ziwei-radio input {
+  accent-color: var(--ziwei-primary);
+}
+
+.ziwei-radio-text {
+  color: var(--ziwei-text);
+}
+
+.ziwei-help-text {
+  color: var(--ziwei-text-secondary);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.ziwei-form-actions {
+  text-align: center;
+}
+
+/* 按钮样式 */
+.ziwei-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  outline: none;
+}
+
+.ziwei-btn-primary {
+  background: linear-gradient(45deg, var(--ziwei-primary), var(--ziwei-secondary));
+  color: white;
+  box-shadow: var(--ziwei-glow);
+}
+
+.ziwei-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(74, 144, 226, 0.3);
+}
+
+.ziwei-btn-secondary {
+  background: var(--ziwei-bg-card);
+  color: var(--ziwei-text);
+  border: 1px solid var(--ziwei-border);
+}
+
+.ziwei-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--ziwei-primary);
+}
+
+.ziwei-btn-outline {
+  background: transparent;
+  color: var(--ziwei-text);
+  border: 1px solid var(--ziwei-border);
+}
+
+.ziwei-btn-outline:hover {
+  border-color: var(--ziwei-primary);
+  color: var(--ziwei-primary);
+}
+
+/* 加载状态 */
+.ziwei-loading {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.ziwei-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--ziwei-border);
+  border-top: 3px solid var(--ziwei-primary);
+  border-radius: 50%;
+  animation: ziwei-spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes ziwei-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.ziwei-loading-text {
+  color: var(--ziwei-text-secondary);
+  font-size: 1.1rem;
+}
+
+/* 结果卡片 */
+.ziwei-result {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.ziwei-info-card,
+.ziwei-chart-card,
+.ziwei-patterns-card,
+.ziwei-daxian-card {
+  background: var(--ziwei-bg-card);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: var(--ziwei-shadow);
+  border: 1px solid var(--ziwei-border);
+}
+
+.ziwei-info-title,
+.ziwei-chart-title,
+.ziwei-patterns-title,
+.ziwei-daxian-title {
+  color: var(--ziwei-text);
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* 命盘图样式 */
+.ziwei-chart {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 2px;
+  background: var(--ziwei-border);
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 4/3;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.ziwei-palace {
+  background: var(--ziwei-bg);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  min-height: 120px;
+}
+
+.ziwei-palace-minggong {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.ziwei-palace-shengong {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 255, 136, 0.05));
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.ziwei-palace-name {
+  color: var(--ziwei-text);
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.ziwei-palace-stem {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  color: var(--ziwei-secondary);
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.ziwei-palace-stars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  justify-content: center;
+  align-items: flex-end;
+  flex-grow: 1;
+}
+
+.ziwei-star {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.ziwei-star-major {
+  color: var(--star-major);
+  font-weight: bold;
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+.ziwei-star-lucky {
+  color: var(--star-lucky);
+}
+
+.ziwei-star-sha {
+  color: var(--star-sha);
+}
+
+.ziwei-star-minor {
+  color: var(--star-minor);
+  opacity: 0.8;
+}
+
+.ziwei-palace-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ziwei-text-secondary);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.ziwei-palace-borrowed {
+  margin-top: 0.25rem;
+  font-size: 0.6rem;
+  color: var(--ziwei-text-secondary);
+  text-align: center;
+}
+
+/* 格局分析样式 */
+.ziwei-patterns {
+  display: grid;
+  gap: 1rem;
+}
+
+.ziwei-pattern {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  padding: 1rem;
+  border-left: 4px solid var(--ziwei-primary);
+}
+
+.ziwei-pattern-excellent {
+  border-left-color: var(--ziwei-success);
+}
+
+.ziwei-pattern-good {
+  border-left-color: var(--ziwei-primary);
+}
+
+.ziwei-pattern-neutral {
+  border-left-color: var(--ziwei-warning);
+}
+
+.ziwei-pattern-caution {
+  border-left-color: var(--ziwei-accent);
+}
+
+.ziwei-pattern-name {
+  color: var(--ziwei-text);
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.ziwei-pattern-description {
+  color: var(--ziwei-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.ziwei-pattern-source {
+  color: var(--ziwei-text-secondary);
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* 大限样式 */
+.ziwei-daxian {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ziwei-daxian-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border-left: 4px solid var(--ziwei-border);
+}
+
+.ziwei-daxian-current {
+  border-left-color: var(--ziwei-secondary);
+  background: rgba(243, 156, 18, 0.1);
+}
+
+.ziwei-daxian-info {
+  flex: 1;
+}
+
+.ziwei-daxian-age {
+  color: var(--ziwei-text);
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.ziwei-daxian-palace {
+  color: var(--ziwei-text-secondary);
+  font-size: 0.9rem;
+}
+
+.ziwei-daxian-status {
+  color: var(--ziwei-secondary);
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+/* 操作按钮 */
+.ziwei-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* 页脚 */
+.ziwei-footer {
+  background: rgba(10, 14, 39, 0.95);
+  border-top: 1px solid var(--ziwei-border);
+  padding: 2rem 0;
+  margin-top: 4rem;
+}
+
+.ziwei-footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  text-align: center;
+}
+
+.ziwei-footer p {
+  color: var(--ziwei-text-secondary);
+  margin: 0.5rem 0;
+}
+
+.ziwei-footer-note {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .ziwei-nav-container {
+    padding: 1rem;
+  }
+
+  .ziwei-container {
+    padding: 0 1rem;
+  }
+
+  .ziwei-title {
+    font-size: 2rem;
+  }
+
+  .ziwei-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ziwei-chart {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+  }
+
+  .ziwei-palace {
+    min-height: 100px;
+    padding: 0.5rem;
+  }
+
+  .ziwei-palace-name {
+    font-size: 0.8rem;
+  }
+
+  .ziwei-star {
+    font-size: 0.6rem;
+  }
+
+  .ziwei-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .ziwei-btn {
+    width: 100%;
+    max-width: 300px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .ziwei-chart {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+  }
+
+  .ziwei-nav-links {
+    gap: 1rem;
+  }
+
+  .ziwei-nav-link {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .ziwei-nav,
+  .ziwei-footer,
+  .ziwei-actions {
+    display: none;
+  }
+
+  .ziwei-main {
+    background: white;
+    color: black;
+  }
+
+  .ziwei-form-section {
+    display: none;
+  }
+
+  .ziwei-info-card,
+  .ziwei-chart-card,
+  .ziwei-patterns-card,
+  .ziwei-daxian-card {
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: none;
+  }
+}
