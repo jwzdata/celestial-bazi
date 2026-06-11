@@ -37,8 +37,16 @@ function fail(msg) {
 }
 
 function loadBaziCore() {
-  const dataSrc = fs.readFileSync(DATA_PATH, 'utf8');
-  const baziSrc = fs.readFileSync(BAZI_PATH, 'utf8');
+  let dataSrc = fs.readFileSync(DATA_PATH, 'utf8');
+  let baziSrc = fs.readFileSync(BAZI_PATH, 'utf8');
+
+  // Strip ESM export keywords so it runs natively in Node vm as a script
+  dataSrc = dataSrc.replace(/export\s+const\s+/g, 'const ')
+                   .replace(/export\s+function\s+/g, 'function ');
+  baziSrc = baziSrc.replace(/export\s+const\s+/g, 'const ')
+                   .replace(/export\s+function\s+/g, 'function ')
+                   .replace(/export\s+default\s+/g, 'const defaultExport = ')
+                   .replace(/import\s+.*?from\s+['"].*?['"];?/g, '');
 
   // Shared sandbox so `const` declared in data.js is visible to bazi.js
   // (mirrors the browser's shared global scope across <script> tags).
@@ -49,6 +57,7 @@ function loadBaziCore() {
     // We intentionally leave `Solar` undefined; nothing invoked by this
     // self-check calls getPillarsUsingLunar, which is the only path that
     // touches the CDN-provided Solar global.
+    window: {}
   };
   sandbox.globalThis = sandbox;
   vm.createContext(sandbox);
@@ -60,7 +69,7 @@ function loadBaziCore() {
   sandbox.module = sharedModule;
   vm.runInContext(baziSrc, sandbox, { filename: 'public/js/bazi.js' });
 
-  return sharedModule.exports;
+  return sandbox;
 }
 
 function findIndex(arr, ch) {

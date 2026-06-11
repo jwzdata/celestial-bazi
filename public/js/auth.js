@@ -1,6 +1,8 @@
 
+import { updateLongitudeFromCity } from './modules/utils.js';
+
 // 全局狀態
-let currentUser = null;
+export let currentUser = null;
 
 // 表單五個欄位的出廠預設值，與 public/index.html 上的 value= 屬性對齊。
 // 用作 applyPreferencesToForm 的「還是預設狀態嗎？」比較基準，避免在兩處重複寫死字串。
@@ -27,7 +29,7 @@ if (refCode) {
 }
 
 // API 請求封裝
-async function apiFetch(endpoint, options = {}) {
+export async function apiFetch(endpoint, options = {}) {
   const token = localStorage.getItem('bazi_token');
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -39,14 +41,16 @@ async function apiFetch(endpoint, options = {}) {
 }
 
 // 初始化用戶狀態
-async function initAuth() {
+export async function initAuth() {
   try {
     const user = await apiFetch('/api/user');
     currentUser = user;
+    window.currentUser = user;
     document.getElementById('userStatusText').textContent = '用戶中心';
     await loadUserPreferences();
   } catch (err) {
     currentUser = null;
+    window.currentUser = null;
     localStorage.removeItem('bazi_token');
     document.getElementById('userStatusText').textContent = '登錄 / 註冊';
   }
@@ -192,7 +196,7 @@ async function saveUserPreferences(prefs) {
 }
 
 // UI 控制
-function showModal(id) {
+export function showModal(id) {
   const container = document.getElementById('modalContainer');
   const panels = container.querySelectorAll(':scope > div');
 
@@ -214,7 +218,7 @@ function showModal(id) {
   container.addEventListener('click', _handleBackdropClick);
 }
 
-function closeModals() {
+export function closeModals() {
   const container = document.getElementById('modalContainer');
   const activePanel = container.querySelector('.modal-panel.active');
 
@@ -237,11 +241,14 @@ function closeModals() {
   container.removeEventListener('click', _handleBackdropClick);
 }
 
+window.closeModals = closeModals;
+window.showModal = showModal;
+
 function _handleModalEscape(e) { if (e.key === 'Escape') closeModals(); }
 function _handleBackdropClick(e) { if (e.target === document.getElementById('modalContainer')) closeModals(); }
 
 // Toast notification system
-function showToast(message, type = 'info') {
+export function showToast(message, type = 'info') {
   let container = document.querySelector('.toast-container');
   if (!container) {
     container = document.createElement('div');
@@ -250,10 +257,12 @@ function showToast(message, type = 'info') {
   }
   const toast = document.createElement('div');
   toast.className = `toast${type !== 'info' ? ' toast-' + type : ''}`;
-  toast.textContent = typeof translateText === 'function' ? translateText(message) : message;
+  toast.textContent = typeof window.translateText === 'function' ? window.translateText(message) : message;
   container.appendChild(toast);
   setTimeout(() => toast.remove(), 3100);
 }
+
+window.showToast = showToast;
 
 // 頭部按鈕點擊
 document.getElementById('btnUser').addEventListener('click', () => {
@@ -333,25 +342,29 @@ document.getElementById('btnAuthSubmit').addEventListener('click', async () => {
   }
 });
 
-function logout() {
+export function logout() {
   localStorage.removeItem('bazi_token');
   currentUser = null;
+  window.currentUser = null;
   document.getElementById('userStatusText').textContent = '登錄 / 註冊';
   closeModals();
 }
 
-function copyRef() {
+window.logout = logout;
+
+export function copyRef() {
   const input = document.getElementById('refLink');
   const text = input.value;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => {
-      showToast(typeof translateText === 'function' ? translateText('推廣鏈接已複製！發送給好友即可邀請體驗。') : '推廣鏈接已複製！發送給好友即可邀請體驗。', 'success');
+      showToast(typeof window.translateText === 'function' ? window.translateText('推廣鏈接已複製！發送給好友即可邀請體驗。') : '推廣鏈接已複製！發送給好友即可邀請體驗。', 'success');
     }).catch(() => fallbackCopy(text));
   } else {
     fallbackCopy(text);
-    showToast(typeof translateText === 'function' ? translateText('推廣鏈接已複製！發送給好友即可邀請體驗。') : '推廣鏈接已複製！發送給好友即可邀請體驗。', 'success');
+    showToast(typeof window.translateText === 'function' ? window.translateText('推廣鏈接已複製！發送給好友即可邀請體驗。') : '推廣鏈接已複製！發送給好友即可邀請體驗。', 'success');
   }
 }
+window.copyRef = copyRef;
 function fallbackCopy(text) {
   const tmp = document.createElement('textarea');
   tmp.value = text;

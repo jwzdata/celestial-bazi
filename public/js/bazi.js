@@ -1,13 +1,15 @@
+import { WX_GAN, CANG_GAN, CG_WEIGHT, ELEMENT_CYCLE, WX_ZHI, DZ, TG, SHI_SHEN_MAP, CS_POWER, getChangSheng, TIAN_YI_GUI_REN, WEN_CHANG, YI_MA, TAO_HUA, HUA_GAI, JIANG_XING, LU_SHEN, YANG_REN, JIN_YU, XING_GROUPS, SAN_HE_GROUPS, SAN_HUI_GROUPS, LIU_CHONG, DZ_LIU_HE, LIU_HAI, HOUR_BRANCH_NAMES, HOUR_BRANCH_RANGES } from './data.js';
+
 // ============================
 // 排盤計算核心
 // ============================
 
 // 預設柱位權重（年月日時）。若不傳權重則退化為舊版統一權重，
 // 使 renderCalendar 等舊呼叫端維持同樣的日柱吉凶評分。
-const DEFAULT_PILLAR_WEIGHTS = [1.0, 1.0, 1.0, 1.0];
-const BAZI_PILLAR_WEIGHTS   = [1.0, 1.5, 1.2, 1.0];
+export const DEFAULT_PILLAR_WEIGHTS = [1.0, 1.0, 1.0, 1.0];
+export const BAZI_PILLAR_WEIGHTS   = [1.0, 1.5, 1.2, 1.0];
 
-function countWuXing(pillars, pillarWeights) {
+export function countWuXing(pillars, pillarWeights) {
   const weights = Array.isArray(pillarWeights) && pillarWeights.length === 4
     ? pillarWeights
     : DEFAULT_PILLAR_WEIGHTS;
@@ -36,7 +38,7 @@ function countWuXing(pillars, pillarWeights) {
 //   deShi        非日柱柱位索引陣列，天干同屬日主或印星（比劫 / 印透干）
 //   rootedBranches / penetratedStems  可讀字串陣列
 //   motherEl / childWX / wealthEl / ctrlEl  與舊版 getXiYong 相容
-function judgeStrength(dayGan, monthZhi, wxCount, pillars) {
+export function judgeStrength(dayGan, monthZhi, wxCount, pillars) {
   const dayWX = WX_GAN[dayGan];
   const mi = ELEMENT_CYCLE.indexOf(dayWX);
   const motherEl    = ELEMENT_CYCLE[(mi - 1 + 5) % 5]; // 生我者（印）
@@ -109,7 +111,7 @@ function judgeStrength(dayGan, monthZhi, wxCount, pillars) {
   };
 }
 
-function getXiYong(dayGan, isStrong, ctrlEl, motherEl, childWX, wealthEl, frameworks) {
+export function getXiYong(dayGan, isStrong, ctrlEl, motherEl, childWX, wealthEl, frameworks) {
   const dayWX = WX_GAN[dayGan];
   // base 的骨架必須與方向一致，否則 49/50 的 isStrong 跳變會穿透到三個 primary paths
   // （扶抑 fallthrough 直接回傳 base；調候 override 以 base.ji 做 prune；通關 繼承 base.xi/xian）。
@@ -217,7 +219,7 @@ function parseTimeArg(timeArg) {
   return { hour: hourMap[idx] ?? 12, minute: 0, source: 'branch', hourIndex: idx };
 }
 
-function getTrueSolarDate(year, month, day, hour, minute, longitude = 120) {
+export function getTrueSolarDate(year, month, day, hour, minute, longitude = 120) {
   const lng = Number.isFinite(Number(longitude)) ? Number(longitude) : 120;
   const longitudeOffset = (lng - 120) * 4;
   const equationOffset = getEquationOfTimeMinutes(year, month, day);
@@ -227,7 +229,7 @@ function getTrueSolarDate(year, month, day, hour, minute, longitude = 120) {
   return { date, longitudeOffset, equationOffset, totalOffset, longitude: lng };
 }
 
-function getHourIndexFromTime(hour, minute = 0) {
+export function getHourIndexFromTime(hour, minute = 0) {
   const total = hour * 60 + minute;
   if (total >= 23 * 60 || total < 60) return 0;
   return Math.floor((total - 60) / 120) + 1;
@@ -240,7 +242,7 @@ function getHourIndexFromTime(hour, minute = 0) {
 //   丁壬日 庚子為首
 //   戊癸日 壬子為首
 // 起始時干 = (dayGanIdx % 5) * 2；對應 十干 索引 0/2/4/6/8（甲丙戊庚壬）。
-function getHourGanIdx(dayGanIdx, hourZhiIdx) {
+export function getHourGanIdx(dayGanIdx, hourZhiIdx) {
   return (((dayGanIdx % 5) * 2) + hourZhiIdx) % 10;
 }
 
@@ -264,7 +266,7 @@ function formatSignedMinutes(value) {
 // meta.solar / meta.lunar / meta.eightChar 也都採用原始北京時間，
 // 讓 getYun / getMingGong / getShenGong / getTaiYuan / getXunKong 等下游 API
 // 以同一份未位移的命盤為基準。
-function getPillarsUsingLunar(year, month, day, timeArg = '12:00', longitude = 120, options = {}) {
+export function getPillarsUsingLunar(year, month, day, timeArg = '12:00', longitude = 120, options = {}) {
   const parsed = parseTimeArg(timeArg);
   const useTrueSolarTime = options.useTrueSolarTime !== false;
   const dayChangeRule = options.dayChangeRule === '00:00' ? '00:00' : '23:00';
@@ -332,7 +334,7 @@ function getPillarsUsingLunar(year, month, day, timeArg = '12:00', longitude = 1
 }
 
 // 十神：以日主為我
-function getShiShen(dayGan, otherGan) {
+export function getShiShen(dayGan, otherGan) {
   let me = WX_GAN[dayGan], ot = WX_GAN[otherGan];
   if (me === ot) return (dayGan % 2 === otherGan % 2) ? '比肩' : '劫財';
   let mi = ELEMENT_CYCLE.indexOf(me), oi = ELEMENT_CYCLE.indexOf(ot);
@@ -361,7 +363,7 @@ function getShiShen(dayGan, otherGan) {
  * @param {Object} userBazi.xiYong - 用戶喜用神信息
  * @param {number} longitude - 經度（用於真太陽時校正）
  */
-function calculateDayFortune(year, month, day, userBazi, longitude = 120) {
+export function calculateDayFortune(year, month, day, userBazi, longitude = 120) {
   // 使用真太陽時計算
   const trueSolar = getTrueSolarDate(year, month, day, 12, 0, longitude);
   const d = trueSolar.date;
@@ -471,7 +473,7 @@ function calculateDayFortune(year, month, day, userBazi, longitude = 120) {
  * @param {string} gender - 性別 ('male' 或 'female')
  * @returns {Array} 大運數組
  */
-function calculateDecadeFortune(userBazi, gender) {
+export function calculateDecadeFortune(userBazi, gender) {
   const { solar, lunar, eightChar } = userBazi;
 
   // 獲取月柱信息
@@ -506,14 +508,7 @@ function calculateDecadeFortune(userBazi, gender) {
   return daYun;
 }
 
-// 導出函數
-if (typeof window !== 'undefined') {
-  window.calculateDayFortune = calculateDayFortune;
-  window.calculateDecadeFortune = calculateDecadeFortune;
-}
-
-// 為某地支的藏干序列回傳對應的十神（與 CANG_GAN[zhiIdx] 對齊）
-function getShiShenForHiddenStems(dayGan, zhiIdx) {
+export function getShiShenForHiddenStems(dayGan, zhiIdx) {
   const hidden = CANG_GAN[zhiIdx] || [];
   return hidden.map(g => getShiShen(dayGan, g));
 }
@@ -530,7 +525,7 @@ function getShiShenForHiddenStems(dayGan, zhiIdx) {
 //     ref = 'year' | 'day' | 'both'（起於年支、日支，或同時）
 //   無禮之刑（子卯）單獨成桶 [pillarIdx,...]，與三刑(寅巳申/丑戌未) 區分
 // 僅回傳非空的桶。
-function computeChartShenSha(pillars) {
+export function computeChartShenSha(pillars) {
   if (!Array.isArray(pillars) || pillars.length < 4) return {};
   const res = {};
   const push = (key, idx) => {
@@ -638,7 +633,7 @@ function computeChartShenSha(pillars) {
 //   水夏須金潤 / 冬取火暖 / 春須火暖 / 秋須木洩
 //   土春須火解凍 / 夏須水潤 / 秋須水潤 / 冬須火暖
 //   火冬須木火 / 春須水土 / 夏須金水 / 秋須木助
-function computeYongShenFrameworks(input) {
+export function computeYongShenFrameworks(input) {
   input = input || {};
   const dayGan = input.dayGan;
   const monthZhi = input.monthZhi;
@@ -776,7 +771,7 @@ function computeYongShenFrameworks(input) {
 // target: 單一地支字符（例如 '寅'）
 // originZhiChars: 原局四柱地支字符陣列 [年,月,日,時]
 // 回傳： [{type, pillarIdx, label}, ...]
-function detectBranchInteractions(target, originZhiChars) {
+export function detectBranchInteractions(target, originZhiChars) {
   const out = [];
   if (!target || !Array.isArray(originZhiChars)) return out;
   const pillarLabels = ['年支','月支','日支','時支'];
@@ -857,38 +852,4 @@ function detectBranchInteractions(target, originZhiChars) {
   return dedup;
 }
 
-// 將計算函式暴露給瀏覽器全域（app.js 當前以 hoisted globals 呼叫；
-// 明確掛上 window 只是讓契約更清晰，並與舊有 getPillarsUsingLunar 對齊）。
-if (typeof window !== 'undefined') {
-  window.getPillarsUsingLunar = getPillarsUsingLunar;
-  window.getTrueSolarDate = getTrueSolarDate;
-  window.getHourIndexFromTime = getHourIndexFromTime;
-  window.getHourGanIdx = getHourGanIdx;
-  window.countWuXing = countWuXing;
-  window.judgeStrength = judgeStrength;
-  window.getXiYong = getXiYong;
-  window.getShiShen = getShiShen;
-  window.getShiShenForHiddenStems = getShiShenForHiddenStems;
-  window.computeChartShenSha = computeChartShenSha;
-  window.computeYongShenFrameworks = computeYongShenFrameworks;
-  window.detectBranchInteractions = detectBranchInteractions;
-}
 
-// Node 端（僅 scripts/verify-bazi-core.js 使用）
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    countWuXing,
-    judgeStrength,
-    getXiYong,
-    getShiShen,
-    getShiShenForHiddenStems,
-    getTrueSolarDate,
-    getHourIndexFromTime,
-    getHourGanIdx,
-    computeChartShenSha,
-    computeYongShenFrameworks,
-    detectBranchInteractions,
-    BAZI_PILLAR_WEIGHTS,
-    DEFAULT_PILLAR_WEIGHTS
-  };
-}

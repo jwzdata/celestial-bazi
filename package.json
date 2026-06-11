@@ -9,7 +9,7 @@
     "netlify:deploy": "netlify deploy --prod",
     "test:core": "node scripts/verify-bazi-core.js",
     "test:ziwei": "node scripts/verify-ziwei-core.js",
-    "test:syntax": "node --check api/_auth.js && node --check api/login.js && node --check api/register.js && node --check api/user.js && node --check api/preferences.js && node --check api/pay/create.js && node --check api/pay/mock-success.js && node --check public/js/auth.js && node --check public/js/bazi.js && node --check public/js/app.js && node --check public/js/i18n.js && node --check public/js/ziwei/constants.js && node --check public/js/ziwei/algorithm.js && node --check public/js/ziwei/ui.js && node --check public/js/ziwei/types.js",
+    "test:syntax": "node --check api/_auth.js && node --check api/login.js && node --check api/register.js && node --check api/user.js && node --check api/preferences.js && node --check api/pay/create.js && node --check api/pay/mock-success.js && node --check public/js/auth.js && node --check public/js/bazi.js && node --check public/js/main.js && node --check public/js/modules/*.js && node --check public/js/i18n.js && node --check public/js/ziwei/constants.js && node --check public/js/ziwei/algorithm.js && node --check public/js/ziwei/ui.js && node --check public/js/ziwei/types.js",
     "test": "npm run test:syntax && npm run test:core && npm run test:ziwei",
     "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/tailwind.css --minify"
   },
