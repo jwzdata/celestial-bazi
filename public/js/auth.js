@@ -54,14 +54,30 @@ async function initAuth() {
 
 // 載入已登入用戶的偏好設定並填入表單
 async function loadUserPreferences() {
+  let prefs = null;
   try {
     const res = await apiFetch('/api/preferences');
     if (res && res.preferences && typeof res.preferences === 'object') {
-      applyPreferencesToForm(res.preferences);
+      prefs = res.preferences;
     }
   } catch (err) {
     // 靜默失敗：載入偏好不應該打擾使用者
-    return null;
+  }
+
+  // 若 API 沒有返回偏好或未登入，嘗試從本地緩存讀取
+  if (!prefs) {
+    try {
+      const localPrefs = localStorage.getItem('bazi_local_prefs');
+      if (localPrefs) {
+        prefs = JSON.parse(localPrefs);
+      }
+    } catch (e) {
+      // JSON 解析錯誤忽略
+    }
+  }
+
+  if (prefs) {
+    applyPreferencesToForm(prefs);
   }
 }
 
@@ -157,6 +173,13 @@ function hasMeaningfulFormPreferences(prefs) {
 
 // 在背景儲存當前表單的偏好值，供下次登入時還原
 async function saveUserPreferences(prefs) {
+  // 先存一份在本地，讓未登入用戶也能享受偏好記憶
+  try {
+    localStorage.setItem('bazi_local_prefs', JSON.stringify(prefs));
+  } catch (e) {
+    // 忽略 localStorage 錯誤（例如隱私模式）
+  }
+
   if (!currentUser) return;
   try {
     await apiFetch('/api/preferences', {
