@@ -3,12 +3,10 @@
 // ============================
 
 // 确保依赖已加载
-if (typeof window.ZIWEI_ALGORITHM === 'undefined') {
-  console.error('ZIWEI_ALGORITHM not loaded. Please include algorithm.js first.');
-}
-
-const ZIWEI_UI_ALGORITHM = window.ZIWEI_ALGORITHM;
-const ZIWEI_UI_CONSTANTS = window.ZIWEI_CONSTANTS;
+import { generateZiweiChart } from './algorithm.js';
+import { ZIWEI_CONSTANTS } from './constants.js';
+const ZIWEI_UI_ALGORITHM = { generateZiweiChart };
+const ZIWEI_UI_CONSTANTS = ZIWEI_CONSTANTS;
 
 // 全局状态
 let currentZiweiChart = null;
@@ -517,3 +515,5 @@ if (document.readyState === 'loading') {
 } else {
   initZiweiUI();
 }
+
+window.initZiweiUI = initZiweiUI;

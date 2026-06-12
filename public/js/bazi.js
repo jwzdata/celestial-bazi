@@ -9,19 +9,138 @@ import { WX_GAN, CANG_GAN, CG_WEIGHT, ELEMENT_CYCLE, WX_ZHI, DZ, TG, SHI_SHEN_MA
 export const DEFAULT_PILLAR_WEIGHTS = [1.0, 1.0, 1.0, 1.0];
 export const BAZI_PILLAR_WEIGHTS   = [1.0, 1.5, 1.2, 1.0];
 
+
+const COMMANDER_RULES = {
+  '寅': [{gan:'戊', days:7}, {gan:'丙', days:7}, {gan:'甲', days:16}],
+  '卯': [{gan:'甲', days:10}, {gan:'乙', days:20}],
+  '辰': [{gan:'乙', days:9}, {gan:'癸', days:3}, {gan:'戊', days:18}],
+  '巳': [{gan:'戊', days:7}, {gan:'庚', days:7}, {gan:'丙', days:16}],
+  '午': [{gan:'丙', days:10}, {gan:'己', days:9}, {gan:'丁', days:11}],
+  '未': [{gan:'丁', days:9}, {gan:'乙', days:3}, {gan:'己', days:18}],
+  '申': [{gan:'戊', days:7}, {gan:'壬', days:7}, {gan:'庚', days:16}],
+  '酉': [{gan:'庚', days:10}, {gan:'辛', days:20}],
+  '戌': [{gan:'辛', days:9}, {gan:'丁', days:3}, {gan:'戊', days:18}],
+  '亥': [{gan:'戊', days:7}, {gan:'甲', days:7}, {gan:'壬', days:16}],
+  '子': [{gan:'壬', days:10}, {gan:'癸', days:20}],
+  '丑': [{gan:'癸', days:9}, {gan:'辛', days:3}, {gan:'己', days:18}]
+};
+
+function getCommander(zhi, daysPassed) {
+  const rules = COMMANDER_RULES[zhi];
+  if (!rules) return null;
+  let accumulated = 0;
+  for (let rule of rules) {
+    accumulated += rule.days;
+    if (daysPassed <= accumulated) return rule.gan;
+  }
+  return rules[rules.length - 1].gan; // fallback to the last one
+}
+
+export function detectDynamicTransformations(pillars) {
+  const zhiChars = pillars.map(p => p.zhi);
+  const ganChars = pillars.map(p => p.gan);
+  let transformedWuxing = null;
+  
+  // 1. Check San He (三合)
+  const sanHeMap = {
+    '申子辰': '水', '亥卯未': '木', '寅午戌': '火', '巳酉丑': '金'
+  };
+  for (let [group, wx] of Object.entries(sanHeMap)) {
+    if (group.split('').every(char => zhiChars.includes(char))) {
+      // Must have penetrating stem of the transformed Wuxing
+      if (ganChars.some(g => WX_GAN[g] === wx)) {
+        transformedWuxing = wx;
+      }
+    }
+  }
+  
+  // 2. Check San Hui (三会)
+  const sanHuiMap = {
+    '亥子丑': '水', '寅卯辰': '木', '巳午未': '火', '申酉戌': '金'
+  };
+  for (let [group, wx] of Object.entries(sanHuiMap)) {
+    if (group.split('').every(char => zhiChars.includes(char))) {
+      // Must have penetrating stem
+      if (ganChars.some(g => WX_GAN[g] === wx)) {
+        transformedWuxing = wx;
+      }
+    }
+  }
+
+  // 天干五合 (Jia-Ji -> Earth, Yi-Geng -> Metal, Bing-Xin -> Water, Ding-Ren -> Wood, Wu-Gui -> Fire)
+  const ganHeMap = {
+    '甲己': '土', '乙庚': '金', '丙辛': '水', '丁壬': '木', '戊癸': '火'
+  };
+  let ganHeWuxing = null;
+  // If adjacent stems combine
+  for (let i = 0; i < 3; i++) {
+    const pair1 = ganChars[i] + ganChars[i+1];
+    const pair2 = ganChars[i+1] + ganChars[i];
+    const wx = ganHeMap[pair1] || ganHeMap[pair2];
+    if (wx) {
+      // Must be supported by month branch Wuxing
+      if (WX_ZHI[zhiChars[1]] === wx) {
+        ganHeWuxing = wx;
+      }
+    }
+  }
+
+  return { branchTransformation: transformedWuxing, stemTransformation: ganHeWuxing };
+}
+
 export function countWuXing(pillars, pillarWeights) {
   const weights = Array.isArray(pillarWeights) && pillarWeights.length === 4
     ? pillarWeights
-    : DEFAULT_PILLAR_WEIGHTS;
+    : [1.0, 1.5, 1.2, 1.0]; // DEFAULT_PILLAR_WEIGHTS
   let count = {'金':0,'木':0,'水':0,'火':0,'土':0};
+  
+  const transformations = detectDynamicTransformations(pillars);
+  
   pillars.forEach((p, i) => {
-    const w = weights[i] ?? 1.0;
-    count[WX_GAN[p.gan]] += 1.5 * w;
+    let w = weights[i] ?? 1.0;
+    
+    // Dynamic Transformation Adjustment for Stems
+    let ganWx = WX_GAN[p.gan];
+    if (transformations.stemTransformation && (p.gan === '甲' || p.gan === '己' || p.gan === '乙' || p.gan === '庚' || p.gan === '丙' || p.gan === '辛' || p.gan === '丁' || p.gan === '壬' || p.gan === '戊' || p.gan === '癸')) {
+       // Simplistic: if there is a valid stem transformation, boost that element.
+       // We don't overwrite the physical gan element, we just add heavily to the transformed element.
+    }
+    
+    count[ganWx] += 1.5 * w;
+    
+    // Hidden stems
     let cg = CANG_GAN[p.zhi];
-    cg.forEach((g, ci) => { count[WX_GAN[g]] += CG_WEIGHT[ci] * w; });
+    let isMonth = (i === 1);
+    let commander = null;
+    
+    if (isMonth && pillars.meta && pillars.meta.daysFromJieQi !== undefined) {
+      commander = getCommander(p.zhi, pillars.meta.daysFromJieQi);
+    }
+
+    cg.forEach((g, ci) => { 
+      let baseW = CG_WEIGHT[ci];
+      if (commander === g) {
+        // Boost commander
+        baseW = 1.2; // Increase Benqi level weight for commander
+      } else if (commander) {
+        // Diminish non-commander
+        baseW *= 0.5;
+      }
+      count[WX_GAN[g]] += baseW * w; 
+    });
   });
+  
+  // Apply massive branch transformation boost
+  if (transformations.branchTransformation) {
+    count[transformations.branchTransformation] += 5.0; // Massive boost for SanHe/SanHui
+  }
+  if (transformations.stemTransformation) {
+    count[transformations.stemTransformation] += 2.0; // Moderate boost for GanHe
+  }
+  
   return count;
 }
+
 
 // ============================
 // 得令 / 得地 / 得勢 強弱模型

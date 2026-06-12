@@ -4,11 +4,9 @@
 // ============================
 
 // 确保依赖的常量已加载
-if (typeof window.ZIWEI_CONSTANTS === 'undefined') {
-  console.error('ZIWEI_CONSTANTS not loaded. Please include constants.js first.');
-}
-
-const ZW = window.ZIWEI_CONSTANTS;
+import { ZIWEI_CONSTANTS } from './constants.js';
+import { getTrueSolarDate, getHourIndexFromTime } from '../bazi.js';
+const ZW = ZIWEI_CONSTANTS;
 
 // iztro 在浏览器 UMD 包中导出为 window.iztro，旧集成代码曾假设存在
 // window.astro；这里统一取到 astro 模块，方便浏览器和 Node 验证脚本共用。
@@ -103,12 +101,22 @@ function getZiweiLunarInfo(year, month, day, hour = 12, minute = 0, timezoneOffs
 }
 
 // 主要的紫微斗数排盘函数
-function generateZiweiChart(birthInfo) {
+export function generateZiweiChart(birthInfo) {
   const { year, month, day, hour, gender } = birthInfo;
 
   try {
     const tzOffset = birthInfo.timezoneOffset !== undefined ? Number(birthInfo.timezoneOffset) : -480;
-    const lunarInfo = getZiweiLunarInfo(year, month, day, hour, 0, tzOffset);
+    const longitude = birthInfo.longitude !== undefined && birthInfo.longitude !== '' ? Number(birthInfo.longitude) : 120;
+    
+    // 1. True Solar Time Correction (真太阳时校正)
+    const trueSolarDate = getTrueSolarDate(year, month, day, hour, 0, longitude, tzOffset);
+    const tsYear = trueSolarDate.getFullYear();
+    const tsMonth = trueSolarDate.getMonth() + 1;
+    const tsDay = trueSolarDate.getDate();
+    const tsHour = trueSolarDate.getHours();
+    const tsMinute = trueSolarDate.getMinutes();
+
+    const lunarInfo = getZiweiLunarInfo(tsYear, tsMonth, tsDay, tsHour, tsMinute, tzOffset);
     const iztroGender = gender === 'male' ? '男' : '女';
 
     const iztroAstro = getIztroAstro();
@@ -120,7 +128,8 @@ function generateZiweiChart(birthInfo) {
 
     // iztro uses hour index (0-11). Local true solar hour index should theoretically be used,
     // but the local hour index directly calculated from local time provides the correct mapping.
-    const timeIndex = Math.floor((hour + 1) / 2) % 12;
+    // Use getHourIndexFromTime which accounts for the actual True Solar minute offset properly
+    const timeIndex = getHourIndexFromTime(tsHour, tsMinute);
     const lunarDateStr = `${lunarInfo.lunarYear}-${lunarInfo.lunarMonth}-${lunarInfo.lunarDay}`;
     const astrolabe = iztroAstro.byLunar(lunarDateStr, timeIndex, iztroGender, lunarInfo.isLeapMonth, true, 'zh-CN');
 
@@ -242,7 +251,17 @@ function generateSimpleZiweiChart(birthInfo) {
 
   // 基础计算逻辑（简化的紫微斗数算法）
   const tzOffset = birthInfo.timezoneOffset !== undefined ? Number(birthInfo.timezoneOffset) : -480;
-  const lunarInfo = getZiweiLunarInfo(year, month, day, hour, 0, tzOffset);
+    const longitude = birthInfo.longitude !== undefined && birthInfo.longitude !== '' ? Number(birthInfo.longitude) : 120;
+    
+    // 1. True Solar Time Correction (真太阳时校正)
+    const trueSolarDate = getTrueSolarDate(year, month, day, hour, 0, longitude, tzOffset);
+    const tsYear = trueSolarDate.getFullYear();
+    const tsMonth = trueSolarDate.getMonth() + 1;
+    const tsDay = trueSolarDate.getDate();
+    const tsHour = trueSolarDate.getHours();
+    const tsMinute = trueSolarDate.getMinutes();
+
+    const lunarInfo = getZiweiLunarInfo(tsYear, tsMonth, tsDay, tsHour, tsMinute, tzOffset);
 
   // 这里可以实现一个基于传统紫微斗数算法的简化版本
   // 由于完整的紫微斗数算法非常复杂，这里提供一个基础框架
