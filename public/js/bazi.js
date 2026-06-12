@@ -46,23 +46,24 @@ export function judgeStrength(dayGan, monthZhi, wxCount, pillars) {
   const wealthEl    = ELEMENT_CYCLE[(mi + 2) % 5];     // 我剋者（財）
   const ctrlEl      = ELEMENT_CYCLE[(mi + 3) % 5];     // 剋我者（官殺）
 
-  // 得令：月支本氣或主氣（第一個藏干）同屬日主或印星
   const monthHidden = CANG_GAN[monthZhi] || [];
   const monthMainEl = monthHidden.length ? WX_GAN[monthHidden[0]] : null;
   const monthBenQiEl = WX_ZHI[monthZhi];
   const deLing = (monthMainEl === dayWX) || (monthMainEl === motherEl) ||
                  (monthBenQiEl === dayWX) || (monthBenQiEl === motherEl);
 
-  // 得地 / 得勢：掃描非日柱的柱位
   const deDi = [];
   const deShi = [];
   const rootedBranches = [];
   const penetratedStems = [];
+  let deDiScore = 0; // Dynamic distance score
+  const branchWeights = [2, 6, 8, 4]; // 年2, 月6, 日8, 時4
+
   if (Array.isArray(pillars)) {
     for (let i = 0; i < pillars.length; i++) {
-      if (i === 2) continue; // 跳過日柱
       const p = pillars[i];
       if (!p) continue;
+      
       const hidden = CANG_GAN[p.zhi] || [];
       let rooted = false;
       for (const g of hidden) {
@@ -70,21 +71,24 @@ export function judgeStrength(dayGan, monthZhi, wxCount, pillars) {
         if (el === dayWX || el === motherEl) { rooted = true; break; }
       }
       if (rooted) {
-        deDi.push(i);
+        if (i !== 2) { deDi.push(i); } // Keep legacy backward compatibility
+        deDiScore += branchWeights[i] || 0;
         rootedBranches.push(DZ[p.zhi]);
       }
-      const stemEl = WX_GAN[p.gan];
-      if (stemEl === dayWX || stemEl === motherEl) {
-        deShi.push(i);
-        penetratedStems.push(TG[p.gan]);
+      
+      if (i !== 2) {
+        const stemEl = WX_GAN[p.gan];
+        if (stemEl === dayWX || stemEl === motherEl) {
+          deShi.push(i);
+          penetratedStems.push(TG[p.gan]);
+        }
       }
     }
   }
 
-  // 分數合成
   let score = 0;
   if (deLing) score += 30;
-  score += Math.min(deDi.length * 6, 18);
+  score += Math.min(deDiScore, 20); // 封頂提高到20
   score += Math.min(deShi.length * 6, 18);
   const support = (wxCount[dayWX] || 0) + (wxCount[motherEl] || 0);
   const drain = (wxCount[childWX] || 0) + (wxCount[wealthEl] || 0) + (wxCount[ctrlEl] || 0);
@@ -93,18 +97,29 @@ export function judgeStrength(dayGan, monthZhi, wxCount, pillars) {
   score = Math.max(0, Math.min(100, Math.round(score)));
 
   let tier;
-  let direction; // 'strong' / 'weak' / 'neutral'
-  if (score < 30)       { tier = '極弱'; direction = 'weak';    }
-  else if (score < 45)  { tier = '偏弱'; direction = 'weak';    }
-  else if (score < 55)  { tier = '中和'; direction = 'neutral'; }
-  else if (score < 70)  { tier = '偏強'; direction = 'strong';  }
-  else                  { tier = '極強'; direction = 'strong';  }
-  // isStrong 保留為 boolean 供舊呼叫端（renderTraits/舊版 getXiYong）使用；
-  // 新版 getXiYong 改以 direction 判斷方向，避免 中和 區間 49/50 的跳變。
-  const isStrong = score >= 50;
+  let direction;
+  let specialPattern = null;
+
+  // 特殊格局判定 (Special Pattern Detection)
+  const isCongRuo = score < 20 && !deLing && deDiScore <= 2;
+  const isZhuanWang = score >= 75 && deLing && drain < 2;
+
+  if (isCongRuo) {
+    tier = '從弱格'; direction = 'cong_weak'; specialPattern = 'cong_weak';
+  } else if (isZhuanWang) {
+    tier = '專旺格'; direction = 'cong_strong'; specialPattern = 'cong_strong';
+  } else {
+    if (score < 30)       { tier = '極弱'; direction = 'weak';    }
+    else if (score < 45)  { tier = '偏弱'; direction = 'weak';    }
+    else if (score < 55)  { tier = '中和'; direction = 'neutral'; }
+    else if (score < 70)  { tier = '偏強'; direction = 'strong';  }
+    else                  { tier = '極強'; direction = 'strong';  }
+  }
+
+  const isStrong = score >= 50 || direction === 'cong_strong';
 
   return {
-    score, tier, isStrong, direction,
+    score, tier, isStrong, direction, specialPattern,
     deLing, deDi, deShi,
     rootedBranches, penetratedStems,
     motherEl, childWX, wealthEl, ctrlEl
@@ -113,30 +128,39 @@ export function judgeStrength(dayGan, monthZhi, wxCount, pillars) {
 
 export function getXiYong(dayGan, isStrong, ctrlEl, motherEl, childWX, wealthEl, frameworks) {
   const dayWX = WX_GAN[dayGan];
-  // base 的骨架必須與方向一致，否則 49/50 的 isStrong 跳變會穿透到三個 primary paths
-  // （扶抑 fallthrough 直接回傳 base；調候 override 以 base.ji 做 prune；通關 繼承 base.xi/xian）。
-  // 當 frameworks._direction === 'neutral' 時 base 改採中性 sentinel：
-  //   { xi: motherEl, yong: null, ji: [], xian: wealthEl }
-  // 其他情況（或 舊 caller 不帶 frameworks 時）維持原 isStrong 三元路徑，確保向下相容。
   const isNeutral = !!(frameworks && frameworks._direction === 'neutral');
-  const base = isNeutral
-    ? { xi: motherEl, yong: null, ji: [], xian: wealthEl }
-    : (isStrong
-        ? { xi: childWX, yong: ctrlEl, ji: [dayWX, motherEl], xian: wealthEl }
-        : { xi: motherEl, yong: dayWX, ji: [ctrlEl, childWX], xian: wealthEl });
+  const isCongWeak = !!(frameworks && frameworks._direction === 'cong_weak');
+  const isCongStrong = !!(frameworks && frameworks._direction === 'cong_strong');
+
+  let base;
+  if (isNeutral) {
+    base = { xi: motherEl, yong: null, ji: [], xian: wealthEl };
+  } else if (isCongWeak) {
+    const yong = (frameworks && frameworks.扶抑 && frameworks.扶抑.wx) || ctrlEl;
+    let xi = wealthEl;
+    if (yong === childWX) xi = wealthEl;
+    if (yong === wealthEl) xi = childWX;
+    if (yong === ctrlEl) xi = wealthEl;
+    base = { xi: xi, yong: yong, ji: [dayWX, motherEl], xian: (yong === ctrlEl ? childWX : ctrlEl) };
+  } else if (isCongStrong) {
+    base = { xi: childWX, yong: motherEl, ji: [ctrlEl, wealthEl], xian: dayWX };
+  } else if (isStrong) {
+    base = { xi: childWX, yong: ctrlEl, ji: [dayWX, motherEl], xian: wealthEl };
+  } else {
+    base = { xi: motherEl, yong: dayWX, ji: [ctrlEl, childWX], xian: wealthEl };
+  }
 
   if (!frameworks || !frameworks.扶抑) return base;
 
-  // 新版路徑：以 strength.direction 取代 isStrong 作為方向來源，
-  // 避免 中和 區間 49/50 的跳變。direction 可能由呼叫端注入於 frameworks._direction。
   const direction = frameworks._direction || (isStrong ? 'strong' : 'weak');
   const fuYi = frameworks.扶抑;
   const tiao = frameworks.調候;
   const tiaoWX = tiao && tiao.wx;
 
-  // 中和：扶抑 本身方向不明，僅採 調候（若有）或 通關，否則退回基礎 base。
   let primary;
-  if (direction === 'neutral') {
+  if (isCongWeak || isCongStrong) {
+    primary = '順勢'; // Special pattern overrides all, using fuyi structure
+  } else if (direction === 'neutral') {
     primary = (tiaoWX && tiao.extreme) ? '調候'
             : (frameworks.通關 && frameworks.通關.wx) ? '通關'
             : '扶抑';
@@ -182,8 +206,8 @@ export function getXiYong(dayGan, isStrong, ctrlEl, motherEl, childWX, wealthEl,
     };
   }
 
-  // primary === '扶抑'
-  return Object.assign({}, base, { primaryFramework: '扶抑' });
+  // primary === '扶抑' or '順勢'
+  return Object.assign({}, base, { primaryFramework: primary });
 }
 
 // 僞隨機
@@ -726,14 +750,28 @@ export function computeYongShenFrameworks(input) {
     };
   }
 
-  // 扶抑
-  // 以 strength.direction 取代 isStrong 作為方向來源，避免 中和 區間 49/50 的跳變
-  // 穿透進 fuYi.wx（進而被 getXiYong 之 調候/通關 override 以及扶抑 fallthrough 繼承）。
-  // 當 direction 缺席時（legacy caller）退回原 isStrong 路徑保持向下相容。
   const direction = strength.direction
     || (typeof strength.isStrong === 'boolean' ? (strength.isStrong ? 'strong' : 'weak') : null);
   let fuYi;
-  if (direction === 'neutral') {
+
+  if (direction === 'cong_weak') {
+    let maxDrain = Math.max(wxCount[strength.childWX]||0, wxCount[strength.wealthEl]||0, wxCount[strength.ctrlEl]||0);
+    let yong = strength.ctrlEl;
+    let patternName = '從弱格';
+    if (maxDrain === (wxCount[strength.childWX]||0)) { yong = strength.childWX; patternName = '從兒格'; }
+    else if (maxDrain === (wxCount[strength.wealthEl]||0)) { yong = strength.wealthEl; patternName = '從財格'; }
+    else if (maxDrain === (wxCount[strength.ctrlEl]||0)) { yong = strength.ctrlEl; patternName = '從殺格'; }
+    fuYi = { framework: '順勢', wx: yong, note: `日主毫無根氣，命局構成【${patternName}】。不可生扶，應順應局中最旺之${yong}五行。`, patternName };
+  } else if (direction === 'cong_strong') {
+    let yong = strength.motherEl;
+    let patternName = '專旺格';
+    if (dayWX === '木') patternName = '曲直格';
+    if (dayWX === '火') patternName = '炎上格';
+    if (dayWX === '土') patternName = '稼穡格';
+    if (dayWX === '金') patternName = '從革格';
+    if (dayWX === '水') patternName = '潤下格';
+    fuYi = { framework: '順勢', wx: yong, note: `全局印比極旺，命局構成【${patternName}】。不可逆其鋒芒，應順勢取${yong}及同類為喜用。`, patternName };
+  } else if (direction === 'neutral') {
     fuYi = { framework: '扶抑', wx: null, note: '日主中和，暫不強扶強抑，取調候或通關為要。' };
   } else if (direction === 'strong') {
     if (strength.score > 70) {

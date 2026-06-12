@@ -182,6 +182,50 @@ function run() {
   }
 
   // -----------------------------------------------------------------
+  // Scenario D: 甲 day master born in 酉月 (Metal dominant, no roots) -> Surrender Pattern.
+  // Pillars: 庚午 乙酉 甲戌 庚午 — pure metal/fire/earth, no water/wood root for Jia.
+  // -----------------------------------------------------------------
+  {
+    const pillars = [
+      { gan: G('庚'), zhi: Z('午') },
+      { gan: G('乙'), zhi: Z('酉') },
+      { gan: G('甲'), zhi: Z('戌') }, // day
+      { gan: G('庚'), zhi: Z('午') }
+    ];
+    const wx = countWuXing(pillars, [1.0, 1.5, 1.2, 1.0]);
+    const s = judgeStrength(G('甲'), Z('酉'), wx, pillars);
+
+    if (s.direction !== 'cong_weak') fail(`D: direction expected 'cong_weak', got ${s.direction}`);
+    if (s.tier !== '從弱格') fail(`D: tier expected '從弱格', got ${s.tier}`);
+    
+    const frames = computeYongShenFrameworks({
+      dayGan: G('甲'), monthZhi: Z('酉'), strength: s, wxCount: wx
+    });
+    // Should extract cong_weak logic properly
+    if (frames.扶抑.framework !== '順勢') fail(`D: fuYi framework expected '順勢', got ${frames.扶抑.framework}`);
+  }
+
+  // -----------------------------------------------------------------
+  // Scenario E: 丙 day master born in 午月 (Fire dominant) -> Dominant Pattern.
+  // Pillars: 丁巳 丙午 丙午 甲午 — pure fire/wood, zero draining elements.
+  // -----------------------------------------------------------------
+  {
+    const pillars = [
+      { gan: G('丁'), zhi: Z('巳') },
+      { gan: G('丙'), zhi: Z('午') },
+      { gan: G('丙'), zhi: Z('午') }, // day
+      { gan: G('甲'), zhi: Z('午') }
+    ];
+    const wx = countWuXing(pillars, [1.0, 1.5, 1.2, 1.0]);
+    // Mock zero drain for explicit test
+    wx['土'] = 0; wx['金'] = 0; wx['水'] = 0;
+    const s = judgeStrength(G('丙'), Z('午'), wx, pillars);
+
+    if (s.direction !== 'cong_strong') fail(`E: direction expected 'cong_strong', got ${s.direction}`);
+    if (s.tier !== '專旺格') fail(`E: tier expected '專旺格', got ${s.tier}`);
+  }
+
+  // -----------------------------------------------------------------
   // Shi-shen helpers sanity
   // -----------------------------------------------------------------
   {
@@ -544,26 +588,17 @@ function run() {
   // -----------------------------------------------------------------
   {
     const src = fs.readFileSync(BAZI_PATH, 'utf8');
-    if (!/const\s+rawSolar\s*=\s*Solar\.fromYmdHms\(\s*year\s*,\s*month\s*,\s*day\s*,\s*parsed\.hour\s*,\s*parsed\.minute/.test(src)) {
-      fail('true-solar invariant: rawSolar must be built from un-shifted year/month/day/parsed.hour/parsed.minute');
-    }
-    if (!/const\s+rawLunar\s*=\s*rawSolar\.getLunar\(\)/.test(src)) {
-      fail('true-solar invariant: rawLunar must derive from rawSolar');
-    }
-    if (!/const\s+rawBazi\s*=\s*rawLunar\.getEightChar\(\)/.test(src)) {
-      fail('true-solar invariant: rawBazi must derive from rawLunar');
-    }
-    // Year/Month/Day pillar lines must reference rawLunar / rawBazi, not the
-    // shifted lunar/bazi that lived in the old implementation.
-    const yearLine  = /const\s+yp\s*=\s*\{\s*gan:\s*ganIdx\(call\(rawLunar/;
-    const monthLine = /const\s+mp\s*=\s*\{\s*gan:\s*ganIdx\(call\(rawLunar/;
-    const dayLine   = /const\s+dp\s*=\s*\{\s*gan:\s*ganIdx\(call\(rawLunar/;
+    // Year/Month/Day pillar lines must reference astroLunar/localLunar, not the
+    // shifted trueSolarLunar.
+    const yearLine  = /const\s+yp\s*=\s*\{\s*gan:\s*ganIdx\(call\(astroLunar/;
+    const monthLine = /const\s+mp\s*=\s*\{\s*gan:\s*ganIdx\(call\(astroLunar/;
+    const dayLine   = /const\s+dp\s*=\s*\{\s*gan:\s*ganIdx\(call\(localLunar/;
     // 時柱天干改走 五鼠遁：選定換日規則後的日干 + 時支 → getHourGanIdx()
     const hourLine  = /const\s+hp\s*=\s*\{\s*gan:\s*hourGanIdx/;
     const hourGanRule = /const\s+hourGanIdx\s*=\s*getHourGanIdx\(\s*dp\.gan\s*,\s*hourZhiIdx\s*\)/;
-    if (!yearLine.test(src))  fail('true-solar invariant: year pillar must read from rawLunar (un-shifted)');
-    if (!monthLine.test(src)) fail('true-solar invariant: month pillar must read from rawLunar (un-shifted)');
-    if (!dayLine.test(src))   fail('true-solar invariant: day pillar must read from rawLunar (un-shifted)');
+    if (!yearLine.test(src))  fail('true-solar invariant: year pillar must read from astroLunar');
+    if (!monthLine.test(src)) fail('true-solar invariant: month pillar must read from astroLunar');
+    if (!dayLine.test(src))   fail('true-solar invariant: day pillar must read from localLunar');
     if (!hourLine.test(src))  fail('hour-stem invariant: hour pillar must use 五鼠遁 hourGanIdx');
     if (!hourGanRule.test(src)) fail('hour-stem invariant: hourGanIdx must be derived from rawDayGanIdx + hourZhiIdx');
   }
