@@ -37,8 +37,8 @@ function getCommander(zhi, daysPassed) {
 }
 
 export function detectDynamicTransformations(pillars) {
-  const zhiChars = pillars.map(p => p.zhi);
-  const ganChars = pillars.map(p => p.gan);
+  const zhiChars = pillars.map(p => DZ[p.zhi]);
+  const ganChars = pillars.map(p => TG[p.gan]);
   let transformedWuxing = null;
   
   // 1. Check San He (三合)
@@ -122,7 +122,7 @@ export function countWuXing(pillars, pillarWeights) {
     
     // Dynamic Transformation Adjustment for Stems
     let ganWx = WX_GAN[p.gan];
-    if (transformations.stemTransformation && (p.gan === '甲' || p.gan === '己' || p.gan === '乙' || p.gan === '庚' || p.gan === '丙' || p.gan === '辛' || p.gan === '丁' || p.gan === '壬' || p.gan === '戊' || p.gan === '癸')) {
+    if (transformations.stemTransformation && ['甲','己','乙','庚','丙','辛','丁','壬','戊','癸'].includes(TG[p.gan])) {
        // Simplistic: if there is a valid stem transformation, boost that element.
        // We don't overwrite the physical gan element, we just add heavily to the transformed element.
     }
@@ -241,7 +241,7 @@ export function judgeStrength(dayGan, monthZhi, wxCount, pillars) {
              currentWeight *= 0.5; // Clash weakens root by 50%
            } else {
              // Check San Xing
-             for (const group of XING_GROUPS) {
+             for (const group of XING_GROUPS['三刑']) {
                if (group.length === 3 && group.includes(otherZhiChar) && group.includes(thisZhiChar)) {
                  currentWeight *= 0.7; // Xing weakens root by 30%
                }
