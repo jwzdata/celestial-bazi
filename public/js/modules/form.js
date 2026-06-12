@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { countWuXing, judgeStrength, getXiYong } from '../bazi.js';
+import { countWuXing, judgeStrength, getXiYong, getPillarsUsingLunar, computeYongShenFrameworks } from '../bazi.js';
 import { WX_GAN } from '../data.js';
 import { transitionSection, fallbackCopy } from './utils.js';
 import { renderPillars, renderPrecisionMeta, renderProInfo, renderWuXing, renderStrength, renderTraits, renderXiYong, renderLucky } from './chart-ui.js';
@@ -47,7 +47,7 @@ export function analyze() {
   setTimeout(() => {
     let success = false;
     try {
-      let pillars = window.getPillarsUsingLunar(year, month, day, timeVal, longitudeVal, rules);
+      let pillars = getPillarsUsingLunar(year, month, day, timeVal, longitudeVal, rules);
       let yp = pillars[0];
       let mp = pillars[1];
       let dp = pillars[2];
@@ -56,7 +56,7 @@ export function analyze() {
       let wxCount = countWuXing(pillars, [1.0, 1.5, 1.2, 1.0]);
       let strength = judgeStrength(dp.gan, mp.zhi, wxCount, pillars);
       
-      const frameworks = window.computeYongShenFrameworks ? window.computeYongShenFrameworks({
+      const frameworks = computeYongShenFrameworks ? computeYongShenFrameworks({
         dayGan: dp.gan, monthZhi: mp.zhi, strength, wxCount
       }) : null;
       if (frameworks && strength && strength.direction) {

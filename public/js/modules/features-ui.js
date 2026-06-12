@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { countWuXing, calculateDecadeFortune, getShiShen, detectBranchInteractions } from '../bazi.js';
+import { countWuXing, calculateDecadeFortune, getShiShen, detectBranchInteractions, getPillarsUsingLunar } from '../bazi.js';
 import { TG, DZ, WX_GAN, WX_ZHI, WX_COLORS, LUCKY_DATA, DRESS_COLORS } from '../data.js';
 import { ensurePosterDependencies, generateQRCode, withTimeout, escapeHTML } from './utils.js';
 import { getPrimaryLuckyElement } from './chart-ui.js';
@@ -480,7 +480,7 @@ export function calculateHehun() {
   let year = parseInt(parts[0]), month = parseInt(parts[1]), day = parseInt(parts[2]);
   let hourZhi = parseInt(otherHour);
   
-  let otherPillars = window.getPillarsUsingLunar(year, month, day, hourZhi);
+  let otherPillars = getPillarsUsingLunar(year, month, day, hourZhi);
   let otherWxCount = countWuXing(otherPillars);
   
   let maxWx = '木';
