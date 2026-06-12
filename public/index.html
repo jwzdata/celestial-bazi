@@ -24,6 +24,17 @@
 <meta name="twitter:image" content="https://celestial-bazi.vercel.app/og-image.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔮</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<script type="speculationrules">
+{
+  "prerender": [{
+    "where": { "href_matches": "/ziwei.html" },
+    "eagerness": "moderate"
+  }]
+}
+</script>
 <link rel="stylesheet" href="css/tailwind.css">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -56,13 +67,13 @@
     <a href="/ziwei.html" class="text-xs text-accent/80 hover:text-accent transition-colors flex items-center">
       <i class="fas fa-star mr-1"></i>紫微斗数
     </a>
-    <button id="btnUser" class="text-xs text-accent/80 hover:text-accent transition-colors flex items-center">
+    <button type="button" id="btnUser" class="text-xs text-accent/80 hover:text-accent transition-colors flex items-center">
       <i class="fas fa-user-circle mr-1 text-sm"></i><span id="userStatusText">登錄 / 註冊</span>
     </button>
-    <button id="btnReset" class="text-xs text-accent/60 hover:text-accent transition-colors hidden">
+    <button type="button" id="btnReset" class="text-xs text-accent/60 hover:text-accent transition-colors hidden">
       <i class="fas fa-redo mr-1"></i>重新分析
     </button>
-    <button id="btnLang" onclick="toggleLanguage()" class="text-xs text-accent/80 hover:text-accent transition-colors ml-2 flex items-center">
+    <button type="button" id="btnLang" onclick="toggleLanguage()" class="text-xs text-accent/80 hover:text-accent transition-colors ml-2 flex items-center">
       <i class="fas fa-globe mr-1"></i>EN
     </button>
   </div>
@@ -82,30 +93,30 @@
     <div class="space-y-5">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs text-accent/60 mb-2 tracking-wider">出生日期（公曆）</label>
+          <label for="inputDate" class="block text-xs text-accent/60 mb-2 tracking-wider">出生日期（公曆）</label>
           <input type="date" id="inputDate" class="input-field" min="1900-01-01" max="2100-12-31" autocomplete="bday">
         </div>
         <div>
-          <label class="block text-xs text-accent/60 mb-2 tracking-wider">出生時間（北京時）</label>
+          <label for="inputTime" class="block text-xs text-accent/60 mb-2 tracking-wider">出生時間（北京時）</label>
           <input type="time" id="inputTime" class="input-field" value="12:00" autocomplete="bday-time">
         </div>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs text-accent/60 mb-2 tracking-wider">性別（用於起運）</label>
+          <label for="inputGender" class="block text-xs text-accent/60 mb-2 tracking-wider">性別（用於起運）</label>
           <select id="inputGender" class="input-field">
             <option value="1">男</option>
             <option value="0">女</option>
           </select>
         </div>
         <div>
-          <label class="block text-xs text-accent/60 mb-2 tracking-wider">出生地</label>
+          <label for="inputCity" class="block text-xs text-accent/60 mb-2 tracking-wider">出生地</label>
           <input type="text" id="inputCity" class="input-field" value="上海" list="cityList" placeholder="輸入城市，如：上海 / London / 倫敦">
           <datalist id="cityList"></datalist>
         </div>
       </div>
       <div>
-        <label class="block text-xs text-accent/60 mb-2 tracking-wider">出生地經度</label>
+        <label for="inputLongitude" class="block text-xs text-accent/60 mb-2 tracking-wider">出生地經度</label>
         <input type="number" id="inputLongitude" class="input-field" value="121.4737" min="-180" max="180" step="0.0001" inputmode="decimal">
         <p class="text-[10px] text-accent/35 mt-2 leading-relaxed">用於真太陽時校正：經度差 + 均時差可能改變時辰邊界，出生時間越接近交界越重要。</p>
       </div>
@@ -121,7 +132,7 @@
           </label>
         </div>
         <div>
-          <label class="block text-[10px] text-accent/50 mb-1 tracking-wider">日界規則</label>
+          <label for="inputDayChangeRule" class="block text-[10px] text-accent/50 mb-1 tracking-wider">日界规则</label>
           <select id="inputDayChangeRule" class="input-field text-sm py-2">
             <option value="23:00">子初換日（23:00）</option>
             <option value="00:00">子正換日（00:00）</option>
@@ -129,7 +140,7 @@
         </div>
       </div>
       <div id="errorMsg" class="text-xs text-fire hidden"></div>
-      <button id="btnAnalyze" class="btn-primary w-full mt-2">開始解析</button>
+      <button type="button" id="btnAnalyze" class="btn-primary w-full mt-2">開始解析</button>
     </div>
   </div>
   <p class="text-center text-xs text-accent/30 mt-6">命理分析僅供參考，人生道路還需自己努力奮鬥</p>
@@ -150,65 +161,65 @@
 <!-- 高級功能導航 (展示用) -->
 <section id="premiumFeatures" class="max-w-5xl mx-auto px-6 pt-12">
   <div id="premiumFeaturesGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-    <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('dayun')">
+    <button type="button" class="glass-card w-full text-left p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('dayun')">
       <div class="w-12 h-12 rounded-full bg-wood/20 text-wood flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
         <i class="fas fa-chart-line text-xl"></i>
       </div>
       <h3 class="font-serif text-sm font-bold text-accent">大運流年</h3>
       <p class="text-[10px] text-accent/50 mt-1">十年運勢起伏</p>
-    </div>
-    <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('hehun')">
+    </button>
+    <button type="button" class="glass-card w-full text-left p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('hehun')">
       <div class="w-12 h-12 rounded-full bg-fire/20 text-fire flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
         <i class="fas fa-heart text-xl"></i>
       </div>
       <h3 class="font-serif text-sm font-bold text-accent">八字合婚</h3>
       <p class="text-[10px] text-accent/50 mt-1">測算姻緣契合</p>
-    </div>
-    <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('qiming')">
+    </button>
+    <button type="button" class="glass-card w-full text-left p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('qiming')">
       <div class="w-12 h-12 rounded-full bg-water/20 text-water flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
         <i class="fas fa-pen-nib text-xl"></i>
       </div>
       <h3 class="font-serif text-sm font-bold text-accent">八字起名</h3>
       <p class="text-[10px] text-accent/50 mt-1">五行補救改運</p>
-    </div>
-    <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="generatePoster()">
+    </button>
+    <button type="button" class="glass-card w-full text-left p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="generatePoster()">
       <div class="w-12 h-12 rounded-full bg-earth/20 text-earth flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
         <i class="fas fa-image text-xl"></i>
       </div>
       <h3 class="font-serif text-sm font-bold text-accent">生成專屬海報</h3>
       <p class="text-[10px] text-accent/50 mt-1">帶二維碼分享</p>
-    </div>
+    </button>
     
     <!-- 每日運勢抽籤 -->
-    <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('chouqian')">
+    <button type="button" class="glass-card w-full text-left p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('chouqian')">
       <div class="w-12 h-12 rounded-full bg-water/20 text-water flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
         <i class="fas fa-scroll text-xl"></i>
       </div>
       <h3 class="font-serif text-sm font-bold text-accent">每日運勢抽籤</h3>
       <p class="text-[10px] text-accent/50 mt-1">專屬打卡靈籤</p>
-    </div>
+    </button>
 
     <!-- 賽博擲筊 -->
-    <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all relative overflow-hidden" onclick="showFeature('zhijiao')">
+    <button type="button" class="glass-card w-full text-left p-6 text-center cursor-pointer hover:border-accent/50 group transition-all relative overflow-hidden" onclick="showFeature('zhijiao')">
       <div class="w-12 h-12 rounded-full bg-[#c13a3a]/20 text-[#c13a3a] flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform relative">
         <i class="fas fa-moon text-xl transform -rotate-45"></i>
       </div>
       <h3 class="font-serif text-sm font-bold text-[#c13a3a]">賽博擲筊</h3>
       <p class="text-[10px] text-[#c13a3a]/60 mt-1">遇事不決 叩問神明</p>
       <div class="absolute top-0 right-0 bg-[#c13a3a] text-white text-[8px] px-2 py-0.5 rounded-bl-lg font-bold">NEW</div>
-    </div>
+    </button>
 
     <!-- 今日幸運數字 -->
-    <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('luckynum')">
+    <button type="button" class="glass-card w-full text-left p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('luckynum')">
       <div class="w-12 h-12 rounded-full bg-wood/20 text-wood flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
         <i class="fas fa-ticket-alt text-xl"></i>
       </div>
       <h3 class="font-serif text-sm font-bold text-accent">今日幸運數字</h3>
       <p class="text-[10px] text-accent/50 mt-1">專屬財運密碼</p>
-    </div>
+    </button>
 
     <!-- 商業變現：大師親算 -->
-    <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('consult')">
+    <button type="button" class="glass-card w-full text-left p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('consult')">
       <div class="w-12 h-12 rounded-full bg-fire/20 text-fire flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform relative">
         <div class="absolute -top-1 -right-1 w-3 h-3 bg-fire rounded-full animate-ping"></div>
         <div class="absolute -top-1 -right-1 w-3 h-3 bg-fire rounded-full border border-[#16213e]"></div>
@@ -216,10 +227,10 @@
       </div>
       <h3 class="font-serif text-sm font-bold text-accent">大師一對一親算</h3>
       <p class="text-[10px] text-accent/50 mt-1">深度解析答疑解惑</p>
-    </div>
+    </button>
 
     <!-- AI 深度命理報告 -->
-    <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all relative overflow-hidden" onclick="showFeature('aiReport')">
+    <button type="button" class="glass-card w-full text-left p-6 text-center cursor-pointer hover:border-accent/50 group transition-all relative overflow-hidden" onclick="showFeature('aiReport')">
       <div class="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
       <div class="w-12 h-12 rounded-full bg-accent/20 text-accent flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform relative">
         <div class="absolute inset-0 rounded-full border-2 border-accent/50 animate-ping opacity-50"></div>
@@ -228,16 +239,16 @@
       <h3 class="font-serif text-sm font-bold text-accent">AI 深度命理報告</h3>
       <p class="text-[10px] text-accent/50 mt-1">萬字長文 終生運程</p>
       <div class="absolute top-0 right-0 bg-fire text-white text-[8px] px-2 py-0.5 rounded-bl-lg font-bold">HOT</div>
-    </div>
+    </button>
 
     <!-- 一生財富白皮書 -->
-    <div class="glass-card p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('wealth')">
+    <button type="button" class="glass-card w-full text-left p-6 text-center cursor-pointer hover:border-accent/50 group transition-all" onclick="showFeature('wealth')">
       <div class="w-12 h-12 rounded-full bg-earth/20 text-earth flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
         <i class="fas fa-coins text-xl"></i>
       </div>
       <h3 class="font-serif text-sm font-bold text-accent">一生財富白皮書</h3>
       <p class="text-[10px] text-accent/50 mt-1">財庫分析 暴富指南</p>
-    </div>
+    </button>
   </div>
 </section>
 
@@ -249,8 +260,8 @@
         <i class="fas fa-book-open text-wood"></i> 每日命理小貼士
       </h2>
       <div class="flex items-center gap-3">
-        <button onclick="copyTip()" class="text-xs text-accent/50 hover:text-accent transition-colors"><i class="fas fa-copy mr-1"></i>複製分享</button>
-        <button onclick="refreshTip(true)" class="text-xs text-accent/50 hover:text-accent transition-colors"><i class="fas fa-sync-alt mr-1"></i>換一個</button>
+        <button type="button" onclick="copyTip()" class="text-xs text-accent/50 hover:text-accent transition-colors"><i class="fas fa-copy mr-1"></i>複製分享</button>
+        <button type="button" onclick="refreshTip(true)" class="text-xs text-accent/50 hover:text-accent transition-colors"><i class="fas fa-sync-alt mr-1"></i>換一個</button>
       </div>
     </div>
     <div id="tipContent" class="text-sm text-accent/80 leading-relaxed bg-black/20 p-4 rounded-lg border-l-2 border-accent">
@@ -440,10 +451,10 @@
       <!-- 日曆控件 -->
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
-          <button id="calPrev" class="px-3 py-1.5 rounded bg-white/5 hover:bg-white/10 text-accent/80 transition-colors text-xs border border-white/10"><i class="fas fa-chevron-left mr-1"></i>上月</button>
+          <button type="button" id="calPrev" class="px-3 py-1.5 rounded bg-white/5 hover:bg-white/10 text-accent/80 transition-colors text-xs border border-white/10"><i class="fas fa-chevron-left mr-1"></i>上月</button>
           <span id="calMonthLabel" class="font-serif text-lg font-600 text-white min-w-[60px] text-center"></span>
-          <button id="calNext" class="px-3 py-1.5 rounded bg-white/5 hover:bg-white/10 text-accent/80 transition-colors text-xs border border-white/10">下月<i class="fas fa-chevron-right ml-1"></i></button>
-          <button id="calBackToday" class="ml-2 px-3 py-1.5 rounded bg-accent/10 hover:bg-accent/20 text-accent transition-colors text-xs border border-accent/20"><i class="fas fa-calendar-day mr-1"></i>回到今天</button>
+          <button type="button" id="calNext" class="px-3 py-1.5 rounded bg-white/5 hover:bg-white/10 text-accent/80 transition-colors text-xs border border-white/10">下月<i class="fas fa-chevron-right ml-1"></i></button>
+          <button type="button" id="calBackToday" class="ml-2 px-3 py-1.5 rounded bg-accent/10 hover:bg-accent/20 text-accent transition-colors text-xs border border-accent/20"><i class="fas fa-calendar-day mr-1"></i>回到今天</button>
         </div>
         <div class="flex items-center gap-4 text-xs">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full" style="background:var(--wood)"></span>吉</span>
@@ -537,12 +548,12 @@
 <div id="modalContainer" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/60 backdrop-blur-sm">
   <!-- 登錄/註冊框 -->
   <div id="authModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#151b28]">
-    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
+    <button type="button" onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-6 text-center" id="authTitle">用戶登錄</h3>
     <div class="space-y-4">
       <input type="text" id="authUsername" class="input-field" placeholder="用戶名">
       <input type="password" id="authPassword" class="input-field" placeholder="密碼">
-      <button id="btnAuthSubmit" class="btn-primary w-full">登錄</button>
+      <button type="button" id="btnAuthSubmit" class="btn-primary w-full">登錄</button>
       <div class="text-center text-xs text-accent/60 mt-4">
         <span id="authToggleText">沒有賬號？</span> 
         <a href="#" id="btnAuthToggle" class="text-accent hover:underline">立即註冊</a>
@@ -552,7 +563,7 @@
 
   <!-- 用戶中心框 -->
   <div id="userModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#151b28]">
-    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
+    <button type="button" onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-6 text-center">用戶中心</h3>
     <div class="space-y-4 text-sm text-accent/80">
       <p>用戶名：<span id="uName" class="font-bold text-accent"></span></p>
@@ -562,24 +573,24 @@
         <p class="mb-2">您的專屬推廣鏈接：</p>
         <div class="flex gap-2">
           <input type="text" id="refLink" class="input-field text-xs py-2" readonly>
-          <button onclick="copyRef()" class="btn-primary py-2 px-4 text-xs whitespace-nowrap">複製</button>
+          <button type="button" onclick="copyRef()" class="btn-primary py-2 px-4 text-xs whitespace-nowrap">複製</button>
         </div>
         <p class="text-[10px] text-accent/50 mt-2">邀請好友體驗命盤分析，推廣分成將在正式收費後開放。</p>
       </div>
-      <button onclick="logout()" class="w-full py-2 border border-fire/50 text-fire rounded-lg mt-4 hover:bg-fire/10 transition-colors">退出登錄</button>
+      <button type="button" onclick="logout()" class="w-full py-2 border border-fire/50 text-fire rounded-lg mt-4 hover:bg-fire/10 transition-colors">退出登錄</button>
     </div>
   </div>
 
   <!-- 付費預留：推廣期暫不展示支付碼 -->
   <div id="payModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#151b28]">
-    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
+    <button type="button" onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">功能免費體驗中</h3>
     <p class="text-xs text-accent/60 text-center mb-6">推廣期暫不收費，所有命理功能均可直接使用。</p>
-    <button onclick="closeModals()" class="btn-primary w-full">開始體驗</button>
+    <button type="button" onclick="closeModals()" class="btn-primary w-full">開始體驗</button>
   </div>
 <!-- 大運流年彈窗 -->
   <div id="dayunModal" class="glass-card p-6 w-full max-w-2xl hidden relative mx-4 bg-[#151b28] max-h-[80vh] overflow-y-auto">
-    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent z-10"><i class="fas fa-times"></i></button>
+    <button type="button" onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent z-10"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">大運與流年測算</h3>
     <p class="text-xs text-accent/60 text-center mb-6">解析未來十年運勢起伏走向</p>
     <div id="dayunContent" class="space-y-4">
@@ -589,16 +600,16 @@
 
   <!-- 八字合婚彈窗 -->
   <div id="hehunModal" class="glass-card p-6 w-full max-w-md hidden relative mx-4 bg-[#151b28]">
-    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
+    <button type="button" onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">八字合婚</h3>
     <p class="text-xs text-accent/60 text-center mb-6">輸入對方信息，測算五行契合度</p>
     <div class="space-y-4">
       <div>
-        <label class="block text-xs text-accent/60 mb-2">對方出生日期</label>
+        <label for="hehunDate" class="block text-xs text-accent/60 mb-2">對方出生日期</label>
         <input type="date" id="hehunDate" class="input-field" value="1995-05-20">
       </div>
       <div>
-        <label class="block text-xs text-accent/60 mb-2">對方出生時辰</label>
+        <label for="hehunHour" class="block text-xs text-accent/60 mb-2">對方出生時辰</label>
         <select id="hehunHour" class="input-field">
           <option value="0">子時（23:00 - 01:00）</option>
           <option value="1">丑時（01:00 - 03:00）</option>
@@ -614,7 +625,7 @@
           <option value="11">亥時（21:00 - 23:00）</option>
         </select>
       </div>
-      <button onclick="calculateHehun()" class="btn-primary w-full"><i class="fas fa-heart mr-2"></i>開始合婚</button>
+      <button type="button" onclick="calculateHehun()" class="btn-primary w-full"><i class="fas fa-heart mr-2"></i>開始合婚</button>
     </div>
     <div id="hehunResult" class="mt-6 hidden border-t border-accent/20 pt-4">
     </div>
@@ -622,19 +633,19 @@
 
   <!-- 八字起名彈窗 -->
   <div id="qimingModal" class="glass-card p-6 w-full max-w-md hidden relative mx-4 bg-[#151b28]">
-    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
+    <button type="button" onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">八字起名</h3>
     <p class="text-xs text-accent/60 text-center mb-6">結合命局喜用神，推薦開運美名</p>
     <div class="space-y-4">
       <div>
-        <label class="block text-xs text-accent/60 mb-2">姓氏</label>
+        <label for="lastName" class="block text-xs text-accent/60 mb-2">姓氏</label>
         <input type="text" id="lastName" class="input-field" placeholder="例如：李">
       </div>
       <div>
-        <label class="block text-xs text-accent/60 mb-2">性別</label>
+        <label for="gender" class="block text-xs text-accent/60 mb-2">性別</label>
         <select id="gender" class="input-field"><option>男</option><option>女</option></select>
       </div>
-      <button onclick="generateNames()" class="btn-primary w-full"><i class="fas fa-magic mr-2"></i>智能起名</button>
+      <button type="button" onclick="generateNames()" class="btn-primary w-full"><i class="fas fa-magic mr-2"></i>智能起名</button>
     </div>
     <div id="qimingResult" class="mt-6 hidden border-t border-accent/20 pt-4">
       <p class="text-xs text-accent/70 mb-3">命局喜 <span id="qimingXiYongText" class="font-bold"></span>，推薦以下名字：</p>
@@ -668,7 +679,7 @@
   
   <!-- 抽籤彈窗 -->
   <div id="chouqianModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#151b28] flex flex-col items-center">
-    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
+    <button type="button" onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">今日專屬靈籤</h3>
     <p class="text-xs text-accent/60 text-center mb-6">心誠則靈，結合八字推演今日運勢</p>
     
@@ -697,7 +708,7 @@
 
   <!-- 賽博擲筊彈窗 -->
   <div id="zhijiaoModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#151b28] flex flex-col items-center">
-    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
+    <button type="button" onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-[#c13a3a] mb-2 text-center">賽博擲筊</h3>
     <p class="text-xs text-accent/60 text-center mb-6">遇事不決，可問玄學。在心中默唸你的問題，點擊擲筊</p>
     
@@ -715,23 +726,23 @@
       </div>
     </div>
 
-    <button onclick="tossZhijiao()" class="w-full py-3 bg-[#c13a3a] text-white rounded-xl font-bold hover:bg-[#a02c2c] transition-colors mb-4" id="btnToss"><i class="fas fa-hand-sparkles mr-2"></i>誠心擲筊</button>
+    <button type="button" onclick="tossZhijiao()" class="w-full py-3 bg-[#c13a3a] text-white rounded-xl font-bold hover:bg-[#a02c2c] transition-colors mb-4" id="btnToss"><i class="fas fa-hand-sparkles mr-2"></i>誠心擲筊</button>
 
     <div id="zhijiaoResult" class="hidden w-full text-center">
       <div class="font-serif text-3xl font-bold mb-2" id="zjTitle"></div>
       <div class="text-sm text-accent/80 mb-4" id="zjDesc"></div>
-      <button onclick="resetZhijiao()" class="text-xs text-accent/50 hover:text-accent underline">重新擲筊</button>
+      <button type="button" onclick="resetZhijiao()" class="text-xs text-accent/50 hover:text-accent underline">重新擲筊</button>
     </div>
   </div>
 
   <!-- 幸運數字彈窗 -->
   <div id="luckynumModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#151b28] flex flex-col items-center">
-    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
+    <button type="button" onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">今日財富密碼</h3>
     <p class="text-xs text-accent/60 text-center mb-6">結合八字喜用神與流日干支生成</p>
     
     <div id="numGenerator" class="w-full">
-      <button onclick="generateLuckyNum()" class="btn-primary w-full mb-6" id="btnGenNum"><i class="fas fa-dice mr-2"></i>點擊生成</button>
+      <button type="button" onclick="generateLuckyNum()" class="btn-primary w-full mb-6" id="btnGenNum"><i class="fas fa-dice mr-2"></i>點擊生成</button>
     </div>
 
     <div id="numResult" class="hidden w-full text-center">
@@ -742,11 +753,11 @@
         <i class="fas fa-info-circle mr-1 text-accent/50"></i>
         此號碼爲您的八字五行喜忌（<span id="numXiYong"></span>）在今日的時空能量投影，可用於日常參考、座位選擇或趣味娛樂。
       </div>
-      <button onclick="generateLuckyNum()" class="text-xs text-accent/50 hover:text-accent underline">重新生成一組</button>
+      <button type="button" onclick="generateLuckyNum()" class="text-xs text-accent/50 hover:text-accent underline">重新生成一組</button>
     </div>
   </div>
   <div id="posterModal" class="glass-card p-6 w-full max-w-sm hidden relative mx-4 bg-[#151b28] flex flex-col items-center">
-    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
+    <button type="button" onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-xl text-accent mb-4">長按保存圖片發朋友圈</h3>
     <div id="posterResult" class="w-full rounded-lg overflow-hidden shadow-2xl shadow-accent/20"></div>
     <p class="text-xs text-accent/50 mt-4 text-center">已包含您的專屬推廣碼<br>好友掃碼即可免費體驗命盤測算</p>
@@ -754,7 +765,7 @@
 
   <!-- 大師親算彈窗 -->
   <div id="consultModal" class="glass-card p-8 w-full max-w-sm hidden relative mx-4 bg-[#151b28] flex flex-col items-center">
-    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
+    <button type="button" onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">大師一對一親算</h3>
     <p class="text-xs text-accent/60 text-center mb-6">資深命理師爲您深度答疑解惑</p>
     
@@ -780,7 +791,7 @@
 
   <!-- AI 深度報告彈窗 -->
   <div id="aiReportModal" class="glass-card p-8 w-full max-w-lg hidden relative mx-4 bg-[#151b28] flex flex-col items-center">
-    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent z-10"><i class="fas fa-times"></i></button>
+    <button type="button" onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent z-10"><i class="fas fa-times"></i></button>
     <div class="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mb-4 relative">
       <div class="absolute inset-0 rounded-full border border-accent animate-ping opacity-50"></div>
       <i class="fas fa-robot text-3xl text-accent"></i>
@@ -802,7 +813,7 @@
         <div class="text-2xl font-bold text-fire">免費開放</div>
       </div>
       <p class="text-[10px] text-accent/40 leading-relaxed mb-4">目前為規則引擎生成示範版，用於展示報告結構與解讀深度；正式 AI 報告接入後將提供更完整內容。</p>
-      <button onclick="generateAiReport()" class="btn-primary w-full animate-pulse" id="btnGenAi"><i class="fas fa-file-alt mr-2"></i>立即生成報告</button>
+      <button type="button" onclick="generateAiReport()" class="btn-primary w-full animate-pulse" id="btnGenAi"><i class="fas fa-file-alt mr-2"></i>立即生成報告</button>
     </div>
 
     <div id="aiReportGenerating" class="hidden w-full text-center py-8">
@@ -822,13 +833,13 @@
       <div class="text-sm text-accent/80 leading-relaxed space-y-4" id="aiReportContent">
         <!-- AI 報告內容 -->
       </div>
-      <button onclick="downloadAiReport()" class="btn-primary w-full mt-6"><i class="fas fa-download mr-2"></i>下載 PDF 版報告</button>
+      <button type="button" onclick="downloadAiReport()" class="btn-primary w-full mt-6"><i class="fas fa-download mr-2"></i>下載 PDF 版報告</button>
     </div>
   </div>
 
   <!-- 一生財富白皮書彈窗 -->
   <div id="wealthModal" class="glass-card p-6 w-full max-w-md hidden relative mx-4 bg-[#151b28]">
-    <button onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent z-10"><i class="fas fa-times"></i></button>
+    <button type="button" onclick="closeModals()" class="absolute top-4 right-4 text-accent/50 hover:text-accent z-10"><i class="fas fa-times"></i></button>
     <h3 class="font-serif text-2xl text-accent mb-2 text-center">一生財富白皮書</h3>
     <p class="text-xs text-accent/60 text-center mb-6">解析命局財庫，尋找屬於你的暴富密碼</p>
     
