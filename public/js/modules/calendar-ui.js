@@ -23,7 +23,7 @@ export function renderCalendar() {
     const now = new Date();
     document.getElementById('calTimeNow').textContent = now.toTimeString().split(' ')[0];
     const days = ['日', '一', '二', '三', '四', '五', '六'];
-    document.getElementById('calDateNow').textContent = \`\${now.getMonth()+1}月\${now.getDate()}日 星期\${days[now.getDay()]}\`;
+    document.getElementById('calDateNow').textContent = `${now.getMonth()+1}月${now.getDate()}日 星期${days[now.getDay()]}`;
   };
   updateTime();
   if(!state.timeInt) state.timeInt = setInterval(updateTime, 1000);
@@ -72,15 +72,15 @@ export function renderCalendar() {
     let todayStyle = isToday ? 'ring-2 ring-accent ring-offset-2 ring-offset-bg bg-accent/5' : '';
     
     let dayCell = document.createElement('div');
-    dayCell.className = \`cal-day \${fortune} \${todayStyle} cursor-pointer hover:-translate-y-1\`;
+    dayCell.className = `cal-day ${fortune} ${todayStyle} cursor-pointer hover:-translate-y-1`;
     let numColor = isToday ? 'color:var(--accent);font-weight:900;' : 'color:rgba(255,215,0,0.6)';
     
-    dayCell.innerHTML = \`
-      <div class="day-num" style="\${numColor}">\${d}\${isToday ? '<span class="ml-1 text-[10px] text-accent/70">今</span>' : ''}</div>
-      <div class="text-[10px] text-accent/40 mt-1">\${TG[dGan]}\${DZ[dZhi]}</div>
-      <div class="day-score">\${percentScore}</div>
-      <div class="day-shishen">\${shishen}</div>
-    \`;
+    dayCell.innerHTML = `
+      <div class="day-num" style="${numColor}">${d}${isToday ? '<span class="ml-1 text-[10px] text-accent/70">今</span>' : ''}</div>
+      <div class="text-[10px] text-accent/40 mt-1">${TG[dGan]}${DZ[dZhi]}</div>
+      <div class="day-score">${percentScore}</div>
+      <div class="day-shishen">${shishen}</div>
+    `;
     
     dayCell.onclick = () => {
       document.querySelectorAll('.cal-day').forEach(el => el.classList.remove('ring-1', 'ring-accent'));
@@ -98,10 +98,10 @@ export function renderCalendar() {
 }
 
 export function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentScore, fortune, dayFortune) {
-  document.getElementById('calSummaryDate').textContent = \`\${solar.getMonth()}月\${solar.getDay()}日\`;
+  document.getElementById('calSummaryDate').textContent = `${solar.getMonth()}月${solar.getDay()}日`;
   let lunarMonth = lunar.getMonthInChinese().replace('腊', '臘').replace('闰', '閏');
   let lunarDay = lunar.getDayInChinese().replace('廿', '廿');
-  document.getElementById('calSummaryLunar').textContent = \`農曆\${lunarMonth}月\${lunarDay}\`;
+  document.getElementById('calSummaryLunar').textContent = `農曆${lunarMonth}月${lunarDay}`;
   
   document.getElementById('calSummaryYear').textContent = bazi.getYear();
   document.getElementById('calSummaryMonth').textContent = bazi.getMonth();
@@ -118,7 +118,7 @@ export function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentSc
   ring.setAttribute('stroke', color);
   
   let fortuneText = fortune === 'ji' ? '大吉' : (fortune === 'xiong' ? '大凶' : '小吉');
-  document.getElementById('calSummaryFortune').innerHTML = \`<span class="w-2 h-2 rounded-full" style="background:\${color}"></span> <span style="color:\${color}">\${fortuneText}</span>\`;
+  document.getElementById('calSummaryFortune').innerHTML = `<span class="w-2 h-2 rounded-full" style="background:${color}"></span> <span style="color:${color}">${fortuneText}</span>`;
   
   document.getElementById('calSummaryShiShen').textContent = shishen;
 
@@ -136,13 +136,13 @@ export function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentSc
       solarTimeLabel = '真太陽時：';
     }
 
-    let analysisHtml = \`
+    let analysisHtml = `
       <div class="text-xs text-accent/70 mt-2 space-y-1">
-        <div>\${changShengLabel} \${details.changSheng} (\${details.changShengScore > 0 ? '+' : ''}\${(details.changShengScore * 20).toFixed(0)})</div>
-        <div>\${naYinLabel} \${translateNaYin(details.naYin)}</div>
-        <div>\${solarTimeLabel} \${details.trueSolarTime}</div>
+        <div>${changShengLabel} ${details.changSheng} (${details.changShengScore > 0 ? '+' : ''}${(details.changShengScore * 20).toFixed(0)})</div>
+        <div>${naYinLabel} ${translateNaYin(details.naYin)}</div>
+        <div>${solarTimeLabel} ${details.trueSolarTime}</div>
       </div>
-    \`;
+    `;
     document.getElementById('calSummaryAnalysis').innerHTML = analysisHtml;
   } else {
     document.getElementById('calSummaryAnalysis').innerHTML = '';
@@ -162,8 +162,8 @@ export function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentSc
     bads = pickItems(seed + 1, ACT_XIONG, 2);
   }
   
-  document.getElementById('calSummaryGood').innerHTML = goods.map(g => \`<div class="text-wood"><i class="fas fa-check-square mr-1"></i>\${g}</div>\`).join('');
-  document.getElementById('calSummaryBad').innerHTML = bads.map(b => \`<div class="text-fire"><i class="fas fa-exclamation-triangle mr-1"></i>\${b}</div>\`).join('');
+  document.getElementById('calSummaryGood').innerHTML = goods.map(g => `<div class="text-wood"><i class="fas fa-check-square mr-1"></i>${g}</div>`).join('');
+  document.getElementById('calSummaryBad').innerHTML = bads.map(b => `<div class="text-fire"><i class="fas fa-exclamation-triangle mr-1"></i>${b}</div>`).join('');
   
   let advice = "運勢平穩，按部就班即可。";
   if (fortune === 'ji') advice = "今日運勢極佳，適合推進重要事項，把握機會。";
@@ -184,11 +184,11 @@ export function updateSummary(solar, lunar, bazi, dGan, dZhi, shishen, percentSc
 
   if (jiShen || xiongSha) {
     if (window.currentLang === 'en') {
-      advice += (jiShen   ? \` | Auspicious Stars: \${jiShen}\` : '');
-      advice += (xiongSha ? \` | Inauspicious Stars: \${xiongSha}\` : '');
+      advice += (jiShen   ? ` | Auspicious Stars: ${jiShen}` : '');
+      advice += (xiongSha ? ` | Inauspicious Stars: ${xiongSha}` : '');
     } else {
-      advice += (jiShen   ? \`｜吉神：\${jiShen}\` : '');
-      advice += (xiongSha ? \`｜凶煞：\${xiongSha}\` : '');
+      advice += (jiShen   ? `｜吉神：${jiShen}` : '');
+      advice += (xiongSha ? `｜凶煞：${xiongSha}` : '');
     }
   }
   document.getElementById('calSummaryAdvice').textContent = advice;

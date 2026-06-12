@@ -211,7 +211,7 @@ export async function fetchCityLongitude(name) {
   const searchName = getCitySearchName(name);
   if (!searchName) return null;
   const params = new URLSearchParams({ name: searchName, count: '10', language: window.currentLang === 'en' ? 'en' : 'zh', format: 'json' });
-  const response = await fetch(\`https://geocoding-api.open-meteo.com/v1/search?\${params.toString()}\`);
+  const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${params.toString()}`);
   if (!response.ok) return null;
   const data = await response.json();
   const match = pickBestGeocodingResult(data.results);
@@ -249,6 +249,17 @@ export function initCityDatalist() {
   if (!list || typeof CITY_LONGITUDES === 'undefined') return;
   list.innerHTML = Object.keys(CITY_LONGITUDES)
     .sort((a, b) => a.localeCompare(b, 'zh-Hant'))
-    .map(city => \`<option value="\${city}"></option>\`)
+    .map(city => `<option value="${city}"></option>`)
     .join('');
+}
+
+export function fallbackCopy(text) {
+  const tmp = document.createElement('textarea');
+  tmp.value = text;
+  tmp.style.position = 'fixed';
+  tmp.style.opacity = '0';
+  document.body.appendChild(tmp);
+  tmp.select();
+  try { document.execCommand('copy'); } catch(_) {}
+  tmp.remove();
 }

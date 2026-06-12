@@ -36,7 +36,7 @@ export function showFeature(feature) {
     let yong = getPrimaryLuckyElement(state.baziResult.xiYong);
     if (Array.isArray(xi)) xi = xi[0];
     if (Array.isArray(yong)) yong = yong[0];
-    document.getElementById('numXiYong').textContent = \`喜\${xi}用\${yong}\`;
+    document.getElementById('numXiYong').textContent = `喜${xi}用${yong}`;
   } else if (feature === 'aiReport') {
     document.getElementById('aiReportIntro').classList.remove('hidden');
     document.getElementById('aiReportGenerating').classList.add('hidden');
@@ -84,12 +84,12 @@ export function renderDaYun() {
     const sentence = (hit) => {
       const label = PILLAR_LABELS[hit.pillarIdx] || '';
       switch (hit.type) {
-        case '六沖': return \`大運支沖\${label}，此運變動較大，宜穩守、忌激進。\`;
-        case '六合': return \`大運支與\${label}相合，人緣與合作機會增多。\`;
-        case '六害': return \`大運支害\${label}，留意口舌是非與小人。\`;
-        case '三合': return \`大運支與\${label}三合相助，順勢而為多得貴人。\`;
-        case '三會': return \`大運支與\${label}三會成方，同氣相求，動蕩中成勢。\`;
-        case '刑':   return \`大運支刑\${label}，宜防訴訟、健康、與親緣摩擦。\`;
+        case '六沖': return `大運支沖${label}，此運變動較大，宜穩守、忌激進。`;
+        case '六合': return `大運支與${label}相合，人緣與合作機會增多。`;
+        case '六害': return `大運支害${label}，留意口舌是非與小人。`;
+        case '三合': return `大運支與${label}三合相助，順勢而為多得貴人。`;
+        case '三會': return `大運支與${label}三會成方，同氣相求，動蕩中成勢。`;
+        case '刑':   return `大運支刑${label}，宜防訴訟、健康、與親緣摩擦。`;
         default:     return '';
       }
     };
@@ -100,17 +100,17 @@ export function renderDaYun() {
     const gap = (WEIGHT[first.type] || 0) - (WEIGHT[second.type] || 0);
     if (gap <= 2) {
       const secondSentence = sentence(second);
-      if (secondSentence) return \`\${firstSentence} 另\${secondSentence}\`;
+      if (secondSentence) return `${firstSentence} 另${secondSentence}`;
     }
     return firstSentence;
   };
 
-  let html = \`
+  let html = `
     <div class="mb-4 p-4 rounded-xl bg-accent/5 border border-accent/10">
       <div class="text-xs text-accent/50 mb-1">起運時間</div>
-      <div class="font-serif text-lg text-accent font-bold">\${yun.getStartYear()}年 \${yun.getStartMonth()}月 \${yun.getStartDay()}日</div>
-      <div class="text-[10px] text-accent/35 mt-1">按\${gender === 1 ? '男命' : '女命'}與年干陰陽推算大運順逆。</div>
-    </div>\`;
+      <div class="font-serif text-lg text-accent font-bold">${yun.getStartYear()}年 ${yun.getStartMonth()}月 ${yun.getStartDay()}日</div>
+      <div class="text-[10px] text-accent/35 mt-1">按${gender === 1 ? '男命' : '女命'}與年干陰陽推算大運順逆。</div>
+    </div>`;
 
   dayunList.slice(1, 9).forEach((dy) => {
     const startYear = dy.getStartYear();
@@ -142,20 +142,20 @@ export function renderDaYun() {
     const dyHitsVisible = dyHitsSorted.slice(0, BADGE_CAP);
     const dyHitsOverflow = Math.max(0, dyHitsSorted.length - BADGE_CAP);
     const badgesHTML = dyHitsVisible.length
-      ? \`<div class="mt-2 flex flex-wrap gap-1.5">\${dyHitsVisible.map(h =>
-          \`<span class="px-1.5 py-0.5 rounded text-[10px] \${TAG_STYLE[h.type] || 'bg-accent/10 text-accent/70 border border-accent/20'}>\${h.label}</span>\`
-        ).join('')}\${dyHitsOverflow
-          ? \`<span class="px-1.5 py-0.5 rounded text-[10px] bg-accent/10 text-accent/60 border border-accent/20">+\${dyHitsOverflow}</span>\`
-          : ''}</div>\`
+      ? `<div class="mt-2 flex flex-wrap gap-1.5">${dyHitsVisible.map(h =>
+          `<span class="px-1.5 py-0.5 rounded text-[10px] ${TAG_STYLE[h.type] || 'bg-accent/10 text-accent/70 border border-accent/20'}>${h.label}</span>`
+        ).join('')}${dyHitsOverflow
+          ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-accent/10 text-accent/60 border border-accent/20">+${dyHitsOverflow}</span>`
+          : ''}</div>`
       : '';
     const interactionDesc = summarizeInteractions(dyHitsSorted);
 
     const baseDesc = isXi
-      ? \`\${ganZhi}大運，干支五行與喜用神呼應，整體更利於順勢發展。\`
+      ? `${ganZhi}大運，干支五行與喜用神呼應，整體更利於順勢發展。`
       : isJi
-        ? \`\${ganZhi}大運，干支五行觸及忌神，宜保守布局，避免高風險決策。\`
-        : \`\${ganZhi}大運，五行氣場中性，適合穩扎穩打、逐步積累。\`;
-    const desc = baseDesc + (interactionDesc ? \` \${interactionDesc}\` : '');
+        ? `${ganZhi}大運，干支五行觸及忌神，宜保守布局，避免高風險決策。`
+        : `${ganZhi}大運，五行氣場中性，適合穩扎穩打、逐步積累。`;
+    const desc = baseDesc + (interactionDesc ? ` ${interactionDesc}` : '');
 
     const yearsHtml = liuNianList.slice(0, 10).map(ln => {
       const lnGz = ln.getGanZhi();
@@ -173,21 +173,21 @@ export function renderDaYun() {
       else if (yScore < 0) { yFortune = '慎'; yColor = 'text-fire'; yBg = 'bg-fire/20'; }
       const lnHits = detectBranchInteractions(yZhiChar, originZhiChars);
       const tooltip = lnHits.length ? lnHits.map(h => h.label).join('、') : '';
-      const titleAttr = tooltip ? \` title="\${tooltip}"\` : '';
+      const titleAttr = tooltip ? ` title="${tooltip}"` : '';
       const hitDot = lnHits.length ? '<span class="inline-block w-1 h-1 rounded-full bg-accent ml-1 align-middle"></span>' : '';
-      return \`<div class="\${yBg} p-1 rounded \${yColor}"\${titleAttr}>\${ln.getYear()}<br>\${lnGz}<br>\${yFortune}\${hitDot}</div>\`;
+      return `<div class="${yBg} p-1 rounded ${yColor}"${titleAttr}>${ln.getYear()}<br>${lnGz}<br>${yFortune}${hitDot}</div>`;
     }).join('');
 
-    html += \`
-      <div class="p-4 border \${borderColor} \${bgColor} rounded-lg">
-        <h4 class="font-bold \${textColor} text-sm mb-2">
-          <i class="fas fa-\${isCurrent ? 'arrow-up' : (isFuture ? 'arrow-right' : 'history')} mr-2"></i>
-          \${dy.getStartAge()}歲起 · \${startYear} - \${endYear} (\${ganZhi}大運)\${tag}
+    html += `
+      <div class="p-4 border ${borderColor} ${bgColor} rounded-lg">
+        <h4 class="font-bold ${textColor} text-sm mb-2">
+          <i class="fas fa-${isCurrent ? 'arrow-up' : (isFuture ? 'arrow-right' : 'history')} mr-2"></i>
+          ${dy.getStartAge()}歲起 · ${startYear} - ${endYear} (${ganZhi}大運)${tag}
         </h4>
-        \${badgesHTML}
-        <p class="text-xs text-accent/70 leading-relaxed mt-2">\${desc}</p>
-        <div class="mt-3 grid grid-cols-5 gap-2 text-center text-[10px]">\${yearsHtml}</div>
-      </div>\`;
+        ${badgesHTML}
+        <p class="text-xs text-accent/70 leading-relaxed mt-2">${desc}</p>
+        <div class="mt-3 grid grid-cols-5 gap-2 text-center text-[10px]">${yearsHtml}</div>
+      </div>`;
   });
 
   container.innerHTML = html || '<p class="text-center text-accent/50 text-sm">請先進行排盤分析</p>';
@@ -231,9 +231,9 @@ export function renderWealth() {
 
   let kuHtml = '';
   if (myKu.length > 0) {
-    kuHtml = \`您的命局自帶財庫：<span class="font-bold text-earth">\${myKu.join('、')}</span>，擅長守財，晚年易有豐厚積累。\`;
+    kuHtml = `您的命局自帶財庫：<span class="font-bold text-earth">${myKu.join('、')}</span>，擅長守財，晚年易有豐厚積累。`;
   } else {
-    kuHtml = \`您的命局暫無明現財庫，建議養成儲蓄習慣，或通過購置固定資產來守住財富。\`;
+    kuHtml = `您的命局暫無明現財庫，建議養成儲蓄習慣，或通過購置固定資產來守住財富。`;
   }
 
   let advice = '';
@@ -243,37 +243,37 @@ export function renderWealth() {
   if (wealthWX === '火') advice = '適合科技、互聯網、電力、美業等行業。投資眼光獨到，適合新興領域。';
   if (wealthWX === '土') advice = '適合房地產、農業、建築、礦產等實體行業。投資以固定資產爲佳。';
 
-  let html = \`
+  let html = `
     <div class="text-center mb-6">
       <div class="inline-block relative">
         <svg width="120" height="120" viewBox="0 0 120 120" class="transform -rotate-90">
           <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="8"></circle>
-          <circle cx="60" cy="60" r="50" fill="none" stroke="var(--fire)" stroke-width="8" stroke-dasharray="\${score * 3.14} 400"></circle>
+          <circle cx="60" cy="60" r="50" fill="none" stroke="var(--fire)" stroke-width="8" stroke-dasharray="${score * 3.14} 400"></circle>
         </svg>
         <div class="absolute inset-0 flex flex-col items-center justify-center">
-          <span class="text-3xl font-bold \${levelColor}">\${score}</span>
+          <span class="text-3xl font-bold ${levelColor}">${score}</span>
           <span class="text-[10px] text-accent/50">財富指數</span>
         </div>
       </div>
-      <div class="mt-2 text-sm font-bold \${levelColor}">\${levelText}</div>
+      <div class="mt-2 text-sm font-bold ${levelColor}">${levelText}</div>
     </div>
 
     <div class="bg-black/20 p-4 rounded-xl mb-4 border border-accent/10">
       <h4 class="text-accent text-sm font-bold mb-2"><i class="fas fa-search-dollar mr-2"></i>財星解析</h4>
-      <p class="text-xs text-accent/80 leading-relaxed mb-2">您的財星五行爲：<span class="font-bold text-accent" style="color:\${WX_COLORS[wealthWX]}">\${wealthWX}</span>。命局中財星數量為 \${Math.round(wealthCount)}。</p>
-      <p class="text-xs text-accent/80 leading-relaxed">\${state.baziResult.isStrong ? '您屬於「身強」能擔財，只要努力打拼，多能獲得豐厚回報。' : '您屬於「身弱」，求財不宜貪大求快，適合團隊合作或借力打力。'}</p>
+      <p class="text-xs text-accent/80 leading-relaxed mb-2">您的財星五行爲：<span class="font-bold text-accent" style="color:${WX_COLORS[wealthWX]}">${wealthWX}</span>。命局中財星數量為 ${Math.round(wealthCount)}。</p>
+      <p class="text-xs text-accent/80 leading-relaxed">${state.baziResult.isStrong ? '您屬於「身強」能擔財，只要努力打拼，多能獲得豐厚回報。' : '您屬於「身弱」，求財不宜貪大求快，適合團隊合作或借力打力。'}</p>
     </div>
 
     <div class="bg-black/20 p-4 rounded-xl mb-4 border border-accent/10">
       <h4 class="text-accent text-sm font-bold mb-2"><i class="fas fa-box-open mr-2"></i>財庫分析</h4>
-      <p class="text-xs text-accent/80 leading-relaxed">\${kuHtml}</p>
+      <p class="text-xs text-accent/80 leading-relaxed">${kuHtml}</p>
     </div>
 
     <div class="bg-black/20 p-4 rounded-xl border border-accent/10">
       <h4 class="text-accent text-sm font-bold mb-2"><i class="fas fa-chart-line mr-2"></i>求財方向</h4>
-      <p class="text-xs text-accent/80 leading-relaxed">\${advice}</p>
+      <p class="text-xs text-accent/80 leading-relaxed">${advice}</p>
     </div>
-  \`;
+  `;
 
   container.innerHTML = html;
 }
@@ -336,51 +336,51 @@ export function renderAiReportContent() {
   let html = '';
 
   if (window.currentLang === 'en') {
-    html = \`
+    html = `
       <h4 class="text-lg font-serif text-accent font-bold mb-4 border-b border-accent/20 pb-2">1. Overall Chart Summary</h4>
-      <p>Your Day Master is \${dWX}, born in \${DZ[state.baziResult.monthZhi]} Month. The overall chart belongs to a \${isS ? 'Strong' : 'Weak'} Day Master pattern. The key characteristic of this destiny lies in its inner resilience and potential. \${isS ? 'You naturally possess strong stress resistance and independent spirit, suitable for pioneering work.' : 'You excel at leveraging resources and have a delicate mindset, suitable for playing a core coordinating role in teams.'}</p>
+      <p>Your Day Master is ${dWX}, born in ${DZ[state.baziResult.monthZhi]} Month. The overall chart belongs to a ${isS ? 'Strong' : 'Weak'} Day Master pattern. The key characteristic of this destiny lies in its inner resilience and potential. ${isS ? 'You naturally possess strong stress resistance and independent spirit, suitable for pioneering work.' : 'You excel at leveraging resources and have a delicate mindset, suitable for playing a core coordinating role in teams.'}</p>
 
       <h4 class="text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2">2. Wealth and Career Analysis</h4>
-      <p>From the wealth vault and fortune cycle trends, your wealth accumulation belongs to a “\${state.baziResult.wxCount['金'] > 1 ? 'Breakthrough' : 'Steady'}” pattern. In the next 3-5 years, you will experience a significant career advancement period. When handling finances, seek professional advice and avoid following trends blindly.</p>
-      <p class="mt-2"><strong>Career Direction:</strong> Your favorable element is \${luckyWX}, making you highly suitable for related industries. In the workplace, you will easily encounter benefactor support, but beware of jealousy from difficult people.</p>
+      <p>From the wealth vault and fortune cycle trends, your wealth accumulation belongs to a “${state.baziResult.wxCount['金'] > 1 ? 'Breakthrough' : 'Steady'}” pattern. In the next 3-5 years, you will experience a significant career advancement period. When handling finances, seek professional advice and avoid following trends blindly.</p>
+      <p class="mt-2"><strong>Career Direction:</strong> Your favorable element is ${luckyWX}, making you highly suitable for related industries. In the workplace, you will easily encounter benefactor support, but beware of jealousy from difficult people.</p>
 
       <h4 class="text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2">3. Relationships and Marriage</h4>
-      <p>Your approach to relationships is relatively \${isS ? 'active and assertive' : 'passive and delicate'}. The chart shows that your true love appears in the \${Math.random() > 0.5 ? 'East or Southeast' : 'West or Northwest'}. In marriage, pay attention to communication styles to avoid unnecessary conflicts due to stubbornness.</p>
+      <p>Your approach to relationships is relatively ${isS ? 'active and assertive' : 'passive and delicate'}. The chart shows that your true love appears in the ${Math.random() > 0.5 ? 'East or Southeast' : 'West or Northwest'}. In marriage, pay attention to communication styles to avoid unnecessary conflicts due to stubbornness.</p>
 
       <h4 class="text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2">4. Personalized Improvement Guide</h4>
       <ul class="list-disc pl-5 space-y-2">
-        <li><strong>Lucky Colors:</strong> Wear more clothing in \${LUCKY_DATA[luckyWX].colors.join(', ')} colors.</li>
-        <li><strong>Direction Choice:</strong> Your bed head or desk should face \${LUCKY_DATA[luckyWX].dir}.</li>
-        <li><strong>Daily Suggestion:</strong> Maintain regular sleep schedule and wear accessories like \${DRESS_COLORS[luckyWX].acc[0]} to enhance your energy field.</li>
+        <li><strong>Lucky Colors:</strong> Wear more clothing in ${LUCKY_DATA[luckyWX].colors.join(', ')} colors.</li>
+        <li><strong>Direction Choice:</strong> Your bed head or desk should face ${LUCKY_DATA[luckyWX].dir}.</li>
+        <li><strong>Daily Suggestion:</strong> Maintain regular sleep schedule and wear accessories like ${DRESS_COLORS[luckyWX].acc[0]} to enhance your energy field.</li>
       </ul>
 
       <div class="mt-6 p-4 bg-accent/10 rounded-lg text-xs text-accent/60">
         <i class="fas fa-gift mr-2"></i> Full demo report is free during the promotion period.
       </div>
-    \`;
+    `;
   } else {
-    html = \`
+    html = `
       <h4 class="text-lg font-serif text-accent font-bold mb-4 border-b border-accent/20 pb-2">一、 命局總評</h4>
-      <p>您的日主為\${dWX}，生於\${DZ[state.baziResult.monthZhi]}月。整體命局屬於\${isS ? '身強' : '身弱'}之格。此命格最大的特點在於其內在的韌性與潛力。\${isS ? '您天生具備較強的抗壓能力與獨立精神，適合開創性的工作。' : '您善於借力打力，心思細膩，適合在團隊中發揮核心協調作用。'}</p>
+      <p>您的日主為${dWX}，生於${DZ[state.baziResult.monthZhi]}月。整體命局屬於${isS ? '身強' : '身弱'}之格。此命格最大的特點在於其內在的韌性與潛力。${isS ? '您天生具備較強的抗壓能力與獨立精神，適合開創性的工作。' : '您善於借力打力，心思細膩，適合在團隊中發揮核心協調作用。'}</p>
 
       <h4 class="text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2">二、 財運與事業剖析</h4>
-      <p>從財庫與大運走勢來看，您的財富積累屬於”\${state.baziResult.wxCount['金'] > 1 ? '爆發型' : '穩健型'}”。在未來的3-5年內，將會迎來一波較為明顯的事業上升期。建議在處理財務時，多聽取專業人士意見，避免盲目跟風。</p>
-      <p class="mt-2"><strong>事業方向建議：</strong> 您的喜用神為 \${luckyWX}，非常適合從事與之相關的行業。在職場中，您容易遇到貴人提攜，但需注意防範小人嫉妒。</p>
+      <p>從財庫與大運走勢來看，您的財富積累屬於”${state.baziResult.wxCount['金'] > 1 ? '爆發型' : '穩健型'}”。在未來的3-5年內，將會迎來一波較為明顯的事業上升期。建議在處理財務時，多聽取專業人士意見，避免盲目跟風。</p>
+      <p class="mt-2"><strong>事業方向建議：</strong> 您的喜用神為 ${luckyWX}，非常適合從事與之相關的行業。在職場中，您容易遇到貴人提攜，但需注意防範小人嫉妒。</p>
 
       <h4 class="text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2">三、 婚姻與感情歸宿</h4>
-      <p>您的感情觀較為\${isS ? '主動且強勢' : '被動且細膩'}。命盤顯示，您的正緣出現在\${Math.random() > 0.5 ? '東方或東南方' : '西方或西北方'}。婚姻生活中，需多注意溝通方式，避免因固執己見而產生不必要的摩擦。</p>
+      <p>您的感情觀較為${isS ? '主動且強勢' : '被動且細膩'}。命盤顯示，您的正緣出現在${Math.random() > 0.5 ? '東方或東南方' : '西方或西北方'}。婚姻生活中，需多注意溝通方式，避免因固執己見而產生不必要的摩擦。</p>
 
       <h4 class="text-lg font-serif text-accent font-bold mt-6 mb-4 border-b border-accent/20 pb-2">四、 專屬改運指導</h4>
       <ul class="list-disc pl-5 space-y-2">
-        <li><strong>色彩開運：</strong> 多穿戴 \${LUCKY_DATA[luckyWX].colors.join('、')} 色的服飾。</li>
-        <li><strong>方位選擇：</strong> 床頭或辦公桌宜朝向 \${LUCKY_DATA[luckyWX].dir}。</li>
-        <li><strong>日常建議：</strong> 保持規律作息，適當佩戴 \${DRESS_COLORS[luckyWX].acc[0]} 等飾品以增強自身氣場。</li>
+        <li><strong>色彩開運：</strong> 多穿戴 ${LUCKY_DATA[luckyWX].colors.join('、')} 色的服飾。</li>
+        <li><strong>方位選擇：</strong> 床頭或辦公桌宜朝向 ${LUCKY_DATA[luckyWX].dir}。</li>
+        <li><strong>日常建議：</strong> 保持規律作息，適當佩戴 ${DRESS_COLORS[luckyWX].acc[0]} 等飾品以增強自身氣場。</li>
       </ul>
 
       <div class="mt-6 p-4 bg-accent/10 rounded-lg text-xs text-accent/60">
         <i class="fas fa-gift mr-2"></i> 推廣期完整版示範報告已免費開放。
       </div>
-    \`;
+    `;
   }
 
   container.innerHTML = html;
@@ -419,8 +419,8 @@ export function tossZhijiao() {
     const rotZL = (Math.random() * 40 - 20) + 'deg';
     const rotZR = (Math.random() * 40 - 20) + 'deg';
     
-    jL.style.transform = \`rotateY(\${resL ? 180 : 0}deg) rotateZ(\${rotZL})\`;
-    jR.style.transform = \`rotateY(\${resR ? 180 : 0}deg) rotateZ(\${rotZR})\`;
+    jL.style.transform = `rotateY(${resL ? 180 : 0}deg) rotateZ(${rotZL})`;
+    jR.style.transform = `rotateY(${resR ? 180 : 0}deg) rotateZ(${rotZR})`;
     
     let title = '';
     let desc = '';
@@ -442,7 +442,7 @@ export function tossZhijiao() {
     
     const resDiv = document.getElementById('zhijiaoResult');
     document.getElementById('zjTitle').textContent = title;
-    document.getElementById('zjTitle').className = \`font-serif text-3xl font-bold mb-2 \${color}\`;
+    document.getElementById('zjTitle').className = `font-serif text-3xl font-bold mb-2 ${color}`;
     document.getElementById('zjDesc').textContent = desc;
     
     resDiv.classList.remove('hidden');
@@ -511,13 +511,13 @@ export function calculateHehun() {
   
   if (maxWx === myXi || maxWx === myYong) {
     score += 25;
-    desc = \`對方八字\${maxWx}旺，正好是您的喜用神，能爲您帶來極大的幫助與好運。\`;
+    desc = `對方八字${maxWx}旺，正好是您的喜用神，能爲您帶來極大的幫助與好運。`;
   } else if (state.baziResult.xiYong.ji.includes(maxWx)) {
     score -= 15;
-    desc = \`對方八字\${maxWx}旺，恰爲您的忌神，相處中可能會有一些摩擦，需要多包容。\`;
+    desc = `對方八字${maxWx}旺，恰爲您的忌神，相處中可能會有一些摩擦，需要多包容。`;
   } else {
     score += 10;
-    desc = \`雙方五行相對平衡，屬於平穩互助的組合。\`;
+    desc = `雙方五行相對平衡，屬於平穩互助的組合。`;
   }
   
   score += Math.floor(Math.random() * 10) - 5;
@@ -527,15 +527,15 @@ export function calculateHehun() {
   
   setTimeout(() => {
     const resDiv = document.getElementById('hehunResult');
-    resDiv.innerHTML = \`
+    resDiv.innerHTML = `
       <div class="flex justify-center items-center gap-4 mb-4">
-        <div class="text-center"><div class="w-10 h-10 rounded-full bg-black/20 border border-accent/30 text-accent flex items-center justify-center mx-auto mb-1">我</div><span class="text-xs text-accent/70">\${myMaxWx}旺</span></div>
+        <div class="text-center"><div class="w-10 h-10 rounded-full bg-black/20 border border-accent/30 text-accent flex items-center justify-center mx-auto mb-1">我</div><span class="text-xs text-accent/70">${myMaxWx}旺</span></div>
         <div class="text-2xl text-fire animate-pulse"><i class="fas fa-heart"></i></div>
-        <div class="text-center"><div class="w-10 h-10 rounded-full bg-black/20 border border-accent/30 text-accent flex items-center justify-center mx-auto mb-1">Ta</div><span class="text-xs text-accent/70">\${maxWx}旺</span></div>
+        <div class="text-center"><div class="w-10 h-10 rounded-full bg-black/20 border border-accent/30 text-accent flex items-center justify-center mx-auto mb-1">Ta</div><span class="text-xs text-accent/70">${maxWx}旺</span></div>
       </div>
-      <p class="text-center text-sm text-accent mb-2">契合度：<span class="font-bold text-xl text-fire">\${score}%</span> (\${level})</p>
-      <p class="text-xs text-accent/60 text-justify leading-relaxed">\${desc}</p>
-    \`;
+      <p class="text-center text-sm text-accent mb-2">契合度：<span class="font-bold text-xl text-fire">${score}%</span> (${level})</p>
+      <p class="text-xs text-accent/60 text-justify leading-relaxed">${desc}</p>
+    `;
     
     resDiv.classList.remove('hidden');
     btn.innerHTML = '<i class="fas fa-check mr-2"></i>測算完成';
@@ -585,10 +585,10 @@ export function generateNames() {
   let secondaryWx = NAME_DICT[yong] ? yong : '水';
 
   const xiYongText = document.getElementById('qimingXiYongText');
-  xiYongText.innerHTML = \`
-    <span style="color:\${WX_COLORS[primaryWx]}">\${primaryWx}</span> 
-    <span style="color:\${WX_COLORS[secondaryWx]}">\${secondaryWx}</span>
-  \`;
+  xiYongText.innerHTML = `
+    <span style="color:${WX_COLORS[primaryWx]}">${primaryWx}</span> 
+    <span style="color:${WX_COLORS[secondaryWx]}">${secondaryWx}</span>
+  `;
   
   const generateCard = (wx1, wx2) => {
     const list1 = NAME_DICT[wx1][gender] || NAME_DICT['木']['男'];
@@ -599,15 +599,15 @@ export function generateNames() {
     
     const borderColor = WX_COLORS[wx1];
     
-    return \`
-      <div class="p-3 bg-black/20 rounded border text-center" style="border-color:\${borderColor}40">
-        <div class="text-lg font-serif text-accent mb-1 tracking-widest">\${safeLn} \${char1} \${char2}</div>
+    return `
+      <div class="p-3 bg-black/20 rounded border text-center" style="border-color:${borderColor}40">
+        <div class="text-lg font-serif text-accent mb-1 tracking-widest">${safeLn} ${char1} ${char2}</div>
         <div class="text-[10px] flex justify-center gap-2">
-          <span style="color:\${WX_COLORS[wx1]}">\${wx1}</span>
-          <span style="color:\${WX_COLORS[wx2]}">\${wx2}</span>
+          <span style="color:${WX_COLORS[wx1]}">${wx1}</span>
+          <span style="color:${WX_COLORS[wx2]}">${wx2}</span>
         </div>
       </div>
-    \`;
+    `;
   };
 
   const cardsContainer = document.getElementById('qimingCards');
@@ -649,7 +649,7 @@ export function drawQian() {
     
     const tr = typeof window.translateText === 'function' ? window.translateText : t => t;
     document.getElementById('qianTitle').textContent = tr(result.t);
-    document.getElementById('qianTitle').className = \`font-serif text-3xl font-bold mb-2 \${result.t.includes('下') ? 'text-fire' : 'text-accent'}\`;
+    document.getElementById('qianTitle').className = `font-serif text-3xl font-bold mb-2 ${result.t.includes('下') ? 'text-fire' : 'text-accent'}`;
     document.getElementById('qianPoem').textContent = tr(result.p);
     const explainPrefix = tr('解析：');
     const explainContent = tr(result.e);
@@ -683,7 +683,7 @@ export function generateLuckyNum() {
     
     const container = document.getElementById('numBalls');
     container.innerHTML = nums.map(n => 
-      \`<div class="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-earth text-bg flex items-center justify-center font-bold text-xl shadow-[0_0_15px_rgba(255,215,0,0.5)] transform hover:scale-110 transition-transform cursor-default">\${n}</div>\`
+      `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-earth text-bg flex items-center justify-center font-bold text-xl shadow-[0_0_15px_rgba(255,215,0,0.5)] transform hover:scale-110 transition-transform cursor-default">${n}</div>`
     ).join('');
     
     btn.classList.add('hidden');
@@ -708,7 +708,7 @@ export async function generatePoster() {
     document.getElementById('posterDesc').textContent = document.getElementById('strengthText').textContent.substring(0, 80) + '...';
     
     const inviteCode = (typeof window.currentUser !== 'undefined' && window.currentUser) ? window.currentUser.invite_code : 'DEMO';
-    const refLink = encodeURIComponent(\`\${window.location.origin}/?ref=\${inviteCode}\`);
+    const refLink = encodeURIComponent(`${window.location.origin}/?ref=${inviteCode}`);
     
     const qrCanvas = document.createElement('canvas');
     const qrSize = 150;

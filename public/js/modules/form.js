@@ -150,12 +150,12 @@ export function initParticles() {
     let left = Math.random() * 100;
     let delay = Math.random() * 20;
     let duration = 15 + Math.random() * 20;
-    p.style.cssText = \`
-      width:\${size}px;height:\${size}px;
-      left:\${left}%;bottom:-10px;
-      animation:particleRise \${duration}s linear \${delay}s infinite;
-      opacity:\${0.15 + Math.random() * 0.3};
-    \`;
+    p.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${left}%;bottom:-10px;
+      animation:particleRise ${duration}s linear ${delay}s infinite;
+      opacity:${0.15 + Math.random() * 0.3};
+    `;
     container.appendChild(p);
   }
 }
@@ -189,7 +189,7 @@ export function refreshTip(forceRandom = false) {
   if (!tipEl) return;
   state.currentTipIndex = forceRandom ? Math.floor(Math.random() * baziTips.length) : getDailyTipIndex();
   const tip = baziTips[state.currentTipIndex];
-  tipEl.innerHTML = \`<div class="fade-in"><span class="text-xs text-accent/60">【<span>\${tip.tag}</span>】</span> <span>\${tip.text}</span></div>\`;
+  tipEl.innerHTML = `<div class="fade-in"><span class="text-xs text-accent/60">【<span>${tip.tag}</span>】</span> <span>${tip.text}</span></div>`;
 }
 
 export async function copyTip() {
@@ -198,7 +198,7 @@ export async function copyTip() {
   const tText = typeof window.translateText === 'function' ? window.translateText(tip.text) : tip.text;
   const tTitle = typeof window.translateText === 'function' ? window.translateText('每日命理小貼士') : '每日命理小貼士';
   const tSource = typeof window.translateText === 'function' ? window.translateText('來自星曜命理') : '來自星曜命理';
-  const shareText = \`【\${tTitle} | \${tTag}】\${tText} (\${tSource})\`;
+  const shareText = `【${tTitle} | ${tTag}】${tText} (${tSource})`;
   try {
     await navigator.clipboard.writeText(shareText);
     window.showToast(typeof window.translateText === 'function' ? window.translateText('已複製，可直接粘貼到朋友圈/社羣。') : '已複製，可直接粘貼到朋友圈/社羣。', 'success');
@@ -263,7 +263,7 @@ export function initModalSwipe() {
     const diff = currentY - startY;
     if (diff > 0) {
       const panel = container.querySelector('.modal-panel.active');
-      if (panel) panel.style.transform = \`translateY(\${diff}px)\`;
+      if (panel) panel.style.transform = `translateY(${diff}px)`;
     }
   }, { passive: true });
 
