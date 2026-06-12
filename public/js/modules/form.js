@@ -9,9 +9,11 @@ export function analyze() {
   const dateStr = document.getElementById('inputDate').value;
   const timeStr = document.getElementById('inputTime').value;
   const longitudeStr = document.getElementById('inputLongitude').value;
-  const gender = parseInt(document.getElementById('gender').value);
+  const gender = parseInt(document.getElementById('inputGender').value);
   const rules = {
-    dayChangeRule: document.getElementById('dayChangeRule').value
+    dayChangeRule: document.getElementById('inputDayChangeRule').value,
+    useTrueSolarTime: document.getElementById('inputUseTrueSolarTime').checked,
+    timezoneOffset: parseInt(document.getElementById('inputTimezone').value) || -480
   };
 
   const errEl = document.getElementById('errorMsg');
