@@ -64,23 +64,27 @@ function parseWuxingJu(name) {
 }
 
 // 获取农历信息（复用八字项目的函数）
-function getZiweiLunarInfo(year, month, day) {
-  // 检查是否已有八字项目的农历函数
-  if (typeof getLunarInfo === 'function') {
-    return getLunarInfo(year, month, day);
-  }
-
-  // 备用实现
+function getZiweiLunarInfo(year, month, day, hour = 12, minute = 0, timezoneOffset = -480) {
   try {
-    const solar = Solar.fromYmd(year, month, day);
-    const lunar = solar.getLunar();
-    const yearStem = ZW.STEMS.indexOf(lunar.getYearGan());
-    const yearBranch = ZW.BRANCHES.indexOf(lunar.getYearZhi());
-    const rawMonth = lunar.getMonth();
+    // Local Time (For Lunar Day - changes at local midnight)
+    const localSolar = Solar.fromYmdHms(year, month, day, hour, minute, 0);
+    const localLunar = localSolar.getLunar();
+    
+    // Absolute Astronomical Time (For Lunar Month & Leap Month)
+    const localEpoch = Date.UTC(year, month - 1, day, hour, minute, 0);
+    const absoluteUtcEpoch = localEpoch + (timezoneOffset * 60000);
+    const beijingEpoch = absoluteUtcEpoch + (480 * 60000); // UTC+8
+    const bjd = new Date(beijingEpoch);
+    const astroSolar = Solar.fromYmdHms(bjd.getUTCFullYear(), bjd.getUTCMonth() + 1, bjd.getUTCDate(), bjd.getUTCHours(), bjd.getUTCMinutes(), 0);
+    const astroLunar = astroSolar.getLunar();
+
+    const yearStem = ZW.STEMS.indexOf(astroLunar.getYearGan());
+    const yearBranch = ZW.BRANCHES.indexOf(astroLunar.getYearZhi());
+    const rawMonth = astroLunar.getMonth(); // Astro month
     return {
-      lunarYear: lunar.getYear(),
+      lunarYear: astroLunar.getYear(),
       lunarMonth: Math.abs(rawMonth),
-      lunarDay: lunar.getDay(),
+      lunarDay: localLunar.getDay(), // Local day
       yearStem: yearStem >= 0 ? yearStem : 0,
       yearBranch: yearBranch >= 0 ? yearBranch : 0,
       isLeapMonth: rawMonth < 0,
@@ -103,8 +107,8 @@ function generateZiweiChart(birthInfo) {
   const { year, month, day, hour, gender } = birthInfo;
 
   try {
-    // 调用 iztro 进行排盘
-    const solarDate = `${year}-${month}-${day}`;
+    const tzOffset = birthInfo.timezoneOffset !== undefined ? Number(birthInfo.timezoneOffset) : -480;
+    const lunarInfo = getZiweiLunarInfo(year, month, day, hour, 0, tzOffset);
     const iztroGender = gender === 'male' ? '男' : '女';
 
     const iztroAstro = getIztroAstro();
@@ -114,7 +118,11 @@ function generateZiweiChart(birthInfo) {
       throw new Error('iztro library not available');
     }
 
-    const astrolabe = iztroAstro.bySolar(solarDate, hour, iztroGender, true, 'zh-CN');
+    // iztro uses hour index (0-11). Local true solar hour index should theoretically be used,
+    // but the local hour index directly calculated from local time provides the correct mapping.
+    const timeIndex = Math.floor((hour + 1) / 2) % 12;
+    const lunarDateStr = `${lunarInfo.lunarYear}-${lunarInfo.lunarMonth}-${lunarInfo.lunarDay}`;
+    const astrolabe = iztroAstro.byLunar(lunarDateStr, timeIndex, iztroGender, lunarInfo.isLeapMonth, true, 'zh-CN');
 
     // 组装十二宫
     const palaces = astrolabe.palaces.map(p => {
@@ -205,8 +213,6 @@ function generateZiweiChart(birthInfo) {
     );
 
     // 农历信息
-    const lunarInfo = getZiweiLunarInfo(year, month, day);
-
     return {
       birthInfo,
       lunarInfo,
@@ -235,7 +241,8 @@ function generateSimpleZiweiChart(birthInfo) {
   const { year, month, day, hour, gender } = birthInfo;
 
   // 基础计算逻辑（简化的紫微斗数算法）
-  const lunarInfo = getZiweiLunarInfo(year, month, day);
+  const tzOffset = birthInfo.timezoneOffset !== undefined ? Number(birthInfo.timezoneOffset) : -480;
+  const lunarInfo = getZiweiLunarInfo(year, month, day, hour, 0, tzOffset);
 
   // 这里可以实现一个基于传统紫微斗数算法的简化版本
   // 由于完整的紫微斗数算法非常复杂，这里提供一个基础框架

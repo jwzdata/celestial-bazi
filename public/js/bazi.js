@@ -219,9 +219,10 @@ function parseTimeArg(timeArg) {
   return { hour: hourMap[idx] ?? 12, minute: 0, source: 'branch', hourIndex: idx };
 }
 
-export function getTrueSolarDate(year, month, day, hour, minute, longitude = 120) {
+export function getTrueSolarDate(year, month, day, hour, minute, longitude = 120, timezoneOffset = -480) {
   const lng = Number.isFinite(Number(longitude)) ? Number(longitude) : 120;
-  const longitudeOffset = (lng - 120) * 4;
+  const standardMeridian = (timezoneOffset / 60) * -15;
+  const longitudeOffset = (lng - standardMeridian) * 4;
   const equationOffset = getEquationOfTimeMinutes(year, month, day);
   const totalOffset = longitudeOffset + equationOffset;
   const utc = Date.UTC(year, month - 1, day, hour, minute, 0);
@@ -270,17 +271,29 @@ export function getPillarsUsingLunar(year, month, day, timeArg = '12:00', longit
   const parsed = parseTimeArg(timeArg);
   const useTrueSolarTime = options.useTrueSolarTime !== false;
   const dayChangeRule = options.dayChangeRule === '00:00' ? '00:00' : '23:00';
-  const trueSolar = getTrueSolarDate(year, month, day, parsed.hour, parsed.minute, longitude);
+  const tzOffset = options.timezoneOffset !== undefined ? Number(options.timezoneOffset) : -480;
+
+  const trueSolar = getTrueSolarDate(year, month, day, parsed.hour, parsed.minute, longitude, tzOffset);
   const d = trueSolar.date;
-  const appliedHourDate = useTrueSolarTime ? d : new Date(Date.UTC(year, month - 1, day, parsed.hour, parsed.minute, 0));
+  const localEpoch = Date.UTC(year, month - 1, day, parsed.hour, parsed.minute, 0);
+  const appliedHourDate = useTrueSolarTime ? d : new Date(localEpoch);
   const hourIndex = getHourIndexFromTime(appliedHourDate.getUTCHours(), appliedHourDate.getUTCMinutes());
 
-  // 未位移的北京時間——決定年/月/日柱
-  const rawSolar = Solar.fromYmdHms(year, month, day, parsed.hour, parsed.minute, 0);
-  const rawLunar = rawSolar.getLunar();
-  const rawBazi = rawLunar.getEightChar();
+  // 1. Local Time (For Day Pillar - changes at local midnight)
+  const localSolar = Solar.fromYmdHms(year, month, day, parsed.hour, parsed.minute, 0);
+  const localLunar = localSolar.getLunar();
+  const localBazi = localLunar.getEightChar();
 
-  // 真太陽時位移後的時間——只用來取時柱與判定時辰索引
+  // 2. Astronomical Time as Beijing Time (For Year & Month Pillars based on global Solar Terms)
+  // tzOffset is minutes from UTC (e.g. UTC+8 = -480, UTC-5 = 300)
+  const absoluteUtcEpoch = localEpoch + (tzOffset * 60000);
+  const beijingEpoch = absoluteUtcEpoch + (480 * 60000); // Shift to UTC+8
+  const bjd = new Date(beijingEpoch);
+  const astroSolar = Solar.fromYmdHms(bjd.getUTCFullYear(), bjd.getUTCMonth() + 1, bjd.getUTCDate(), bjd.getUTCHours(), bjd.getUTCMinutes(), 0);
+  const astroLunar = astroSolar.getLunar();
+  const astroBazi = astroLunar.getEightChar();
+
+  // 3. True Solar Time (For Hour Pillar)
   const trueSolarSolar = Solar.fromYmdHms(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), 0);
   const trueSolarLunar = trueSolarSolar.getLunar();
   const trueSolarBazi = trueSolarLunar.getEightChar();
@@ -291,9 +304,9 @@ export function getPillarsUsingLunar(year, month, day, timeArg = '12:00', longit
   const dayGanMethod = dayChangeRule === '00:00' ? 'getDayGanExact2' : 'getDayGanExact';
   const dayZhiMethod = dayChangeRule === '00:00' ? 'getDayZhiExact2' : 'getDayZhiExact';
 
-  const yp = { gan: ganIdx(call(rawLunar, 'getYearGanExact', rawBazi.getYearGan())), zhi: zhiIdx(call(rawLunar, 'getYearZhiExact', rawBazi.getYearZhi())) };
-  const mp = { gan: ganIdx(call(rawLunar, 'getMonthGanExact', rawBazi.getMonthGan())), zhi: zhiIdx(call(rawLunar, 'getMonthZhiExact', rawBazi.getMonthZhi())) };
-  const dp = { gan: ganIdx(call(rawLunar, dayGanMethod, rawBazi.getDayGan())), zhi: zhiIdx(call(rawLunar, dayZhiMethod, rawBazi.getDayZhi())) };
+  const yp = { gan: ganIdx(call(astroLunar, 'getYearGanExact', astroBazi.getYearGan())), zhi: zhiIdx(call(astroLunar, 'getYearZhiExact', astroBazi.getYearZhi())) };
+  const mp = { gan: ganIdx(call(astroLunar, 'getMonthGanExact', astroBazi.getMonthGan())), zhi: zhiIdx(call(astroLunar, 'getMonthZhiExact', astroBazi.getMonthZhi())) };
+  const dp = { gan: ganIdx(call(localLunar, dayGanMethod, localBazi.getDayGan())), zhi: zhiIdx(call(localLunar, dayZhiMethod, localBazi.getDayZhi())) };
   const hourZhiIdx = hourIndex;
   const hourGanIdx = getHourGanIdx(dp.gan, hourZhiIdx);
   const hp = { gan: hourGanIdx, zhi: hourZhiIdx };
@@ -305,11 +318,12 @@ export function getPillarsUsingLunar(year, month, day, timeArg = '12:00', longit
     trueSolarDateTime: formatDateTime(d),
     appliedHourTime: `${pad2(appliedHourDate.getUTCHours())}:${pad2(appliedHourDate.getUTCMinutes())}`,
     appliedHourDateTime: formatDateTime(appliedHourDate),
-    hourClockSource: useTrueSolarTime ? 'trueSolar' : 'beijing',
+    hourClockSource: useTrueSolarTime ? 'trueSolar' : 'localStandard',
     useTrueSolarTime,
     dayChangeRule,
     dayChangeRuleText: dayChangeRule === '00:00' ? '子正換日（00:00）' : '子初換日（23:00）',
     longitude: trueSolar.longitude,
+    timezoneOffset: tzOffset,
     longitudeOffset: trueSolar.longitudeOffset,
     equationOffset: trueSolar.equationOffset,
     totalOffset: trueSolar.totalOffset,
@@ -319,12 +333,16 @@ export function getPillarsUsingLunar(year, month, day, timeArg = '12:00', longit
     hourIndex,
     hourName: HOUR_BRANCH_NAMES[hourIndex],
     hourRange: HOUR_BRANCH_RANGES[hourIndex],
-    // 主要下游 API（getYun / getMingGong / getShenGong / getTaiYuan / getXunKong）
-    // 一律走原始北京時間這份 bazi，以保證節氣分界穩定
-    solar: rawSolar,
-    lunar: rawLunar,
-    eightChar: rawBazi,
-    // 只作為除錯/檢視用
+    // Downstream relies on Beijing astronomical time to match global solar terms
+    solar: astroSolar,
+    lunar: astroLunar,
+    eightChar: astroBazi,
+    localSolar,
+    localLunar,
+    localEightChar: localBazi,
+    astroSolar,
+    astroLunar,
+    astroEightChar: astroBazi,
     trueSolarSolar,
     trueSolarLunar,
     trueSolarEightChar: trueSolarBazi
@@ -363,9 +381,9 @@ export function getShiShen(dayGan, otherGan) {
  * @param {Object} userBazi.xiYong - 用戶喜用神信息
  * @param {number} longitude - 經度（用於真太陽時校正）
  */
-export function calculateDayFortune(year, month, day, userBazi, longitude = 120) {
+export function calculateDayFortune(year, month, day, userBazi, longitude = 120, timezoneOffset = -480) {
   // 使用真太陽時計算
-  const trueSolar = getTrueSolarDate(year, month, day, 12, 0, longitude);
+  const trueSolar = getTrueSolarDate(year, month, day, 12, 0, longitude, timezoneOffset);
   const d = trueSolar.date;
 
   // 獲取農曆和八字

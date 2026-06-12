@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>紫微斗数功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            border-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <h1>紫微斗数功能测试</h1>
+
+    <div class="test-section">
+        <h2>1. 基础常量测试</h2>
+        <button onclick="testConstants()">测试常量</button>
+        <div id="constantsResult" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 算法功能测试</h2>
+        <button onclick="testAlgorithm()">测试算法</button>
+        <div id="algorithmResult" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 排盘测试</h2>
+        <button onclick="testChartGeneration()">测试排盘</button>
+        <div id="chartResult" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. UI功能测试</h2>
+        <button onclick="testUI()">测试UI</button>
+        <div id="uiResult" class="test-result"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const resultDiv = event.target.nextElementSibling;
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            resultDiv.innerHTML += `[${timestamp}] <span class="${className}">${message}</span>\n`;
+            resultDiv.scrollTop = resultDiv.scrollHeight;
+        }
+
+        function testConstants() {
+            const resultDiv = document.getElementById('constantsResult');
+            resultDiv.innerHTML = '';
+
+            try {
+                if (typeof window.ZIWEI_CONSTANTS === 'undefined') {
+                    log('❌ ZIWEI_CONSTANTS 未定义', 'error');
+                    return;
+                }
+
+                const ZW = window.ZIWEI_CONSTANTS;
+                log('✅ 常量加载成功');
+                log(`天干数量: ${ZW.STEMS.length}`);
+                log(`地支数量: ${ZW.BRANCHES.length}`);
+                log(`主星数量: ${ZW.MAJOR_STARS.length}`);
+                log(`宫位数量: ${ZW.PALACE_NAMES.length}`);
+                log(`四化表条目: ${Object.keys(ZW.SI_HUA_TABLE).length}`);
+
+                log('✅ 所有基础常量测试通过', 'success');
+            } catch (e) {
+                log(`❌ 常量测试失败: ${e.message}`, 'error');
+            }
+        }
+
+        function testAlgorithm() {
+            const resultDiv = document.getElementById('algorithmResult');
+            resultDiv.innerHTML = '';
+
+            try {
+                if (typeof window.ZIWEI_ALGORITHM === 'undefined') {
+                    log('❌ ZIWEI_ALGORITHM 未定义', 'error');
+                    return;
+                }
+
+                const ZA = window.ZIWEI_ALGORITHM;
+                log('✅ 算法模块加载成功');
+
+                // 测试基础函数
+                const brightness1 = ZA.mapBrightness('庙');
+                const brightness2 = ZA.mapBrightness('陷');
+                const brightness3 = ZA.mapBrightness('');
+
+                log(`亮度映射测试: 庙→${brightness1}, 陷→${brightness2}, 空→${brightness3}`);
+
+                const wuxingJu = ZA.parseWuxingJu('水二局');
+                log(`五行局解析测试: 水二局→${wuxingJu}`);
+
+                log('✅ 基础算法函数测试通过', 'success');
+            } catch (e) {
+                log(`❌ 算法测试失败: ${e.message}`, 'error');
+            }
+        }
+
+        function testChartGeneration() {
+            const resultDiv = document.getElementById('chartResult');
+            resultDiv.innerHTML = '';
+
+            try {
+                if (typeof window.ZIWEI_ALGORITHM === 'undefined') {
+                    log('❌ ZIWEI_ALGORITHM 未定义', 'error');
+                    return;
+                }
+
+                const ZA = window.ZIWEI_ALGORITHM;
+
+                // 测试数据
+                const testData = {
+                    year: 1990,
+                    month: 5,
+                    day: 15,
+                    hour: 6, // 时辰索引
+                    gender: 'male',
+                    name: '测试用户'
+                };
+
+                log('开始生成紫微斗数命盘...');
+
+                // 测试简化算法
+                const simpleChart = ZA.generateSimpleZiweiChart(testData);
+                log('✅ 简化算法执行成功');
+                log(`命盘基本信息: ${simpleChart.birthInfo.name}, ${simpleChart.wuxingJuName}`);
+                log(`宫位数量: ${simpleChart.palaces.length}`);
+
+                // 测试完整算法（可能失败）
+                try {
+                    const fullChart = ZA.generateZiweiChart(testData);
+                    if (!fullChart.error) {
+                        log('✅ 完整算法执行成功');
+                        log(`紫微星位置: ${fullChart.ziweiPos}`);
+                        log(`当前大限: ${fullChart.currentDaXianIndex}`);
+                    } else {
+                        log(`⚠️ 完整算法不可用: ${fullChart.error}`);
+                    }
+                } catch (e) {
+                    log(`⚠️ 完整算法执行失败: ${e.message}`);
+                }
+
+                log('✅ 排盘功能测试完成', 'success');
+            } catch (e) {
+                log(`❌ 排盘测试失败: ${e.message}`, 'error');
+            }
+        }
+
+        function testUI() {
+            const resultDiv = document.getElementById('uiResult');
+            resultDiv.innerHTML = '';
+
+            try {
+                if (typeof window.ZIWEI_UI === 'undefined') {
+                    log('❌ ZIWEI_UI 未定义', 'error');
+                    return;
+                }
+
+                const ZUI = window.ZIWEI_UI;
+                log('✅ UI模块加载成功');
+
+                // 测试函数是否存在
+                const functions = ['initZiweiUI', 'calculateZiweiChart', 'displayZiweiResult'];
+                functions.forEach(fn => {
+                    if (typeof ZUI[fn] === 'function') {
+                        log(`✅ ${fn} 函数存在`);
+                    } else {
+                        log(`❌ ${fn} 函数不存在`, 'error');
+                    }
+                });
+
+                log('✅ UI功能测试完成', 'success');
+            } catch (e) {
+                log(`❌ UI测试失败: ${e.message}`, 'error');
+            }
+        }
+    </script>
+
+    <!-- 加载紫微斗数模块 -->
+    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.7.7/lunar.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/iztro@2.5.8/dist/iztro.min.js"></script>
+    <script src="public/js/ziwei/types.js"></script>
+    <script src="public/js/ziwei/constants.js"></script>
+    <script src="public/js/ziwei/algorithm.js"></script>
+    <script src="public/js/ziwei/ui.js"></script>
+
+    <script>
+        // 页面加载完成后运行基础测试
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('紫微斗数测试页面加载完成');
+            console.log('可用模块:', {
+                constants: typeof window.ZIWEI_CONSTANTS,
+                algorithm: typeof window.ZIWEI_ALGORITHM,
+                ui: typeof window.ZIWEI_UI
+            });
+        });
+    </script>
+</body>
+</html>

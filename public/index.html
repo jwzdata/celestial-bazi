@@ -115,11 +115,30 @@
           <datalist id="cityList"></datalist>
         </div>
       </div>
-      <div>
-        <label for="inputLongitude" class="block text-xs text-accent/60 mb-2 tracking-wider">出生地經度</label>
-        <input type="number" id="inputLongitude" class="input-field" value="121.4737" min="-180" max="180" step="0.0001" inputmode="decimal">
-        <p class="text-[10px] text-accent/35 mt-2 leading-relaxed">用於真太陽時校正：經度差 + 均時差可能改變時辰邊界，出生時間越接近交界越重要。</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="inputLongitude" class="block text-xs text-accent/60 mb-2 tracking-wider">出生地經度</label>
+          <input type="number" id="inputLongitude" class="input-field" value="121.4737" min="-180" max="180" step="0.0001" inputmode="decimal">
+        </div>
+        <div>
+          <label for="inputTimezone" class="block text-xs text-accent/60 mb-2 tracking-wider">出生地時區</label>
+          <select id="inputTimezone" class="input-field">
+            <option value="-480">UTC+08:00 中國/台灣</option>
+            <option value="-540">UTC+09:00 日本/韓國</option>
+            <option value="-600">UTC+10:00 悉尼/關島</option>
+            <option value="-420">UTC+07:00 曼谷/雅加達</option>
+            <option value="-330">UTC+05:30 印度</option>
+            <option value="-180">UTC+03:00 莫斯科/杜拜</option>
+            <option value="-60">UTC+01:00 巴黎/柏林</option>
+            <option value="0">UTC+00:00 倫敦</option>
+            <option value="300">UTC-05:00 紐約/美東</option>
+            <option value="360">UTC-06:00 芝加哥/美中</option>
+            <option value="420">UTC-07:00 丹佛/山區</option>
+            <option value="480">UTC-08:00 洛杉磯/美西</option>
+          </select>
+        </div>
       </div>
+      <p class="text-[10px] text-accent/35 mt-2 leading-relaxed">用於天文時間校正，確保海外出生地節氣與真太陽時的絕對準確性。</p>
       <div class="bg-black/20 border border-accent/10 rounded-xl p-4 space-y-3">
         <div class="flex items-center justify-between gap-3">
           <div>
