@@ -101,7 +101,202 @@ function getZiweiLunarInfo(year, month, day, hour = 12, minute = 0, timezoneOffs
 }
 
 // 主要的紫微斗数排盘函数
+
+// ==========================================
+// 专业级紫微斗数分析引擎 (Professional Analytics)
+// ==========================================
+
+// 1. 三方四正分析
+export function getSanFangSiZheng(palaces, targetBranchIndex) {
+  const self = palaces[targetBranchIndex];
+  const sanFang1 = palaces[(targetBranchIndex + 4) % 12];
+  const sanFang2 = palaces[(targetBranchIndex + 8) % 12];
+  const duiGong = palaces[(targetBranchIndex + 6) % 12];
+  
+  const allStars = [
+    ...self.stars, ...sanFang1.stars, ...sanFang2.stars, ...duiGong.stars
+  ];
+  
+  return {
+    self,
+    sanFang: [sanFang1, sanFang2],
+    duiGong,
+    allStars
+  };
+}
+
+// 2. 飞星四化分析 (宫干四化)
+export function computeFlyingSiHua(palaces, siHuaTable) {
+  const flights = [];
+  
+  palaces.forEach(fromPalace => {
+    const stem = fromPalace.stem;
+    const stemIndex = ZW.STEMS.indexOf(stem);
+    if (stemIndex === -1) return;
+    
+    const [luStar, quanStar, keStar, jiStar] = siHuaTable[stemIndex];
+    const siHuaMap = { '化禄': luStar, '化权': quanStar, '化科': keStar, '化忌': jiStar };
+    
+    for (const [siHuaType, starName] of Object.entries(siHuaMap)) {
+      if (!starName) continue;
+      
+      // 寻找该星曜所在的宫位
+      for (const toPalace of palaces) {
+        if (toPalace.stars.some(s => s.name === starName)) {
+          flights.push({
+            fromPalace: fromPalace.name,
+            toPalace: toPalace.name,
+            star: starName,
+            siHua: siHuaType
+          });
+          break;
+        }
+      }
+    }
+  });
+  
+  return flights;
+}
+
+// 3. 自化分析
+export function computeSelfSiHua(palaces, siHuaTable) {
+  palaces.forEach(palace => {
+    const stemIndex = ZW.STEMS.indexOf(palace.stem);
+    if (stemIndex === -1) return;
+    
+    const [luStar, quanStar, keStar, jiStar] = siHuaTable[stemIndex];
+    const siHuaMap = { '化禄': luStar, '化权': quanStar, '化科': keStar, '化忌': jiStar };
+    
+    palace.selfSihua = [];
+    for (const [siHuaType, starName] of Object.entries(siHuaMap)) {
+      if (!starName) continue;
+      if (palace.stars.some(s => s.name === starName)) {
+        palace.selfSihua.push({ star: starName, siHua: siHuaType });
+      }
+    }
+  });
+}
+
+// 4. 宫位六线分析
+export function analyzePalaceAxes(palaces) {
+  const findPalace = name => palaces.find(p => p.name === name);
+  const axes = [
+    { name: '命迁线', p1: findPalace('命宫'), p2: findPalace('迁移宫') },
+    { name: '夫官线', p1: findPalace('夫妻宫'), p2: findPalace('官禄宫') },
+    { name: '兄友线', p1: findPalace('兄弟宫'), p2: findPalace('交友宫') },
+    { name: '财福线', p1: findPalace('财帛宫'), p2: findPalace('福德宫') },
+    { name: '子田线', p1: findPalace('子女宫'), p2: findPalace('田宅宫') },
+    { name: '父疾线', p1: findPalace('父母宫'), p2: findPalace('疾厄宫') }
+  ];
+  
+  return axes.map(axis => {
+    if (!axis.p1 || !axis.p2) return axis;
+    return {
+      ...axis,
+      allStars: [...axis.p1.stars, ...axis.p2.stars]
+    };
+  });
+}
+
+// 5. 经典格局检测
+export function detectZiweiPatterns(palaces) {
+  const patterns = [];
+  const mingPalace = palaces.find(p => p.name === '命宫');
+  if (!mingPalace) return patterns;
+  
+  const mingIndex = ZW.BRANCHES.indexOf(mingPalace.branch);
+  const { sanFang, duiGong, allStars } = getSanFangSiZheng(palaces, mingIndex);
+  
+  const hasStar = (palace, starName) => palace.stars.some(s => s.name === starName);
+  const hasStarsInArray = (starsArray, starNames) => starNames.every(name => starsArray.some(s => s.name === name));
+  const hasShaJi = (palace) => palace.stars.some(s => ['擎羊','陀罗','火星','铃星','地空','地劫'].includes(s.name) || s.siHua === '忌');
+  
+  const mingShaJi = hasShaJi(mingPalace);
+
+  // 1. 紫府同宫
+  if (hasStar(mingPalace, '紫微') && hasStar(mingPalace, '天府')) {
+    patterns.push({ name: '紫府同宫格', level: 'auspicious', description: '紫微天府同守命宫，帝王与财库同处，主大富大贵。', broken: mingShaJi });
+  }
+  
+  // 2. 日月并明 / 日月反背
+  const taiYangPalace = palaces.find(p => hasStar(p, '太阳'));
+  const taiYinPalace = palaces.find(p => hasStar(p, '太阴'));
+  if (taiYangPalace && taiYinPalace) {
+    const sunBranch = taiYangPalace.branch;
+    const moonBranch = taiYinPalace.branch;
+    if (['巳','午'].includes(sunBranch) && ['亥','子'].includes(moonBranch)) {
+      patterns.push({ name: '日月并明格', level: 'auspicious', description: '太阳在巳午得地，太阴在亥子得地，日月交辉，主贵。', broken: false });
+    } else if (['亥','子'].includes(sunBranch) && ['巳','午'].includes(moonBranch)) {
+      patterns.push({ name: '日月反背格', level: 'inauspicious', description: '太阳落陷于夜，太阴落陷于昼，主辛劳波折。', broken: false });
+    }
+    // 明珠出海格: 太阳在卯, 太阴在亥
+    if (sunBranch === '卯' && moonBranch === '亥' && !mingPalace.stars.some(s => s.type === 'major')) {
+      patterns.push({ name: '明珠出海格', level: 'auspicious', description: '命无正曜，太阳在卯太阴在亥会照，主声名远播。', broken: mingShaJi });
+    }
+  }
+  
+  // 3. 机月同梁
+  if (hasStarsInArray(allStars, ['天机','太阴','天同','天梁'])) {
+    patterns.push({ name: '机月同梁格', level: 'auspicious', description: '三方四正会齐机月同梁，利于文职、公教、企划。', broken: mingShaJi });
+  }
+  
+  // 4. 杀破狼
+  if (hasStarsInArray(allStars, ['七杀','破军','贪狼'])) {
+    patterns.push({ name: '杀破狼格', level: 'neutral', description: '开创力极强，人生起伏大，主动荡与变化。', broken: false });
+  }
+  
+  // 5. 府相朝垣
+  if (hasStarsInArray([...sanFang[0].stars, ...sanFang[1].stars, ...duiGong.stars], ['天府','天相'])) {
+    patterns.push({ name: '府相朝垣格', level: 'auspicious', description: '天府天相在三方四正朝照命宫，主人际广阔，衣食无忧。', broken: false });
+  }
+  
+  // 6. 火贪/铃贪
+  const checkHuoLingTan = (palace) => {
+    if (!palace) return;
+    if (hasStar(palace, '贪狼') && hasStar(palace, '火星')) {
+      patterns.push({ name: '火贪格', level: 'auspicious', description: `火星贪狼同守${palace.name}，主突发，易得意外之财（爆发）。`, broken: hasShaJi(palace) && !hasStar(palace, '火星') });
+    }
+    if (hasStar(palace, '贪狼') && hasStar(palace, '铃星')) {
+      patterns.push({ name: '铃贪格', level: 'auspicious', description: `铃星贪狼同守${palace.name}，主突发，易掌权势（爆发）。`, broken: hasShaJi(palace) && !hasStar(palace, '铃星') });
+    }
+  };
+  checkHuoLingTan(mingPalace);
+  checkHuoLingTan(duiGong);
+  checkHuoLingTan(palaces.find(p => p.name === '财帛宫'));
+  checkHuoLingTan(palaces.find(p => p.name === '官禄宫'));
+  
+  // 7. 禄马交驰
+  if (hasStarsInArray(allStars, ['禄存','天马'])) {
+    patterns.push({ name: '禄马交驰格', level: 'auspicious', description: '禄存与天马会照，主在奔波变动中得财。', broken: false });
+  }
+  
+  // 8. 坐贵向贵
+  if (hasStar(mingPalace, '天魁') && hasStar(duiGong, '天钺') || hasStar(mingPalace, '天钺') && hasStar(duiGong, '天魁')) {
+    patterns.push({ name: '坐贵向贵格', level: 'auspicious', description: '天魁天钺分守命宫与迁移宫，主得贵人相助，逢凶化吉。', broken: mingShaJi });
+  }
+  
+  // 9. 阳梁昌禄
+  if (hasStarsInArray(allStars, ['太阳','天梁','文昌','禄存'])) {
+    patterns.push({ name: '阳梁昌禄格', level: 'auspicious', description: '主科甲考试极佳，利于学术、仕途。', broken: mingShaJi });
+  }
+  
+  // 10. 君臣庆会
+  if (hasStar(mingPalace, '紫微') && hasStarsInArray(allStars, ['左辅','右弼','天魁','天钺'])) {
+    patterns.push({ name: '君臣庆会格', level: 'auspicious', description: '紫微帝星得百官朝拱，主大富大贵，掌握极权。', broken: mingShaJi });
+  }
+  
+  // 11. 马头带箭
+  if (mingPalace.branch === '午' && hasStar(mingPalace, '擎羊') && (hasStar(mingPalace, '贪狼') || hasStar(mingPalace, '七杀'))) {
+    patterns.push({ name: '马头带箭格', level: 'neutral', description: '午宫擎羊遇贪狼或七杀，威镇边疆，武职荣显，但多辛劳。', broken: false });
+  }
+  
+  return patterns;
+}
+
+// ==========================================
+
 export function generateZiweiChart(birthInfo) {
+
   const { year, month, day, hour, gender } = birthInfo;
 
   try {

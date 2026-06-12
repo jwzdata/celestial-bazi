@@ -336,12 +336,26 @@ function displayZiweiChart(chart) {
         html += `<div class="ziwei-palace-borrowed">借自${palace.borrowedFromName}</div>`;
       }
     } else {
+      
       html += `<div class="ziwei-palace-stars">`;
       palace.stars.forEach(star => {
+        let brightnessStr = '';
+        if (star.type === 'major' && ZIWEI_UI_CONSTANTS.STAR_BRIGHTNESS && ZIWEI_UI_CONSTANTS.STAR_BRIGHTNESS[star.name]) {
+           const bList = ZIWEI_UI_CONSTANTS.STAR_BRIGHTNESS[star.name];
+           const b = bList[ZW.BRANCHES.indexOf(palace.branch)];
+           if (b) brightnessStr = `<span class="ziwei-brightness">${b}</span>`;
+        }
+        
+        let sihuaStr = star.siHua ? `<span class="ziwei-sihua ziwei-sihua-${star.siHua}">[${star.siHua}]</span>` : '';
         const starClass = `ziwei-star ziwei-star-${star.type}`;
-        html += `<span class="${starClass}">${star.name}</span>`;
+        html += `<span class="${starClass}">${star.name}${brightnessStr}${sihuaStr}</span>`;
       });
       html += `</div>`;
+      
+      if (palace.selfSihua && palace.selfSihua.length > 0) {
+        html += `<div class="ziwei-palace-self-sihua">自化: ${palace.selfSihua.map(s => s.siHua).join(',')}</div>`;
+      }
+
     }
 
     html += `</div>`;
@@ -351,13 +365,13 @@ function displayZiweiChart(chart) {
   chartEl.innerHTML = html;
 }
 
-// 显示格局分析（简化版）
+
+// 显示格局分析
 function displayPatterns(chart) {
   const patternsEl = document.getElementById('ziweiPatterns');
   if (!patternsEl) return;
 
-  // 简化的格局检测
-  const patterns = detectBasicPatterns(chart);
+  const patterns = chart.patterns || [];
 
   if (patterns.length === 0) {
     patternsEl.innerHTML = '<p class="ziwei-no-patterns">暂未识别到特殊格局</p>';
@@ -366,54 +380,38 @@ function displayPatterns(chart) {
 
   let html = '';
   patterns.forEach(pattern => {
-    const levelClass = `ziwei-pattern-${pattern.level}`;
+    const levelClass = pattern.level === 'auspicious' ? 'ziwei-pattern-good' : (pattern.level === 'inauspicious' ? 'ziwei-pattern-bad' : 'ziwei-pattern-neutral');
+    const brokenHtml = pattern.broken ? '<span class="ziwei-pattern-broken">（有破格）</span>' : '';
     html += `
       <div class="ziwei-pattern ${levelClass}">
-        <div class="ziwei-pattern-name">${pattern.name}</div>
+        <div class="ziwei-pattern-name">${pattern.name}${brokenHtml}</div>
         <div class="ziwei-pattern-description">${pattern.description}</div>
-        ${pattern.source ? `<div class="ziwei-pattern-source">出处：${pattern.source}</div>` : ''}
       </div>
     `;
   });
 
+  // 追加显示六线分析
+  if (chart.axes && chart.axes.length > 0) {
+    html += '<h4 class="ziwei-section-subtitle">宫位六线分析</h4><div class="ziwei-axes-container">';
+    chart.axes.forEach(axis => {
+      if (!axis.p1) return;
+      const stars1 = axis.p1.stars.map(s => s.name).join(' ');
+      const stars2 = axis.p2.stars.map(s => s.name).join(' ');
+      html += `
+        <div class="ziwei-axis-item">
+          <div class="ziwei-axis-name">${axis.name}</div>
+          <div class="ziwei-axis-desc">${axis.p1.name} [${stars1 || '空'}] ↔ ${axis.p2.name} [${stars2 || '空'}]</div>
+        </div>
+      `;
+    });
+    html += '</div>';
+  }
+
   patternsEl.innerHTML = html;
 }
 
-// 简化的格局检测
-function detectBasicPatterns(chart) {
-  const patterns = [];
 
-  // 查找紫微星系
-  const ziweiPalace = chart.palaces.find(p =>
-    p.stars.some(s => s.name === '紫微' && s.type === 'major')
-  );
 
-  if (ziweiPalace) {
-    // 紫微独坐
-    const majorStars = ziweiPalace.stars.filter(s => s.type === 'major');
-    if (majorStars.length === 1 && majorStars[0].name === '紫微') {
-      patterns.push({
-        name: '紫微独坐',
-        level: 'good',
-        description: '紫微星独坐命宫，具有领导才能，但需要辅佐之星配合',
-        source: '紫微斗数全书'
-      });
-    }
-  }
-
-  // 查找空宫情况
-  const emptyPalaces = chart.palaces.filter(p => p.isEmpty);
-  if (emptyPalaces.length > 6) {
-    patterns.push({
-      name: '空宫较多',
-      level: 'neutral',
-      description: '命盘中空宫较多，性格较为随和，适应能力强',
-      source: '倪海夏天纪'
-    });
-  }
-
-  return patterns;
-}
 
 // 显示大限信息
 function displayDaXian(chart) {

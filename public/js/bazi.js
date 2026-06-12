@@ -1,4 +1,4 @@
-import { WX_GAN, CANG_GAN, CG_WEIGHT, ELEMENT_CYCLE, WX_ZHI, DZ, TG, SHI_SHEN_MAP, CS_POWER, getChangSheng, TIAN_YI_GUI_REN, WEN_CHANG, YI_MA, TAO_HUA, HUA_GAI, JIANG_XING, LU_SHEN, YANG_REN, JIN_YU, XING_GROUPS, SAN_HE_GROUPS, SAN_HUI_GROUPS, LIU_CHONG, DZ_LIU_HE, LIU_HAI, HOUR_BRANCH_NAMES, HOUR_BRANCH_RANGES } from './data.js';
+import { WX_GAN, CANG_GAN, CG_WEIGHT, ELEMENT_CYCLE, WX_ZHI, DZ, TG, SHI_SHEN_MAP, CS_POWER, getChangSheng, TIAN_YI_GUI_REN, WEN_CHANG, YI_MA, TAO_HUA, HUA_GAI, JIANG_XING, LU_SHEN, YANG_REN, JIN_YU, XING_GROUPS, SAN_HE_GROUPS, SAN_HUI_GROUPS, LIU_CHONG, DZ_LIU_HE, LIU_HAI, HOUR_BRANCH_NAMES, HOUR_BRANCH_RANGES } , getKongWang, LIU_HE_TRANSFORM } from './data.js';
 
 // ============================
 // 排盤計算核心
@@ -85,7 +85,24 @@ export function detectDynamicTransformations(pillars) {
     }
   }
 
-  return { branchTransformation: transformedWuxing, stemTransformation: ganHeWuxing };
+  
+  // 地支六合 (Liu He)
+  let liuHeWuxing = null;
+  for (let i = 0; i < zhiChars.length; i++) {
+    for (let j = i+1; j < zhiChars.length; j++) {
+      const pair = zhiChars[i] + zhiChars[j];
+      const wx = LIU_HE_TRANSFORM[pair];
+      if (wx) {
+        // Condition: penetrating stem or season
+        if (ganChars.some(g => WX_GAN[g] === wx) || (WX_ZHI[zhiChars[1]] === wx)) {
+          liuHeWuxing = wx;
+        }
+      }
+    }
+  }
+
+  return { branchTransformation: transformedWuxing, stemTransformation: ganHeWuxing, liuHeTransformation: liuHeWuxing };
+
 }
 
 export function countWuXing(pillars, pillarWeights) {
@@ -96,6 +113,10 @@ export function countWuXing(pillars, pillarWeights) {
   
   const transformations = detectDynamicTransformations(pillars);
   
+  
+  const dayPillar = pillars[2];
+  const kongWangBranches = dayPillar ? getKongWang(dayPillar.gan, dayPillar.zhi) : [];
+
   pillars.forEach((p, i) => {
     let w = weights[i] ?? 1.0;
     
@@ -126,6 +147,10 @@ export function countWuXing(pillars, pillarWeights) {
         // Diminish non-commander
         baseW *= 0.5;
       }
+      // Kong Wang dampening
+      if (kongWangBranches.includes(p.zhi)) {
+         baseW *= 0.3;
+      }
       count[WX_GAN[g]] += baseW * w; 
     });
   });
@@ -133,6 +158,10 @@ export function countWuXing(pillars, pillarWeights) {
   // Apply massive branch transformation boost
   if (transformations.branchTransformation) {
     count[transformations.branchTransformation] += 5.0; // Massive boost for SanHe/SanHui
+  }
+  
+  if (transformations.liuHeTransformation) {
+    count[transformations.liuHeTransformation] += 2.0; // Boost for LiuHe
   }
   if (transformations.stemTransformation) {
     count[transformations.stemTransformation] += 2.0; // Moderate boost for GanHe
@@ -171,6 +200,11 @@ export function judgeStrength(dayGan, monthZhi, wxCount, pillars) {
   const deLing = (monthMainEl === dayWX) || (monthMainEl === motherEl) ||
                  (monthBenQiEl === dayWX) || (monthBenQiEl === motherEl);
 
+  
+  // Determine Kong Wang based on Day Pillar
+  const dayPillar = Array.isArray(pillars) ? pillars[2] : null;
+  const kongWangBranches = dayPillar ? getKongWang(dayPillar.gan, dayPillar.zhi) : [];
+
   const deDi = [];
   const deShi = [];
   const rootedBranches = [];
@@ -191,7 +225,31 @@ export function judgeStrength(dayGan, monthZhi, wxCount, pillars) {
       }
       if (rooted) {
         if (i !== 2) { deDi.push(i); } // Keep legacy backward compatibility
-        deDiScore += branchWeights[i] || 0;
+        let currentWeight = branchWeights[i] || 0;
+        
+        // Kong Wang dampening
+        if (kongWangBranches.includes(p.zhi)) {
+          currentWeight *= 0.3;
+        }
+        
+        // Clash/Punishment dampening from other branches
+        for (let j = 0; j < pillars.length; j++) {
+           if (i === j || !pillars[j]) continue;
+           const otherZhiChar = DZ[pillars[j].zhi];
+           const thisZhiChar = DZ[p.zhi];
+           if (LIU_CHONG[otherZhiChar] === thisZhiChar) {
+             currentWeight *= 0.5; // Clash weakens root by 50%
+           } else {
+             // Check San Xing
+             for (const group of XING_GROUPS) {
+               if (group.length === 3 && group.includes(otherZhiChar) && group.includes(thisZhiChar)) {
+                 currentWeight *= 0.7; // Xing weakens root by 30%
+               }
+             }
+           }
+        }
+        
+        deDiScore += currentWeight;
         rootedBranches.push(DZ[p.zhi]);
       }
       
@@ -642,12 +700,20 @@ export function calculateDecadeFortune(userBazi, gender) {
   const monthZhi = DZ.indexOf(eightChar.getMonthZhi());
 
   // 判斷大運順逆
-  const isYangMale = userBazi.dayGan % 2 === 0 && gender === 'male';
-  const isYinFemale = userBazi.dayGan % 2 === 1 && gender === 'female';
+  const isYangMale = userBazi.yearGan % 2 === 0 && gender === 'male';
+  const isYinFemale = userBazi.yearGan % 2 === 1 && gender === 'female';
   const forward = isYangMale || isYinFemale; // 陽男陰女順行，其餘逆行
 
   // 計算起運歲數（簡化為固定值，實際應根據節氣計算）
-  const startAge = 3; // 簡化為3歲起運
+  
+  let startAge = 3;
+  if (userBazi.eightChar && typeof userBazi.eightChar.getYun === 'function') {
+    try {
+      const yun = userBazi.eightChar.getYun(gender === 'male' ? 1 : 0);
+      startAge = yun.getStartYear();
+    } catch(e) { console.warn('getYun error, fallback to 3', e); }
+  }
+
 
   const daYun = [];
 
@@ -662,7 +728,9 @@ export function calculateDecadeFortune(userBazi, gender) {
       gan: TG[ganIdx],
       zhi: DZ[zhiIdx],
       wuXing: WX_GAN[ganIdx] + WX_ZHI[zhiIdx],
-      shiShen: getShiShen(userBazi.dayGan, ganIdx)
+      shiShen: getShiShen(userBazi.dayGan, ganIdx),
+      stemPhase: `${age}-${age + 4}歲偏重天干`,
+      branchPhase: `${age + 5}-${age + 9}歲偏重地支`
     });
   }
 
@@ -812,64 +880,87 @@ export function computeYongShenFrameworks(input) {
   const season = SEASON_MAP[DZ[monthZhi]] || null;
 
   // 調候表：dayWX × 季 → 首選五行（簡化版窮通寶鑑要訣）
-  const TIAO_HOU = {
-    '木': { '春':'金', '夏':'水', '秋':'水', '冬':'火' },
-    '火': { '春':'水', '夏':'水', '秋':'木', '冬':'木' },
-    '土': { '春':'火', '夏':'水', '秋':'水', '冬':'火' },
-    '金': { '春':'土', '夏':'水', '秋':'火', '冬':'火' },
-    '水': { '春':'火', '夏':'金', '秋':'木', '冬':'火' }
+  
+  // 《窮通寶鑑》120 規則
+  const TIAO_HOU_FULL = {
+    '甲': {
+      '子': ['丁','庚'], '丑': ['丁','庚'], '寅': ['丙','癸'], '卯': ['庚','丁'],
+      '辰': ['庚','壬'], '巳': ['癸','庚'], '午': ['癸','丁'], '未': ['癸','丁'],
+      '申': ['丁','壬'], '酉': ['丁','壬'], '戌': ['壬','甲'], '亥': ['庚','丁']
+    },
+    '乙': {
+      '子': ['丙','戊'], '丑': ['丙','戊'], '寅': ['丙','癸'], '卯': ['丙','癸'],
+      '辰': ['癸','丙'], '巳': ['癸','辛'], '午': ['癸','丙'], '未': ['癸','丙'],
+      '申': ['丙','癸'], '酉': ['丙','癸'], '戌': ['癸','丙'], '亥': ['丙','戊']
+    },
+    '丙': {
+      '子': ['壬','戊'], '丑': ['壬','甲'], '寅': ['壬','庚'], '卯': ['壬','己'],
+      '辰': ['壬','甲'], '巳': ['壬','庚'], '午': ['壬','庚'], '未': ['壬','庚'],
+      '申': ['壬','戊'], '酉': ['壬','癸'], '戌': ['甲','壬'], '亥': ['甲','壬']
+    },
+    '丁': {
+      '子': ['甲','庚'], '丑': ['甲','庚'], '寅': ['甲','庚'], '卯': ['庚','甲'],
+      '辰': ['甲','壬'], '巳': ['甲','壬'], '午': ['壬','癸'], '未': ['甲','壬'],
+      '申': ['甲','庚'], '酉': ['甲','庚'], '戌': ['甲','庚'], '亥': ['甲','庚']
+    },
+    '戊': {
+      '子': ['丙','甲'], '丑': ['丙','甲'], '寅': ['丙','甲'], '卯': ['丙','癸'],
+      '辰': ['甲','癸'], '巳': ['甲','丙'], '午': ['壬','甲'], '未': ['癸','丙'],
+      '申': ['丙','癸'], '酉': ['丙','癸'], '戌': ['甲','壬'], '亥': ['甲','丙']
+    },
+    '己': {
+      '子': ['丙','甲'], '丑': ['丙','甲'], '寅': ['丙','癸'], '卯': ['甲','癸'],
+      '辰': ['丙','癸'], '巳': ['癸','丙'], '午': ['癸','丙'], '未': ['癸','丙'],
+      '申': ['丙','癸'], '酉': ['丙','癸'], '戌': ['甲','丙'], '亥': ['丙','甲']
+    },
+    '庚': {
+      '子': ['丁','甲'], '丑': ['丁','甲'], '寅': ['丁','甲'], '卯': ['丁','甲'],
+      '辰': ['甲','丁'], '巳': ['壬','丙'], '午': ['壬','癸'], '未': ['丁','甲'],
+      '申': ['丁','甲'], '酉': ['丁','甲'], '戌': ['甲','壬'], '亥': ['丁','丙']
+    },
+    '辛': {
+      '子': ['丙','壬'], '丑': ['丙','壬'], '寅': ['己','壬'], '卯': ['壬','甲'],
+      '辰': ['壬','甲'], '巳': ['壬','甲'], '午': ['壬','癸'], '未': ['壬','庚'],
+      '申': ['壬','甲'], '酉': ['壬','甲'], '戌': ['壬','甲'], '亥': ['壬','丙']
+    },
+    '壬': {
+      '子': ['戊','丙'], '丑': ['丙','甲'], '寅': ['庚','丙'], '卯': ['戊','辛'],
+      '辰': ['甲','庚'], '巳': ['壬','辛'], '午': ['癸','庚'], '未': ['辛','甲'],
+      '申': ['戊','丁'], '酉': ['甲','庚'], '戌': ['甲','丙'], '亥': ['戊','丙']
+    },
+    '癸': {
+      '子': ['丙','辛'], '丑': ['丙','辛'], '寅': ['辛','丙'], '卯': ['庚','辛'],
+      '辰': ['丙','辛'], '巳': ['辛','壬'], '午': ['庚','壬'], '未': ['庚','壬'],
+      '申': ['丁','甲'], '酉': ['辛','丙'], '戌': ['辛','甲'], '亥': ['庚','辛']
+    }
   };
-  const TIAO_NOTES = {
-    '木-春': '甲乙木生於春月，正位過旺，須金削斫以成器。',
-    '木-夏': '木生於夏月火炎之時，枝葉易枯，須水潤之方得生機。',
-    '木-秋': '木生於秋月金旺，根葉凋零，須水滋潤以續氣。',
-    '木-冬': '木生於冬月寒凝，非火暖不能發生。',
-    '火-春': '火生於春月，木多火塞，須水調和。',
-    '火-夏': '火生於夏月炎燥，得水濟之方成既濟之功。',
-    '火-秋': '火生於秋月氣衰，見木生扶方可繼明。',
-    '火-冬': '火生於冬月寒甚，得木相資、始能禦寒。',
-    '土-春': '土生於春月木盛克土，須火生扶以解木剋。',
-    '土-夏': '土生於夏月，得水潤之方能萬物滋生。',
-    '土-秋': '土生於秋月氣寒，得水潤澤始見生機。',
-    '土-冬': '土生於冬月寒凝，須火暖方能發育。',
-    '金-春': '金生於春月餘寒未盡，須土生扶方得堅實。',
-    '金-夏': '金生於夏月火炎，恐遭熔化，須水調劑。',
-    '金-秋': '金生於秋月當令，須火煅煉方成器用。',
-    '金-冬': '金生於冬月寒凍，須火溫暖以解寒威。',
-    '水-春': '水生於春月木盛洩氣，須火暖木以成既濟。',
-    '水-夏': '水生於夏月盡涸，須金相生以續源。',
-    '水-秋': '水生於秋月清冷，須木洩秀以通其流。',
-    '水-冬': '水生於冬月旺極，須火解凍方成大用。'
-  };
+
   let tiao = { framework: '調候', wx: null, note: '日主季節資訊不足，調候暫略。', extreme: false };
-  if (season && TIAO_HOU[dayWX] && TIAO_HOU[dayWX][season]) {
-    const wx = TIAO_HOU[dayWX][season];
-    // 季節極端判定：放寬為「候氣不足」而非「完全缺席」，以捕捉一絲火光都缺的深冬金水。
-    //   冬 + 金/水 + 命局火 < 2                → 寒冬須火暖局
-    //   夏 + 火/土 + 命局水 < 2                → 夏炎須水潤局
-    //   秋 + 甲乙木 + 命局水 < 2               → 秋木逢金，無水則枯
-    //   春 + 丙丁火 + 命局水 < 2               → 春火燥烈，無水則焚
-    // 範圍刻意不完全覆蓋窮通寶鑑全部 20 節，主要補齊古典 "秋木須水"/"春火須水"
-    // 兩組被原版遺漏的場景；其餘節氣仍取 TIAO_HOU 表的首選五行但不作 extreme。
-    const wxFire  = wxCount['火'] || 0;
-    const wxWater = wxCount['水'] || 0;
-    const dayGanChar = TG[dayGan];
-    const isJiaYi = (dayGanChar === '甲' || dayGanChar === '乙');
-    const isBingDing = (dayGanChar === '丙' || dayGanChar === '丁');
-    const extreme =
-      (season === '冬' && (dayWX === '金' || dayWX === '水') && wxFire < 2) ||
-      (season === '夏' && (dayWX === '火' || dayWX === '土') && wxWater < 2) ||
-      (season === '秋' && isJiaYi && wxWater < 2) ||
-      (season === '春' && isBingDing && wxWater < 2);
+  const dayGanChar = TG[dayGan];
+  const monthZhiChar = DZ[monthZhi];
+  
+  if (TIAO_HOU_FULL[dayGanChar] && TIAO_HOU_FULL[dayGanChar][monthZhiChar]) {
+    const preferences = TIAO_HOU_FULL[dayGanChar][monthZhiChar];
+    const primaryGan = preferences[0];
+    const primaryWx = WX_GAN[TG.indexOf(primaryGan)];
+    const secondaryGan = preferences.length > 1 ? preferences[1] : null;
+    
+    // Check extreme condition: if the primary element is almost absent (< 1.5 weight)
+    const primaryCount = wxCount[primaryWx] || 0;
+    const extreme = primaryCount < 1.5;
+    
+    let note = `【窮通寶鑑】${dayGanChar}日主生於${monthZhiChar}月，首選${primaryGan}${primaryWx}調候`;
+    if (secondaryGan) note += `，次取${secondaryGan}${WX_GAN[TG.indexOf(secondaryGan)]}。`;
+    if (extreme) note += ` 命局${primaryWx}氣枯竭，亟需調候！`;
+
     tiao = {
       framework: '調候',
-      wx,
-      note: TIAO_NOTES[`${dayWX}-${season}`] || `${dayWX}日主生於${season}月宜取${wx}以調候。`,
-      extreme
+      wx: primaryWx,
+      note: note,
+      extreme: extreme
     };
   }
-
-  const direction = strength.direction
+const direction = strength.direction
     || (typeof strength.isStrong === 'boolean' ? (strength.isStrong ? 'strong' : 'weak') : null);
   let fuYi;
 

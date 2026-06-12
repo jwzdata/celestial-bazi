@@ -292,3 +292,35 @@ export const CAREER = {
 };
 
 
+
+// 空亡计算 (Kong Wang)
+export function getKongWang(dayGanIdx, dayZhiIdx) {
+  // 旬首地支 = (zhiIdx - ganIdx + 12) % 12
+  const xunShouZhi = (dayZhiIdx - dayGanIdx + 12) % 12;
+  // 空亡地支为旬首往前推两位 (相当于 +10 和 +11)
+  return [(xunShouZhi + 10) % 12, (xunShouZhi + 11) % 12];
+}
+
+export const LIU_HE_TRANSFORM = {
+  '子丑': '土', '丑子': '土',
+  '寅亥': '木', '亥寅': '木',
+  '卯戌': '火', '戌卯': '火',
+  '辰酉': '金', '酉辰': '金',
+  '巳申': '水', '申巳': '水',
+  '午未': '土', '未午': '土'
+};
+
+export const AN_HE = [
+  '寅丑', '丑寅', // 寅中戊丙甲 合 丑中癸辛己
+  '午亥', '亥午', // 午中丁己 合 亥中壬甲
+  '卯申', '申卯'  // 卯中乙 合 申中庚
+];
+
+export const PO = {
+  '子酉': true, '酉子': true,
+  '丑辰': true, '辰丑': true,
+  '寅亥': true, '亥寅': true,
+  '卯午': true, '午卯': true,
+  '巳申': true, '申巳': true,
+  '未戌': true, '戌未': true
+};
